@@ -70,7 +70,7 @@ export default function AdminPage() {
 
     try {
       // Simple admin authentication
-      if (formData.username === 'admin' && formData.password === 'admin123') {
+      if (formData.username === 'admin' && formData.password === 'admin@123') {
         sessionStorage.setItem('isAdminLoggedIn', 'true')
         sessionStorage.setItem('adminData', JSON.stringify({
           username: formData.username,
