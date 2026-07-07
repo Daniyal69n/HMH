@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useNotification } from '../context/NotificationContext'
+import { setAdminSession, validateAdminLogin } from '@/lib/adminAuth'
 
 export default function AdminPage() {
   const router = useRouter()
@@ -69,22 +70,13 @@ export default function AdminPage() {
     setIsLoading(true)
 
     try {
-      // Simple admin authentication
-      if (formData.username === 'admin' && formData.password === 'admin@123') {
-        sessionStorage.setItem('isAdminLoggedIn', 'true')
-        sessionStorage.setItem('adminData', JSON.stringify({
-          username: formData.username,
-          role: 'admin',
-          loginTime: new Date().toISOString()
-        }))
-        
-        // Redirect directly to dashboard
+      if (validateAdminLogin(formData.username, formData.password)) {
+        setAdminSession(formData.username)
         router.push('/admin/dashboard')
       } else {
         showError('Invalid admin credentials. Please try again.')
         setIsLoading(false)
       }
-      
     } catch (error) {
       showError('Login failed. Please try again.')
       setIsLoading(false)

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 const EMPTY_PROFILE = {
   name: '',
@@ -39,6 +40,7 @@ function loadStoredProfile() {
 }
 
 export default function Page() {
+  const router = useRouter()
   const [page, setPage] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [bellOpen, setBellOpen] = useState(false)
@@ -216,6 +218,12 @@ export default function Page() {
   }, [spinAngle, spinResult])
 
   const goTo = (id) => {
+    if (id === 'admin') {
+      router.push('/admin')
+      setSidebarOpen(false)
+      setBellOpen(false)
+      return
+    }
     setPage(id)
     setSidebarOpen(false)
     setBellOpen(false)

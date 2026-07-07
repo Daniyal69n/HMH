@@ -3,11 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useNotification } from '../../context/NotificationContext'
+import AdminShell from '@/components/admin/AdminShell'
+import { clearAdminSession } from '@/lib/adminAuth'
+import styles from '@/components/admin/admin.module.css'
 
 export default function AdminDashboard() {
   const router = useRouter()
   const { showSuccess, showError, showWarning, showInfo } = useNotification()
-  const [activeTab, setActiveTab] = useState('plans')
+  const [activeTab, setActiveTab] = useState('dashboard')
   const [plans, setPlans] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [editingPlan, setEditingPlan] = useState(null)
@@ -112,8 +115,7 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout from admin panel?')) {
-      sessionStorage.removeItem('isAdminLoggedIn')
-      sessionStorage.removeItem('adminData')
+      clearAdminSession()
       router.push('/admin')
     }
   }
@@ -589,7 +591,7 @@ export default function AdminDashboard() {
 
   // Load recharge history when tab is activated
   useEffect(() => {
-    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'rechargeHistory') {
+    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'planRequests') {
       const loadRechargeHistory = async () => {
         try {
           setHistoryLoading(true)
@@ -614,7 +616,7 @@ export default function AdminDashboard() {
 
   // Load withdraw history when tab is activated
   useEffect(() => {
-    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'withdrawHistory') {
+    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'withdrawals') {
       const loadWithdrawHistory = async () => {
         try {
           setHistoryLoading(true)
@@ -639,7 +641,7 @@ export default function AdminDashboard() {
 
   // Load recent activities when analytics tab is activated
   useEffect(() => {
-    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'analytics') {
+    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'dashboard') {
       const loadRecentActivities = async () => {
         try {
           setActivityLoading(true)
@@ -1115,139 +1117,12 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400">
-      {/* Admin Header */}
-      <div className="bg-white shadow-lg">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
-                <p className="text-gray-600">Manage your Neo Earner platform</p>
-              </div>
-            </div>
-            <div className="flex space-x-3">
-              <button 
-                onClick={handleLogout}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Logout
-              </button>
-              <button 
-                onClick={() => router.push('/')}
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                Back to Site
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-6">
-        {/* Tab Navigation */}
-        <div className="bg-white rounded-lg shadow-lg mb-6">
-          <div className="flex border-b overflow-x-auto scrollbar-hide">
-            <button
-              onClick={() => setActiveTab('plans')}
-              className={`px-4 md:px-6 py-3 font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                activeTab === 'plans'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Investment Plans
-            </button>
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`px-4 md:px-6 py-3 font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                activeTab === 'users'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Users
-            </button>
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`px-4 md:px-6 py-3 font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                activeTab === 'analytics'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Analytics
-            </button>
-            <button
-              onClick={() => setActiveTab('images')}
-              className={`px-4 md:px-6 py-3 font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                activeTab === 'images'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Image Management
-            </button>
-            <button
-              onClick={() => setActiveTab('transactions')}
-              className={`px-4 md:px-6 py-3 font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                activeTab === 'transactions'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Transactions
-            </button>
-            <button
-              onClick={() => setActiveTab('payments')}
-              className={`px-4 md:px-6 py-3 font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                activeTab === 'payments'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Payment Settings
-            </button>
-            <button
-              onClick={() => setActiveTab('coupons')}
-              className={`px-4 md:px-6 py-3 font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                activeTab === 'coupons'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Coupon Management
-            </button>
-            <button
-              onClick={() => setActiveTab('rechargeHistory')}
-              className={`px-4 md:px-6 py-3 font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                activeTab === 'rechargeHistory'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Recharge History
-            </button>
-            <button
-              onClick={() => setActiveTab('withdrawHistory')}
-              className={`px-4 md:px-6 py-3 font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                activeTab === 'withdrawHistory'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Withdraw History
-            </button>
-          </div>
-        </div>
-
-        {/* Content Area */}
-        {activeTab === 'plans' && (
+    <AdminShell
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      onLogout={handleLogout}
+    >
+        {activeTab === 'planRequests' && (
           <div className="space-y-6">
             {/* Add/Edit Plan Form */}
             {showAddPlan && (
@@ -1701,7 +1576,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === 'analytics' && (
+        {activeTab === 'dashboard' && (
           <div className="space-y-6">
             {/* Key Metrics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -1946,7 +1821,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === 'images' && (
+        {activeTab === 'manageAds' && (
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h3 className="text-lg font-bold text-gray-800 mb-4">Image Management</h3>
             <p className="text-gray-600 mb-6">Manage car images for your investment plans.</p>
@@ -2045,95 +1920,91 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === 'transactions' && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Transaction Management</h3>
-            
-            {/* Recharge Requests */}
-            <div className="mb-8">
-              <h4 className="text-md font-semibold text-gray-700 mb-4">Pending Recharge Requests ({pendingRechargeRequests.length})</h4>
-              {pendingRechargeRequests.length === 0 ? (
-                <p className="text-gray-500">No pending recharge requests</p>
-              ) : (
-                <div className="space-y-3">
-                  {pendingRechargeRequests.map((request) => (
-                    <div key={request.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-semibold text-gray-800">{request.userName}</p>
-                          <p className="text-sm text-gray-600">Phone: {request.userId}</p>
-                          <p className="text-sm text-gray-600">Amount: ${request.amount}</p>
-                          <p className="text-sm text-gray-600">Payment Method: {request.paymentMethod}</p>
-                          <p className="text-sm text-blue-600">User Transaction ID: {request.userTransactionId || 'Not provided'}</p>
-                          <p className="text-xs text-gray-500">System Transaction ID: {request.transactionId}</p>
-                          <p className="text-xs text-gray-500">Date: {formatPakistanDate(request.createdAt)} {formatPakistanTime(request.createdAt)}</p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleRechargeApproval(request.transactionId, true)}
-                            className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleRechargeApproval(request.transactionId, false)}
-                            className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-                          >
-                            Reject
-                          </button>
-                        </div>
+        {activeTab === 'planRequests' && (
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Pending Recharge Requests ({pendingRechargeRequests.length})</h3>
+            {pendingRechargeRequests.length === 0 ? (
+              <p className="text-gray-500">No pending recharge requests</p>
+            ) : (
+              <div className="space-y-3">
+                {pendingRechargeRequests.map((request) => (
+                  <div key={request.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-gray-800">{request.userName}</p>
+                        <p className="text-sm text-gray-600">Phone: {request.userId}</p>
+                        <p className="text-sm text-gray-600">Amount: ${request.amount}</p>
+                        <p className="text-sm text-gray-600">Payment Method: {request.paymentMethod}</p>
+                        <p className="text-sm text-blue-600">User Transaction ID: {request.userTransactionId || 'Not provided'}</p>
+                        <p className="text-xs text-gray-500">System Transaction ID: {request.transactionId}</p>
+                        <p className="text-xs text-gray-500">Date: {formatPakistanDate(request.createdAt)} {formatPakistanTime(request.createdAt)}</p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleRechargeApproval(request.transactionId, true)}
+                          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleRechargeApproval(request.transactionId, false)}
+                          className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                        >
+                          Reject
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Withdraw Requests */}
-            <div>
-              <h4 className="text-md font-semibold text-gray-700 mb-4">Pending Withdraw Requests ({pendingWithdrawRequests.length})</h4>
-              {pendingWithdrawRequests.length === 0 ? (
-                <p className="text-gray-500">No pending withdraw requests</p>
-              ) : (
-                <div className="space-y-3">
-                  {pendingWithdrawRequests.map((request) => (
-                    <div key={request.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-semibold text-gray-800">{request.userName}</p>
-                          <p className="text-sm text-gray-600">Phone: {request.userId}</p>
-                          <p className="text-sm text-gray-600">Amount: ${request.amountAfterFee || (request.amount * 0.75).toFixed(2)} (After 25% fee)</p>
-                          <p className="text-xs text-gray-500">Original: ${request.amount} | Fee: ${request.withdrawalFee || (request.amount * 0.25).toFixed(2)} | Debug: {request.amountAfterFee ? 'Has amountAfterFee' : 'Calculated'}</p>
-                          <p className="text-sm text-gray-600">Method: {request.withdrawalMethod}</p>
-                          <p className="text-sm text-gray-600">Account Name: {request.withdrawalAccountName}</p>
-                          <p className="text-sm text-gray-600">Account Number: {request.withdrawalNumber || 'Not provided'}</p>
-                          <p className="text-xs text-gray-500">Transaction ID: {request.transactionId}</p>
-                          <p className="text-xs text-gray-500">Date: {formatPakistanDate(request.createdAt)} {formatPakistanTime(request.createdAt)}</p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleWithdrawApproval(request.transactionId, true)}
-                            className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleWithdrawApproval(request.transactionId, false)}
-                            className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {activeTab === 'payments' && (
+        {activeTab === 'withdrawals' && (
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Withdrawal Requests ({pendingWithdrawRequests.length})</h3>
+            {pendingWithdrawRequests.length === 0 ? (
+              <p className="text-gray-500">No pending withdraw requests</p>
+            ) : (
+              <div className="space-y-3">
+                {pendingWithdrawRequests.map((request) => (
+                  <div key={request.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-gray-800">{request.userName}</p>
+                        <p className="text-sm text-gray-600">Phone: {request.userId}</p>
+                        <p className="text-sm text-gray-600">Amount: ${request.amountAfterFee || (request.amount * 0.75).toFixed(2)} (After 25% fee)</p>
+                        <p className="text-xs text-gray-500">Original: ${request.amount} | Fee: ${request.withdrawalFee || (request.amount * 0.25).toFixed(2)}</p>
+                        <p className="text-sm text-gray-600">Method: {request.withdrawalMethod}</p>
+                        <p className="text-sm text-gray-600">Account Name: {request.withdrawalAccountName}</p>
+                        <p className="text-sm text-gray-600">Account Number: {request.withdrawalNumber || 'Not provided'}</p>
+                        <p className="text-xs text-gray-500">Transaction ID: {request.transactionId}</p>
+                        <p className="text-xs text-gray-500">Date: {formatPakistanDate(request.createdAt)} {formatPakistanTime(request.createdAt)}</p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleWithdrawApproval(request.transactionId, true)}
+                          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleWithdrawApproval(request.transactionId, false)}
+                          className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'earningsControl' && (
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h3 className="text-lg font-bold text-gray-800 mb-4">Payment Settings</h3>
             <p className="text-gray-600 mb-6">Manage payment method details for user recharges.</p>
@@ -2207,7 +2078,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === 'coupons' && (
+        {activeTab === 'earningsControl' && (
           <div className="space-y-6">
             {/* Add Coupon Form */}
             {showAddCoupon && (
@@ -2430,7 +2301,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Recharge History Tab */}
-        {activeTab === 'rechargeHistory' && (
+        {activeTab === 'planRequests' && (
           <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-gray-800">Recharge History</h3>
@@ -2614,7 +2485,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Withdraw History Tab */}
-        {activeTab === 'withdrawHistory' && (
+        {activeTab === 'withdrawals' && (
           <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-gray-800">Withdraw History</h3>
@@ -2784,7 +2655,20 @@ export default function AdminDashboard() {
             )}
           </div>
         )}
-      </div>
-    </div>
+
+        {activeTab === 'mysteryBoxes' && (
+          <div className={styles.placeholder}>
+            <h3>Mystery Boxes</h3>
+            <p>Configure mystery box rewards and odds here.</p>
+          </div>
+        )}
+
+        {activeTab === 'ecommerce' && (
+          <div className={styles.placeholder}>
+            <h3>E-Commerce</h3>
+            <p>Manage store products and orders here.</p>
+          </div>
+        )}
+    </AdminShell>
   )
 } 

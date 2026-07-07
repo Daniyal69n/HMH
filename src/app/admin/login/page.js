@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useNotification } from '../../context/NotificationContext'
+import { setAdminSession, validateAdminLogin } from '@/lib/adminAuth'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -64,36 +65,13 @@ export default function AdminLoginPage() {
     setIsLoading(true)
 
     try {
-      // Call backend API for admin authentication
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-          isAdmin: true
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok && data.success) {
-        sessionStorage.setItem('isAdminLoggedIn', 'true')
-        sessionStorage.setItem('adminData', JSON.stringify({
-          username: formData.username,
-          role: 'admin',
-          loginTime: new Date().toISOString()
-        }))
-        
-        // Redirect immediately without alert
+      if (validateAdminLogin(formData.username, formData.password)) {
+        setAdminSession(formData.username)
         router.push('/admin/dashboard')
       } else {
-        showError(data.message || 'Invalid admin credentials. Please try again.')
+        showError('Invalid admin credentials. Please try again.')
         setIsLoading(false)
       }
-      
     } catch (error) {
       showError('Login failed. Please try again.')
       setIsLoading(false)
