@@ -1,215 +1,151 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     password: '',
     confirmPassword: '',
     referralCode: ''
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [mounted, setMounted] = useState(false);
-  const router = useRouter();
+  })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  // Set mounted to true after component mounts (client-side only)
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Auto-fill referral code from URL parameter (only after mounting)
-  useEffect(() => {
-    if (mounted && typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const refCode = urlParams.get('ref');
-      if (refCode) {
-        setFormData(prev => ({
-          ...prev,
-          referralCode: refCode
-        }));
-      }
+    const params = new URLSearchParams(window.location.search)
+    const ref = params.get('ref')
+    if (ref) {
+      setFormData((prev) => ({
+        ...prev,
+        referralCode: ref
+      }))
     }
-  }, [mounted]);
+  }, [])
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  const handleChange = (event) => {
+    const { name, value } = event.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }))
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    setError('')
 
-    // Validate password confirmation
+    if (!formData.name.trim() || !formData.phone.trim() || !formData.password.trim()) {
+      setError('Fill in your name, phone number, and password.')
+      return
+    }
+
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
+      setError('Passwords do not match.')
+      return
     }
 
-    // Remove confirmPassword from the data being sent
-    const { confirmPassword, ...registrationData } = formData;
-
-    try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(registrationData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Registration successful
-        alert('Registration successful! You received Rs 100 signup bonus!');
-        router.push('/login');
-      } else {
-        setError(data.error || 'Registration failed');
-      }
-    } catch (error) {
-      setError('Network error. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Don't render anything until mounted (prevents SSR issues)
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
+    setLoading(true)
+    setTimeout(() => {
+      setLoading(false)
+      router.push('/login')
+    }, 450)
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-          <p className="text-gray-600">Join us and get Rs 100 signup bonus!</p>
-        </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-              Full Name *
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your full name"
-            />
+    <div className="meridian">
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: '24px' }}>
+        <div style={{ width: '100%', maxWidth: '540px' }}>
+          <div className="card" style={{ marginBottom: '18px', textAlign: 'center', background: 'linear-gradient(150deg, var(--surface), var(--surface-2))' }}>
+            <div className="brand-mark" style={{ margin: '0 auto 14px' }}>M</div>
+            <div className="eyebrow" style={{ marginBottom: '6px' }}>Join HMHProEarn</div>
+            <h1 style={{ margin: 0, fontFamily: 'var(--font-fraunces, serif)', fontSize: '30px', fontWeight: 600 }}>Create your account</h1>
+            <p style={{ margin: '10px 0 0', color: 'var(--text-dim)', fontSize: '14px' }}>Set up your profile and continue to the HMHProEarn flow.</p>
           </div>
 
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number *
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your phone number"
-            />
+          <div className="card" style={{ borderRadius: '16px' }}>
+            <form onSubmit={handleSubmit}>
+              <label htmlFor="name">Full name</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Enter your full name"
+              />
+
+              <label htmlFor="phone">Phone number</label>
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Enter your phone number"
+              />
+
+              <div className="row-2">
+                <div>
+                  <label htmlFor="password">Password</label>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Create a password"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="confirmPassword">Confirm password</label>
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Repeat password"
+                  />
+                </div>
+              </div>
+
+              <label htmlFor="referralCode">Referral code</label>
+              <input
+                id="referralCode"
+                name="referralCode"
+                type="text"
+                value={formData.referralCode}
+                onChange={handleChange}
+                placeholder="Optional referral code"
+              />
+
+              {error ? (
+                <div style={{ marginTop: '14px', padding: '12px 14px', borderRadius: '10px', background: 'rgba(196, 87, 74, 0.12)', border: '1px solid rgba(196, 87, 74, 0.35)', color: 'var(--red)', fontSize: '13px' }}>
+                  {error}
+                </div>
+              ) : null}
+
+              <div style={{ marginTop: '18px' }}>
+                <button className="btn btn-gold" type="submit" disabled={loading} style={{ opacity: loading ? 0.75 : 1 }}>
+                  {loading ? 'Creating account...' : 'Create account'}
+                </button>
+              </div>
+            </form>
+
+            <p style={{ margin: '18px 0 0', textAlign: 'center', color: 'var(--text-dim)', fontSize: '13.5px' }}>
+              Already have an account?{' '}
+              <Link href="/login" style={{ color: 'var(--gold-bright)', fontWeight: 700 }}>
+                Sign in
+              </Link>
+            </p>
           </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password *
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Create a password"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm Password *
-            </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Confirm your password"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="referralCode" className="block text-sm font-medium text-gray-700 mb-2">
-              Referral Code (Optional)
-            </label>
-            <input
-              type="text"
-              id="referralCode"
-              name="referralCode"
-              value={formData.referralCode}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter referral code if you have one"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? 'Creating Account...' : 'Create Account'}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            Already have an account?{' '}
-            <a href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-              Sign in
-            </a>
-          </p>
         </div>
       </div>
     </div>
-  );
+  )
 }
-
-

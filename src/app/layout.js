@@ -1,27 +1,33 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import "./meridian.css";
 import ClientLayout from './client-layout';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+});
+
+const jetBrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
 export const metadata = {
-  title: "Neo Earner",
-  description: "Explore Neo Earner investment opportunities",
+  title: "HMHProEarn",
+  description: "HMHProEarn dashboard and member experience",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${manrope.variable} ${fraunces.variable} ${jetBrainsMono.variable} antialiased`}
         suppressHydrationWarning={true}
       >
         <ClientLayout>

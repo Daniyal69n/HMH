@@ -1,1789 +1,997 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useNotification } from './context/NotificationContext'
-import { updateUserBalance, getCurrentUser } from '@/lib/api'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+
+const EMPTY_PROFILE = {
+  name: '',
+  email: '',
+  username: '',
+  city: '',
+  address: ''
+}
+
+function loadStoredProfile() {
+  if (typeof window === 'undefined') return { ...EMPTY_PROFILE }
+
+  let merged = { ...EMPTY_PROFILE }
+
+  try {
+    const userData = sessionStorage.getItem('userData')
+    if (userData) {
+      const user = JSON.parse(userData)
+      merged = {
+        ...merged,
+        name: user.name || merged.name,
+        email: user.email || merged.email,
+        username: user.username || user.phone || merged.username
+      }
+    }
+  } catch {}
+
+  try {
+    const savedProfile = localStorage.getItem('hmh-profile')
+    if (savedProfile) {
+      merged = { ...merged, ...JSON.parse(savedProfile) }
+    }
+  } catch {}
+
+  return merged
+}
 
 export default function Page() {
-  const router = useRouter()
-  const { showSuccess, showError, showWarning, showInfo } = useNotification()
-  const [currentCarSlide, setCurrentCarSlide] = useState(0)
-  const [activeNav, setActiveNav] = useState('home')
-  const [userName] = useState('John Doe') // You can make this dynamic later
-  const [currentPlans, setCurrentPlans] = useState([]) // Store user's current plan
-  
-  // Modal states
-  const [showRechargeModal, setShowRechargeModal] = useState(false)
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false)
-  const [rechargeAmount, setRechargeAmount] = useState('')
-  const [withdrawAmount, setWithdrawAmount] = useState('')
-  const [transactionId, setTransactionId] = useState('')
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('easypaisa')
-  const [selectedWithdrawMethod, setSelectedWithdrawMethod] = useState('easypaisa')
-  const [withdrawAccountName, setWithdrawAccountName] = useState('')
-  const [withdrawAccountNumber, setWithdrawAccountNumber] = useState('')
-  const [paymentDetails, setPaymentDetails] = useState({
-    easypaisa: { number: '', accountName: '' },
-    jazzcash: { number: '', accountName: '' }
-  })
-  
-  // Coupon states
-  const [showCouponModal, setShowCouponModal] = useState(false)
-  const [couponCode, setCouponCode] = useState('')
-  const [userBalance, setUserBalance] = useState(0)
-  const [userData, setUserData] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  
-  // Signup bonus popup state
-  const [showSignupBonusModal, setShowSignupBonusModal] = useState(false)
-  
-  // Income tracking states
-  const [todayIncome, setTodayIncome] = useState(0)
-  const [earnBalance, setEarnBalance] = useState(0)
-  const [totalRecharge, setTotalRecharge] = useState(0)
-  const [referralCommission, setReferralCommission] = useState(0)
-  
-  // Debug function to track commission changes
-  const debugSetReferralCommission = (value, source) => {
-    console.log(`🔍 Commission change from ${source}:`, {
-      oldValue: referralCommission,
-      newValue: value,
-      timestamp: new Date().toISOString()
-    });
-    setReferralCommission(value);
-  };
-  const [totalCommissionEarned, setTotalCommissionEarned] = useState(0)
-  
-  // Carousel images state
-  const [carouselImages, setCarouselImages] = useState({
-    'car1.jpeg': '/car1.jpeg',
-    'car2.jpeg': '/car2.jpeg',
-    'car3.jpeg': '/car3.jpeg',
-    'car4.jpeg': '/car4.jpeg',
-    'car5.jpeg': '/car5.jpeg'
-  })
-  
-  // Calculate total balance - userBalance already includes team commission from database
-  const totalBalance = userBalance
-  
+  const [page, setPage] = useState('dashboard')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [bellOpen, setBellOpen] = useState(false)
+  const [toast, setToast] = useState('')
+  const toastTimer = useRef(null)
+  const spinTimer = useRef(null)
 
-  
-  // Remaining days state
-  const [remainingDays, setRemainingDays] = useState(0)
+  const [withdrawHistory, setWithdrawHistory] = useState([])
+  const [wdAmount, setWdAmount] = useState('')
+  const [wdMethod, setWdMethod] = useState('')
+  const [wdName, setWdName] = useState('')
+  const [wdAccount, setWdAccount] = useState('')
 
-  const totalCarSlides = 4
-  
-  const withdrawals = [
-    { name: 'Sarah M.', phone: '+92 300 ****567', amount: '$1,250', time: '2 minutes ago', color: 'green' },
-    { name: 'Mike R.', phone: '+92 301 ****234', amount: '$850', time: '5 minutes ago', color: 'blue' },
-    { name: 'Emma L.', phone: '+92 302 ****789', amount: '$2,100', time: '7 minutes ago', color: 'purple' },
-    { name: 'David K.', phone: '+92 303 ****456', amount: '$675', time: '12 minutes ago', color: 'yellow' },
-    { name: 'Lisa P.', phone: '+92 304 ****321', amount: '$1,500', time: '15 minutes ago', color: 'red' },
-    { name: 'Alex T.', phone: '+92 305 ****654', amount: '$950', time: '18 minutes ago', color: 'indigo' }
-  ]
-  
-  // For mobile auto-scrolling
-  const [currentInvestmentSlide, setCurrentInvestmentSlide] = useState(0)
-  
-  // Auto-advance investment slider on mobile
-  useEffect(() => {    
-    const investmentInterval = setInterval(() => {
-      setCurrentInvestmentSlide((prev) => (prev + 1) % withdrawals.length)
-    }, 3000)
-    
-    return () => {
-      clearInterval(investmentInterval)
-    }
-  }, [withdrawals.length])
+  const [profile, setProfile] = useState(EMPTY_PROFILE)
+  const [profileDraft, setProfileDraft] = useState(EMPTY_PROFILE)
+  const [profileSaved, setProfileSaved] = useState(false)
+  const profileReady = useRef(false)
 
-  const firstName = userName.split(' ')[0]
-  const userInitial = userName.charAt(0).toUpperCase()
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [checkoutProduct, setCheckoutProduct] = useState(null)
+  const [coName, setCoName] = useState('')
+  const [coPhone, setCoPhone] = useState('')
+  const [coAddress, setCoAddress] = useState('')
 
-  // Auto-advance car carousel
-  useEffect(() => {    
-    const carInterval = setInterval(() => {
-      setCurrentCarSlide((prev) => (prev + 1) % totalCarSlides)
-    }, 3000)
-    
-    return () => {
-      clearInterval(carInterval)
-    }
-  }, [totalCarSlides])
+  const [spinAngle, setSpinAngle] = useState(0)
+  const [spinRunning, setSpinRunning] = useState(false)
+  const [spinResult, setSpinResult] = useState('Locked')
+  const spinAngleRef = useRef(0)
 
-  // Reset signup bonus modal when userData changes
-  useEffect(() => {
-    if (userData) {
-      // Check if user has already seen the popup for this session
-      const hasSeenSignupPopup = sessionStorage.getItem(`signupPopupSeen_${userData.phone}`);
-      if (hasSeenSignupPopup) {
-        setShowSignupBonusModal(false);
-      }
-    }
-  }, [userData])
-  
-  // Parse investment amount from string (e.g., "$5,000" to 5000)
-  const parseInvestmentAmount = (amountString) => {
-    if (typeof amountString === 'number') return amountString
-    if (!amountString) return 0
-    
-    // Remove currency symbols and commas, then parse
-    const cleanAmount = amountString.replace(/[$,₹Rs]/g, '').replace(/,/g, '')
-    return parseFloat(cleanAmount) || 0
+  const NAV = useMemo(
+    () => [
+      { id: 'dashboard', label: 'Dashboard', icon: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z' },
+      { id: 'withdraw', label: 'Withdraw funds', icon: 'M3 7h18v10H3zM3 10h18' },
+      { id: 'network', label: 'My network', icon: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM17 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 3-5 6-5s6 2 6 5M13 20c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4' },
+      { id: 'plans', label: 'My plan', icon: 'M12 3v18M5 8l7-5 7 5' },
+      { id: 'levels', label: 'Rewards & levels', icon: 'M8 21h8M12 17v4M6 3h12l-1 8a5 5 0 0 1-10 0z' },
+      { id: 'spin', label: 'Lucky spin', icon: 'M12 2v20M2 12h20' },
+      { id: 'store', label: 'E-commerce', icon: 'M4 8h16l-1.5 11h-13zM8 8V6a4 4 0 0 1 8 0v2' },
+      { id: 'membership', label: 'Membership card', icon: 'M3 6h18v12H3zM3 10h18' },
+      { id: 'profile', label: 'Profile settings', icon: 'M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5' },
+      { id: 'admin', label: 'Admin panel', icon: 'M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z' }
+    ],
+    []
+  )
+
+  const leaders = useMemo(
+    () => [
+      { name: 'Jordan K.', level: 12, amt: 482.5 },
+      { name: 'Sam T.', level: 9, amt: 361.2 },
+      { name: 'Riley M.', level: 8, amt: 298.75 },
+      { name: 'Casey P.', level: 6, amt: 210.0 },
+      { name: 'Morgan L.', level: 5, amt: 175.4 },
+      { name: 'Drew H.', level: 4, amt: 140.0 },
+      { name: 'Taylor B.', level: 3, amt: 98.6 },
+      { name: 'Jamie F.', level: 2, amt: 64.1 },
+      { name: 'Avery S.', level: 1, amt: 32.0 },
+      { name: 'Quinn R.', level: 1, amt: 18.5 }
+    ],
+    []
+  )
+
+  const plans = useMemo(
+    () => [
+      { icon: '💰', name: 'Basic', price: 5, daily: 0.15, tasks: 'Watch 5 ads daily', direct: 1.0, indirect: 0.25 },
+      { icon: '🚀', name: 'Standard', price: 10, daily: 0.35, tasks: 'Watch 8 ads daily', direct: 2.0, indirect: 0.5 },
+      { icon: '💎', name: 'Diamond', price: 25, daily: 1.0, tasks: 'Watch 10 ads daily', direct: 5.0, indirect: 1.25, featured: true },
+      { icon: '⭐', name: 'Pro', price: 50, daily: 2.1, tasks: 'Watch 12 ads daily', direct: 10.0, indirect: 2.5 },
+      { icon: '👑', name: 'Premium', price: 100, daily: 4.5, tasks: 'Watch 15 ads daily', direct: 20.0, indirect: 5.0 },
+      { icon: '🏆', name: 'Legend', price: 250, daily: 12.0, tasks: 'Watch 20 ads daily', direct: 50.0, indirect: 12.5 }
+    ],
+    []
+  )
+
+  const products = useMemo(
+    () => [
+      { icon: '👟', name: 'Cherry loafers', desc: 'Premium edition loafers', price: 'Rs 3,000' },
+      { icon: '🎧', name: 'Wireless earbuds', desc: 'Noise-isolating, 20h battery', price: 'Rs 4,500' },
+      { icon: '⌚', name: 'Classic watch', desc: 'Stainless steel, water resistant', price: 'Rs 6,200' },
+      { icon: '🎒', name: 'Travel backpack', desc: 'Weatherproof, 30L capacity', price: 'Rs 3,800' }
+    ],
+    []
+  )
+
+  const spinPrizes = useMemo(
+    () => [
+      { label: '$2 Cash', icon: '💵', color: '#caa84d' },
+      { label: '$3 Cash', icon: '💵', color: '#d08a28' },
+      { label: 'Smartwatch', icon: '⌚', color: '#6b63e6' },
+      { label: '$3 Cash', icon: '💵', color: '#d08a28' },
+      { label: 'Laptop', icon: '💻', color: '#5aa17a' },
+      { label: '$2 Cash', icon: '💵', color: '#d08a28' },
+      { label: 'AirPods', icon: '🎧', color: '#7b56e8' },
+      { label: '$3 Cash', icon: '💵', color: '#d08a28' },
+      { label: 'Diamond Ring', icon: '💍', color: '#d34588' },
+      { label: '$2 Cash', icon: '💵', color: '#d08a28' },
+      { label: 'Tour Package', icon: '✈️', color: '#58a0c7' },
+      { label: '$3 Cash', icon: '💵', color: '#c54d3f' }
+    ],
+    []
+  )
+
+  const spinGradient = useMemo(
+    () => `conic-gradient(${spinPrizes.map((prize, index) => `${prize.color} ${index * 30}deg ${(index + 1) * 30}deg`).join(', ')})`,
+    [spinPrizes]
+  )
+
+  const levels = useMemo(
+    () =>
+      Array.from({ length: 50 }, (_, index) => {
+        const level = index + 1
+        const isMilestone = level % 10 === 0
+        const membersRequired = level === 1 ? 2 : level < 10 ? level + 1 : level
+
+        return {
+          level,
+          isMilestone,
+          membersRequired,
+          rewardLabel: isMilestone ? `$${level * 10} + prize pack` : null,
+          salaryLabel: isMilestone ? `$${level * 10} monthly salary` : null
+        }
+      }),
+    []
+  )
+
+  const levelBadgeClass = (level) => {
+    const palette = ['level-blue', 'level-green', 'level-red', 'level-amber', 'level-gold']
+    return palette[(level - 1) % palette.length]
   }
 
-  // Cache for user data to prevent unnecessary reloads
-  const [lastLoadTime, setLastLoadTime] = useState(0);
-  
-  // Load user data and current plan from database
-  const loadUserData = async (forceRefresh = false) => {
-    // Prevent multiple simultaneous loads
-    const now = Date.now();
-    if (!forceRefresh && now - lastLoadTime < 5000) { // 5 second cache
-      console.log('Skipping loadUserData - too recent');
-      return;
-    }
-    setLastLoadTime(now);
-    try {
-      setIsLoading(true);
-      console.log('loadUserData called - fetching user data...');
-      
-      // Load user data and all other data in parallel for maximum performance
-      const user = await getCurrentUser(true); // Force refresh from database
-      console.log('User data fetched:', user);
-      
-      if (user) {
-        setUserData(user);
-        setUserBalance(user.balance || 0);
-        setEarnBalance(user.earnBalance || 0);
-        setTotalRecharge(user.totalRecharge || 0);
-        // Don't override team commission from user data - let team API set it
-        // setReferralCommission(user.referralCommission || 0);
-        // setTotalCommissionEarned(user.totalCommissionEarned || 0);
-        
-        console.log('User data loaded (team commission will be set by team API):', {
-          balance: user.balance || 0,
-          earnBalance: user.earnBalance || 0,
-          totalRecharge: user.totalRecharge || 0
-        });
-        
-        // Check if user has signup bonus and hasn't seen the popup yet
-        if (user.signupBonus && user.signupBonus > 0) {
-          const hasSeenSignupPopup = sessionStorage.getItem(`signupPopupSeen_${user.phone}`);
-          console.log('Signup bonus check:', {
-            userPhone: user.phone,
-            signupBonus: user.signupBonus,
-            hasSeenSignupPopup: hasSeenSignupPopup,
-            willShowPopup: !hasSeenSignupPopup
-          });
-          
-          if (!hasSeenSignupPopup && !showSignupBonusModal) {
-            // Mark as seen immediately to prevent multiple popups
-            sessionStorage.setItem(`signupPopupSeen_${user.phone}`, 'true');
-            console.log('Setting signup popup as seen for:', user.phone);
-            
-            setTimeout(() => {
-              setShowSignupBonusModal(true);
-            }, 1000); // Show popup after 1 second
-          }
-        }
-        console.log('User data set in state:', {
-          balance: user.balance || 0,
-          earnBalance: user.earnBalance || 0,
-          totalRecharge: user.totalRecharge || 0
-          // Team commission will be set by team API
-        });
-        
-        // Load ALL data in parallel for maximum performance
-        const timestamp = Date.now(); // Add timestamp to prevent caching
-        const [investmentsResponse, plansResponse, teamResponse, imagesResponse] = await Promise.all([
-          fetch(`/api/user/investments?active=true&userId=${user.phone}&_t=${timestamp}`),
-          fetch(`/api/plans?_t=${timestamp}`),
-          fetch(`/api/user/team?userId=${user.phone}&_t=${timestamp}`),
-          fetch('/api/admin/images')
-        ]);
-        
-        // Process investments
-        if (investmentsResponse.ok) {
-          const investments = await investmentsResponse.json()
-          console.log('Raw investments from API:', investments)
-          
-          if (investments && investments.length > 0) {
-            console.log('Active investments found:', investments)
-            
-            let plans = [];
-            if (plansResponse.ok) {
-              plans = await plansResponse.json()
-              console.log('Available plans:', plans)
-            }
-            
-            // Process each investment and merge with plan template data
-            const completePlans = investments.map(investment => {
-              const planTemplate = plans.find(plan => plan.name === investment.planName)
-              if (planTemplate) {
-                return {
-                  ...investment,
-                  image: planTemplate.image,
-                  color: planTemplate.color,
-                  description: planTemplate.description
-                }
-              } else {
-                return investment
-              }
-            })
-            
-            console.log('Complete plans with images:', completePlans)
-            setCurrentPlans(completePlans)
-          } else {
-            console.log('No active investments found')
-            setCurrentPlans([])
-          }
-        } else {
-          console.log('Failed to fetch investments')
-          setCurrentPlans([])
-        }
-        
-        // Process team commission data
-        if (teamResponse.ok) {
-          const teamData = await teamResponse.json()
-          console.log('Team data loaded in parallel:', teamData)
-          
-          // Always set team commission, even if 0, to ensure it's displayed
-          debugSetReferralCommission(teamData.totalTeamEarnings || 0, 'team API parallel load');
-          setTotalCommissionEarned(teamData.totalTeamEarnings || 0);
-          console.log('Team commission set from team API:', teamData.totalTeamEarnings || 0);
-          
-          // Don't add team commission to balance - it's already included in user.balance from database
-          // The team commission is stored separately and should only be displayed, not added to balance
-          console.log('Team commission loaded (not added to balance):', teamData.totalTeamEarnings || 0);
-        } else {
-          console.log('Team API failed, setting commission to 0');
-          debugSetReferralCommission(0, 'team API failed');
-          setTotalCommissionEarned(0);
-        }
-        
-        // Process carousel images from database
-        if (imagesResponse.ok) {
-          const imagesData = await imagesResponse.json()
-          if (imagesData.success && imagesData.images) {
-            const newCarouselImages = { ...carouselImages }
-            Object.keys(imagesData.images).forEach(imageName => {
-              newCarouselImages[imageName] = imagesData.images[imageName].data
-            })
-            setCarouselImages(newCarouselImages)
-            console.log('Carousel images loaded from database')
-          }
-        } else {
-          console.log('Failed to load carousel images, using defaults')
-        }
-      }
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const showToast = (msg) => {
+    setToast(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(''), 2600)
+  }
 
-  useEffect(() => {
-    loadUserData()
-  }, []) // Load once on mount
-
-  // Remove automatic team commission refresh to prevent disappearing
-  // useEffect(() => {
-  //   if (userData?.phone && referralCommission === 0) {
-  //     setTimeout(() => {
-  //       handleRefreshTeamCommission()
-  //     }, 3000)
-  //   }
-  // }, [userData?.phone, referralCommission])
-
-  // Load payment details from database
-  useEffect(() => {
-    const loadPaymentDetails = async () => {
-      try {
-        // Set default payment details immediately for faster UI
-        const defaultPaymentDetails = {
-                  easypaisa: { number: '0300 1234567', accountName: 'Neo Earner' },
-        jazzcash: { number: '0300 7654321', accountName: 'Neo Earner' }
-        }
-        setPaymentDetails(defaultPaymentDetails)
-        
-        // Then try to load from database (non-blocking)
-        const response = await fetch('/api/settings?key=paymentDetails')
-        if (response.ok) {
-          const data = await response.json()
-          if (data && data.value) {
-            setPaymentDetails(data.value)
-          } else {
-            // Save default to database (non-blocking)
-            fetch('/api/settings', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                key: 'paymentDetails',
-                value: defaultPaymentDetails,
-                description: 'Payment method details'
-              })
-            }).catch(err => console.error('Error saving default payment details:', err))
-          }
-        }
-      } catch (error) {
-        console.error('Error loading payment details:', error)
-        // Keep default payment details if loading fails
-      }
-    }
-
-    loadPaymentDetails()
+  useLayoutEffect(() => {
+    const storedProfile = loadStoredProfile()
+    setProfile(storedProfile)
+    setProfileDraft(storedProfile)
+    if (storedProfile.name) setCoName(storedProfile.name)
+    profileReady.current = true
   }, [])
-  
-  // Daily income system - check and add daily income every 24 hours
-  useEffect(() => {
-    if (!userData || currentPlans.length === 0) return
-    
-    const checkAndAddDailyIncome = async () => {
-      try {
-        // Check daily income for all active plans
-        for (const plan of currentPlans) {
-          const response = await fetch(`/api/user/balance`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              operation: 'check_daily_income',
-              userId: userData.phone,
-              planId: plan._id
-            })
-          })
 
-          if (response.ok) {
-            const result = await response.json()
-            if (result.incomeAdded) {
-              setEarnBalance(result.newEarnBalance)
-              setUserBalance(result.newBalance)
-              showSuccess(`Daily income of ${result.incomeAmount} Rs added from ${plan.planName}`)
-            } else if (result.hoursRemaining) {
-              // Check if user has already seen this popup today
-              const today = new Date().toDateString()
-              const hasSeenDailyIncomePopup = sessionStorage.getItem(`dailyIncomePopupSeen_${userData.phone}_${today}`)
-              
-              if (!hasSeenDailyIncomePopup) {
-                // Show info about time remaining until first income (only once per day)
-                showInfo(`First daily income will be added in ${result.hoursRemaining} hours`)
-                // Remember that user has seen this popup today
-                sessionStorage.setItem(`dailyIncomePopupSeen_${userData.phone}_${today}`, 'true')
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error checking daily income:', error)
-      }
+  useEffect(() => {
+    const savedSpinAngle = localStorage.getItem('hmh-spin-angle')
+    const savedSpinResult = localStorage.getItem('hmh-spin-result')
+    if (savedSpinAngle) {
+      const parsedAngle = Number(savedSpinAngle) || 0
+      spinAngleRef.current = parsedAngle
+      setSpinAngle(parsedAngle)
     }
-    
-    // Check immediately when component mounts
-    checkAndAddDailyIncome()
-    
-    // Set up interval to check every hour (in case user keeps the page open)
-    const dailyIncomeInterval = setInterval(checkAndAddDailyIncome, 60 * 60 * 1000) // Check every hour
-    
+    if (savedSpinResult) setSpinResult(savedSpinResult)
+
     return () => {
-      clearInterval(dailyIncomeInterval)
+      if (toastTimer.current) clearTimeout(toastTimer.current)
+      if (spinTimer.current) clearInterval(spinTimer.current)
     }
-  }, [userData, currentPlans, showSuccess])
-  
-  // Check if plan is expired based on validity period
-  const isPlanExpired = (plan) => {
-    if (!plan || !plan.investDate) return false
-    
-    const investDate = new Date(plan.investDate)
-    const currentDate = new Date()
-    
-    // Parse validity period - handle both "15" and "15 days" formats
-    let validityDays
-    if (typeof plan.validity === 'number') {
-      validityDays = plan.validity
-    } else if (typeof plan.validity === 'string') {
-      const validityMatch = plan.validity.match(/(\d+)\s*days?/i)
-      if (validityMatch) {
-        validityDays = parseInt(validityMatch[1])
-      } else {
-        // Try to parse as just a number
-        validityDays = parseInt(plan.validity)
-      }
-    } else {
-      return false
-    }
-    
-    if (isNaN(validityDays)) return false
-    
-    const expirationDate = new Date(investDate.getTime() + (validityDays * 24 * 60 * 60 * 1000))
-    
-    return currentDate > expirationDate
-  }
+  }, [])
 
-  // Get remaining days for current plan
-  const getRemainingDays = (plan) => {
-    if (!plan || !plan.investDate) {
-      console.log('getRemainingDays: No plan or investDate')
-      return 0
-    }
-    
-    const investDate = new Date(plan.investDate)
-    const currentDate = new Date()
-    
-    // Parse validity period - handle both "15" and "15 days" formats
-    let validityDays
-    if (typeof plan.validity === 'number') {
-      validityDays = plan.validity
-    } else if (typeof plan.validity === 'string') {
-      const validityMatch = plan.validity.match(/(\d+)\s*days?/i)
-      if (validityMatch) {
-        validityDays = parseInt(validityMatch[1])
-      } else {
-        // Try to parse as just a number
-        validityDays = parseInt(plan.validity)
-      }
-    } else {
-      console.log('getRemainingDays: Invalid validity format:', plan.validity)
-      return 0
-    }
-    
-    if (isNaN(validityDays)) {
-      console.log('getRemainingDays: Could not parse validity days:', plan.validity)
-      return 0
-    }
-    
-    const expirationDate = new Date(investDate.getTime() + (validityDays * 24 * 60 * 60 * 1000))
-    
-    const remainingTime = expirationDate.getTime() - currentDate.getTime()
-    const remainingDays = Math.ceil(remainingTime / (24 * 60 * 60 * 1000))
-    
-    const result = Math.max(0, remainingDays)
-    
-    // Debug logging
-    console.log('getRemainingDays calculation:', {
-      planName: plan.planName,
-      investDate: investDate.toISOString(),
-      validity: plan.validity,
-      validityDays,
-      expirationDate: expirationDate.toISOString(),
-      currentDate: currentDate.toISOString(),
-      remainingTime,
-      remainingDays: result
-    })
-    
-    return result
-  }
-
-  // Update remaining days when current plans change
   useEffect(() => {
-    if (currentPlans.length > 0) {
-      // Check if any plan is expired
-      const expiredPlans = currentPlans.filter(plan => isPlanExpired(plan))
-      if (expiredPlans.length > 0) {
-        showWarning('Some of your investment plans have expired')
-      }
-    } else {
-      setRemainingDays(0)
-    }
-  }, [currentPlans, showWarning])
+    if (!profileSaved) return
+    const timer = setTimeout(() => setProfileSaved(false), 2200)
+    return () => clearTimeout(timer)
+  }, [profileSaved])
 
-  // Calculate income based on current plan and team
-  const calculateIncome = async () => {
-    if (!userData || currentPlans.length === 0) return
-
-    try {
-      // Calculate from all active plans
-      let totalDailyIncome = 0
-      currentPlans.forEach(plan => {
-        const dailyIncomeAmount = parseInvestmentAmount(plan.dailyIncome)
-        totalDailyIncome += dailyIncomeAmount
-      })
-      setTodayIncome(totalDailyIncome)
-
-      // Don't calculate team income automatically - let team API handle it
-      // This prevents overriding commission that was already loaded
-      console.log('Daily income calculated, skipping team commission calculation to prevent override')
-    } catch (error) {
-      console.error('Error calculating income:', error)
-    }
-  }
-
-  // Refresh balance when userData changes
   useEffect(() => {
-    if (userData) {
-      calculateIncome()
-    }
-  }, [userData, currentPlans])
-  
-  // Update remaining days display periodically
+    if (typeof window === 'undefined' || !profileReady.current) return
+    window.localStorage.setItem('hmh-profile', JSON.stringify(profile))
+  }, [profile])
+
   useEffect(() => {
-    if (currentPlans.length === 0) return
-    
-    const updateRemainingDays = () => {
-      // Calculate total remaining days from all plans (for display purposes, show the minimum)
-      const allRemainingDays = currentPlans.map(plan => getRemainingDays(plan))
-      const minRemainingDays = Math.min(...allRemainingDays)
-      setRemainingDays(minRemainingDays)
-      console.log(`Plans: ${currentPlans.length}, Min Days Left: ${minRemainingDays}`)
-    }
-    
-    // Update immediately
-    updateRemainingDays()
-    
-    // Update every minute to keep days left accurate
-    const interval = setInterval(updateRemainingDays, 60 * 1000)
-    
-    return () => {
-      clearInterval(interval)
-    }
-  }, [currentPlans])
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem('hmh-spin-angle', String(spinAngle))
+    window.localStorage.setItem('hmh-spin-result', spinResult)
+  }, [spinAngle, spinResult])
 
-  const nextCarSlide = () => {
-    setCurrentCarSlide((prev) => (prev + 1) % totalCarSlides)
-  }
-
-  const previousCarSlide = () => {
-    setCurrentCarSlide((prev) => (prev - 1 + totalCarSlides) % totalCarSlides)
-  }
-
-  const handleRecharge = () => {
-    setShowRechargeModal(true)
-  }
-
-  const handleWithdraw = () => {
-    setShowWithdrawModal(true)
-  }
-
-  const handleTelegram = () => {
-    // Open Telegram channel link
-    window.open('https://t.me/HondaCivicCar', '_blank')
-            showInfo('Opening Neo Earner Telegram channel...')
-  }
-
-  const handleWhatsApp = () => {
-    // Open WhatsApp channel link
-    window.open('https://whatsapp.com/channel/0029VbBRj5B1yT2Coj35e92J', '_blank')
-            showInfo('Opening Neo Earner WhatsApp channel...')
-  }
-  
-  const handleCoupon = () => {
-    // Don't override userBalance - it already includes team commission
-    // The modal will use the current userBalance which is correct
-    console.log('Opening coupon modal with current userBalance:', userBalance) // Debug log
-    setShowCouponModal(true)
-  }
-
-  const handleSignupBonusClose = () => {
-    if (userData) {
-      // Mark that user has seen the signup bonus popup
-      sessionStorage.setItem(`signupPopupSeen_${userData.phone}`, 'true')
-      console.log('Signup bonus popup closed and marked as seen for:', userData.phone);
-    }
-    setShowSignupBonusModal(false)
-  }
-
-  const handleRechargeSubmit = async () => {
-    if (!rechargeAmount || parseFloat(rechargeAmount) <= 0) {
-      showError('Please enter a valid amount')
-      return
-    }
-
-    const amount = parseFloat(rechargeAmount)
-    
-    // Check minimum recharge limit
-    if (amount < 1000) {
-      showError('Minimum recharge amount is Rs 1000')
-      return
-    }
-
-    if (!userData) {
-      showError('Please log in to recharge')
-      return
-    }
-
+  const goTo = (id) => {
+    setPage(id)
+    setSidebarOpen(false)
+    setBellOpen(false)
     try {
-      await updateUserBalance(userData.phone, 'recharge', {
-        amount: amount,
-        paymentMethod: selectedPaymentMethod === 'easypaisa' ? 'EasyPaisa' : 'JazzCash',
-        paymentNumber: paymentDetails[selectedPaymentMethod].number,
-        paymentAccountName: paymentDetails[selectedPaymentMethod].accountName,
-        transactionId: transactionId.trim()
+      window.scrollTo(0, 0)
+    } catch {}
+  }
+
+  const topbarTitle = NAV.find((n) => n.id === page)?.label ?? 'HMHProEarn'
+
+  const submitWithdrawal = () => {
+    if (!wdAmount || !wdMethod || !wdName || !wdAccount) {
+      showToast('Please fill in every field')
+      return
+    }
+    setWithdrawHistory((prev) => [
+      { id: globalThis.crypto?.randomUUID?.() ?? String(Date.now()), amount: Number(wdAmount), method: wdMethod, status: 'Pending' },
+      ...prev
+    ])
+    setWdAmount('')
+    setWdMethod('')
+    setWdName('')
+    setWdAccount('')
+    showToast('Withdrawal request submitted')
+  }
+
+  const copyRefLink = async () => {
+    const link = 'https://meridian-earn.app/join/alexrivera'
+    try {
+      await navigator.clipboard.writeText(link)
+    } catch {}
+    showToast('Referral link copied')
+  }
+
+  const openCheckout = (p) => {
+    setCheckoutProduct(p)
+    setCheckoutOpen(true)
+  }
+
+  const confirmOrder = () => {
+    if (!coPhone || !coAddress) {
+      showToast('Please add your phone and address')
+      return
+    }
+    setCheckoutOpen(false)
+    setCheckoutProduct(null)
+    showToast('Order placed — this is a preview, no payment was charged')
+  }
+
+  const startSpin = () => {
+    if (spinRunning) return
+    setSpinRunning(true)
+    setSpinResult('Spinning...')
+    if (spinTimer.current) clearInterval(spinTimer.current)
+    spinTimer.current = setInterval(() => {
+      setSpinAngle((current) => {
+        const next = (current + 18) % 360
+        spinAngleRef.current = next
+        return next
       })
-
-      showSuccess(`Recharge request submitted for {amount}. Admin will approve your payment.`)
-      setRechargeAmount('')
-      setTransactionId('')
-      setShowRechargeModal(false)
-      
-      // Refresh user data to update balance display
-      await loadUserData(true)
-    } catch (error) {
-      showError(error.message || 'Recharge request failed')
-    }
+    }, 40)
   }
 
-  const handleWithdrawSubmit = async () => {
-    // Check if user has purchased any investment plan
-    if (currentPlans.length === 0) {
-      showError('❌ Withdrawal Failed!\n\nYou must purchase an investment plan before you can withdraw.\n\nPlease go to the Invest page and buy a plan first.')
-      setShowWithdrawModal(false)
-      return
-    }
+  const stopSpin = () => {
+    if (!spinRunning) return
+    if (spinTimer.current) clearInterval(spinTimer.current)
+    spinTimer.current = null
+    setSpinRunning(false)
 
-    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
-      showError('Please enter a valid amount')
-      return
-    }
+    const normalizedAngle = ((spinAngleRef.current % 360) + 360) % 360
+    const prizeIndex = Math.floor((((360 - normalizedAngle) + 15) % 360) / 30) % spinPrizes.length
+    const prize = spinPrizes[prizeIndex]
+    setSpinResult(prize.label)
+    const finalAngle = spinAngleRef.current + 720 + prizeIndex * 30
+    spinAngleRef.current = finalAngle
+    setSpinAngle(finalAngle)
+    showToast(`Spin stopped on ${prize.label}`)
+  }
 
-    const amount = parseFloat(withdrawAmount)
-    
-    // Check minimum withdrawal limit
-    if (amount < 300) {
-      showError('Minimum withdrawal amount is Rs 300')
-      return
-    }
+  const resetSpin = () => {
+    if (spinTimer.current) clearInterval(spinTimer.current)
+    spinTimer.current = null
+    setSpinRunning(false)
+    setSpinAngle(0)
+    spinAngleRef.current = 0
+    setSpinResult('Locked')
+    showToast('Spin reset')
+  }
 
-    // Check if user has sufficient balance (userBalance already includes team commission)
-    if (amount > userBalance) {
-      showError(`Insufficient balance. Available: Rs${userBalance.toFixed(2)}`)
-      return
-    }
-
-    if (!userData) {
-      showError('Please log in to withdraw')
-      return
-    }
+  const saveProfile = () => {
+    const nextProfile = { ...profileDraft }
+    setProfile(nextProfile)
+    setProfileDraft(nextProfile)
+    setCoName(nextProfile.name || '')
+    setProfileSaved(true)
+    showToast('Profile saved')
 
     try {
-      const withdrawalData = {
-        amount: amount,
-        teamCommission: referralCommission, // Include team commission
-        withdrawalMethod: selectedWithdrawMethod === 'easypaisa' ? 'EasyPaisa' : 'JazzCash',
-        withdrawalNumber: withdrawAccountNumber.trim() || paymentDetails[selectedWithdrawMethod].number,
-        withdrawalAccountName: withdrawAccountName
-      };
-      
-      console.log('Sending withdrawal request:', withdrawalData);
-      
-      const result = await updateUserBalance(userData.phone, 'withdraw', withdrawalData)
-      
-      console.log('Withdrawal response:', result);
-
-      showSuccess(`Withdrawal request submitted for Rs{amount}. Amount has been deducted from your balance. Admin will process your withdrawal.`)
-      setWithdrawAmount('')
-      setWithdrawAccountName('')
-      setShowWithdrawModal(false)
-      
-      // Refresh user data to update balance display
-      await loadUserData(true)
-    } catch (error) {
-      console.error('Withdrawal error:', error);
-      showError(error.message || 'Withdrawal request failed')
-    }
-  }
-
-  const handleNavigation = (page) => {
-    setActiveNav(page)
-    switch(page) {
-      case 'home':
-        // Already on home
-        break
-      case 'invest':
-        router.push('/invest')
-        break
-      case 'team':
-        router.push('/team')
-        break
-      case 'profile':
-        router.push('/profile')
-        break
-    }
-  }
-
-
-
-  const handleCouponRedeem = async () => {
-    if (!couponCode.trim()) {
-      showError('Please enter a coupon code')
-      return
-    }
-
-    if (!userData) {
-      showError('Please log in to redeem coupons')
-      return
-    }
-
-    try {
-      const response = await fetch('/api/coupons/redeem', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          couponCode: couponCode.trim(),
-          userId: userData.phone
-        })
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        // Update local state
-        setEarnBalance(prev => prev + result.bonusAmount)
-        setUserBalance(prev => prev + result.bonusAmount)
-        
-        showSuccess(`🎉 Coupon redeemed successfully! ${result.bonusAmount} Rs added to your earn balance and total balance.`)
-        setCouponCode('')
-        setShowCouponModal(false)
-        
-        // Refresh user data to update balance display
-        await loadUserData(true)
-        
-        // Refresh balance and income after successful redemption
-        if (userData) {
-          calculateIncome()
-        }
-      } else {
-        showError(result.message || 'Coupon redemption failed')
+      const userData = sessionStorage.getItem('userData')
+      if (userData) {
+        const user = JSON.parse(userData)
+        sessionStorage.setItem('userData', JSON.stringify({ ...user, name: nextProfile.name, email: nextProfile.email }))
       }
-    } catch (error) {
-      showError(error.message || 'Coupon redemption failed')
-    }
+    } catch {}
   }
 
-  const handleRefreshTeamCommission = async () => {
-    if (!userData) {
-      showError('Please log in to refresh team commission')
-      return
-    }
+  useEffect(() => {
+    if (page === 'profile') setProfileDraft(profile)
+  }, [page, profile])
 
-    try {
-      showInfo('Refreshing team commission...')
-      
-      // Use team API instead of balance API to get current commission
-      const response = await fetch(`/api/user/team?userId=${userData.phone}`)
+  const avatarInitial = (profile.name || 'A').trim().charAt(0).toUpperCase()
+  const membershipName = profile.name || 'Alex Rivera'
+  const membershipUsername = profile.username || 'alex_rivera'
+  const membershipEmail = profile.email || 'alex.rivera@example.com'
 
-      if (response.ok) {
-        const teamData = await response.json()
-        console.log('Team data refreshed:', teamData)
-        
-        // Update commission from team API
-        const currentCommission = teamData.totalTeamEarnings || 0;
-        
-        // Only update if the commission has actually changed
-        if (currentCommission !== referralCommission) {
-          debugSetReferralCommission(currentCommission, 'handleRefreshTeamCommission from team API');
-          setTotalCommissionEarned(currentCommission);
-        } else {
-          console.log('Commission unchanged, no update needed');
-        }
-        
-        if (currentCommission > 0) {
-          showSuccess(`Team commission refreshed! Current commission: Rs${currentCommission.toFixed(2)}`)
-          
-          console.log('Team commission refreshed:', {
-            currentCommission: currentCommission,
-            currentBalance: userData.balance || 0
-          });
-        } else {
-          showInfo('No team commission available at this time.')
-        }
-        
-        console.log('Team commission refreshed from team API:', teamData)
-      } else {
-        showError('Failed to refresh team commission')
-      }
-    } catch (error) {
-      console.error('Error refreshing team commission:', error)
-      showError('Failed to refresh team commission')
-    }
-  }
-
-  const handleTestTeamCommission = async () => {
-    if (!userData) {
-      showError('Please log in to test team commission')
-      return
-    }
-
-    try {
-      showInfo('Testing team commission calculation...')
-      
-      const response = await fetch('/api/test-team-commission', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: userData.phone
-        })
-      })
-
-      if (response.ok) {
-        const result = await response.json()
-        console.log('Team commission test result:', result)
-        showSuccess(`Test completed! Check console for details. Total potential commission: Rs${result.commissionCalculation.totalTeamIncome.toFixed(2)}`)
-      } else {
-        showError('Failed to test team commission')
-      }
-    } catch (error) {
-      console.error('Error testing team commission:', error)
-      showError('Failed to test team commission')
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading your dashboard...</p>
-          <p className="text-sm text-gray-500 mt-2">Please wait while we fetch your data</p>
-          <div className="mt-4 flex justify-center space-x-1">
-            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const streakDots = useMemo(() => Array.from({ length: 10 }), [])
 
   return (
-    <>
-      <div className="w-full min-h-screen">
-        
-        
-                  {/* Neo Earner Investment Carousel */}
-        <div className="w-full h-[300px]">
-          <div className="relative w-full h-full overflow-hidden">
-            {/* Car Images */}
-            <div className="absolute inset-0 flex transition-transform duration-500 ease-in-out" 
-              style={{ transform: `translateX(-${currentCarSlide * 100}%)` }}>
-              <div className="min-w-full relative">
-                <img 
-                  src={carouselImages['car1.jpeg']} 
-                  alt="Neo Earner Type R" 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = '/car1.jpeg';
-                  }}
-                />
-              </div>
-              <div className="min-w-full relative">
-                <img 
-                  src={carouselImages['car2.jpeg']} 
-                  alt="Neo Earner Sedan" 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = '/car2.jpeg';
-                  }}
-                />
-              </div>
-              <div className="min-w-full relative">
-                <img 
-                  src={carouselImages['car3.jpeg']} 
-                  alt="Neo Earner Hatchback" 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = '/car3.jpeg';
-                  }}
-                />
-              </div>
-              <div className="min-w-full relative">
-                <img 
-                  src={carouselImages['car4.jpeg']} 
-                  alt="Neo Earner Sport" 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = '/car4.jpeg';
-                  }}
-                />
-              </div>
-            </div>
-            
-            {/* Navigation Arrows */}
-            <button 
-              onClick={previousCarSlide}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full p-2 focus:outline-none"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            
-            <button 
-              onClick={nextCarSlide}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full p-2 focus:outline-none"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            
-            {/* Dots Indicator */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-              {[...Array(totalCarSlides)].map((_, i) => (
-                <button 
-                  key={i}
-                  onClick={() => setCurrentCarSlide(i)}
-                  className={`w-2 h-2 rounded-full ${currentCarSlide === i ? 'bg-white' : 'bg-white/50'}`}
-                  aria-label={`Go to slide ${i + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-        
-        {/* Main Content Area with Transparent Background */}
-        <div className="flex-1 bg-transparent relative">
-          {/* Subtle Pattern Overlay */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-10 left-10 w-20 h-20 bg-purple-300 rounded-full"></div>
-            <div className="absolute top-20 right-20 w-16 h-16 bg-purple-200 rounded-full"></div>
-            <div className="absolute bottom-20 left-20 w-12 h-12 bg-purple-300 rounded-full"></div>
-            <div className="absolute bottom-10 right-10 w-24 h-24 bg-purple-200 rounded-full"></div>
-          </div>
-          
-          <div className="relative z-10 px-4 py-6">
-            {/* Action Buttons */}
-            <div className="bg-white rounded-lg p-2 mb-8" style={{ boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px' }}>
-              <div className="flex justify-between gap-3 overflow-x-auto">
-                        <div 
-                onClick={handleRecharge}
-                className="flex-1 bg-purple-600 p-1 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col items-center cursor-pointer overflow-hidden"
-              >
-                <div className="w-full p-1 flex justify-center">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                  </svg>
-                </div>
-                <div className="p-2 text-center">
-                  <span className="font-medium text-white">Recharge</span>
-                </div>
-              </div>
-            
-                        <div 
-                onClick={handleWithdraw}
-                className={`flex-1 p-1 rounded-lg shadow-lg transition-all duration-300 flex flex-col items-center cursor-pointer overflow-hidden ${
-                  currentPlans.length > 0
-                    ? 'bg-purple-600 text-white hover:shadow-xl hover:-translate-y-1' 
-                    : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                }`}
-              >
-                <div className="w-full p-1 flex justify-center">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                </div>
-                <div className="p-2 text-center">
-                  <span className="font-medium">Withdraw</span>
-                  {currentPlans.length === 0 && (
-                    <div className="text-xs mt-1 opacity-75">Plan Required</div>
-                  )}
-                </div>
-              </div>
-            
-                        <div 
-                onClick={handleTelegram}
-                className="flex-1 bg-purple-600 p-1 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col items-center cursor-pointer overflow-hidden"
-              >
-                <div className="w-full p-1 flex justify-center">
-                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                  </svg>
-                </div>
-                <div className="p-2 text-center">
-                  <span className="font-medium text-white">Help</span>
-                </div>
-              </div>
-            
-              <div 
-                onClick={handleCoupon}
-                className="flex-1 bg-purple-600 p-1 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col items-center cursor-pointer overflow-hidden"
-              >
-                <div className="w-full p-1 flex justify-center">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                  </svg>
-                </div>
-                <div className="p-2 text-center">
-                  <span className="font-medium text-white">Redeem</span>
-                </div>
-              </div>
-          </div>
-            </div>
-        
-                  {/* Live Withdrawals */}
-          <div className="bg-white rounded-full mb-8" style={{ boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px' }}>
-            <div className="flex items-center p-2">
-              <div className="bg-purple-500 rounded-full p-2 mr-3">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                </svg>
-              </div>
-              <div className="overflow-hidden flex-1">
-                <div className="animate-scroll whitespace-nowrap text-black font-medium">
-                  <span className="mr-8">✅ Rs 798 0335****9054 Withdraw Success</span>
-                  <span className="mr-8">✅ Rs 1,250 0300****567 Withdraw Success</span>
-                  <span className="mr-8">✅ Rs 850 0301****234 Withdraw Success</span>
-                  <span className="mr-8">✅ Rs 2,100 0302****789 Withdraw Success</span>
-                  <span className="mr-8">✅ Rs 798 0335****9054 Withdraw Success</span>
-                  <span className="mr-8">✅ Rs 1,250 0300****567 Withdraw Success</span>
-                  <span className="mr-8">✅ Rs 850 0301****234 Withdraw Success</span>
-                  <span className="mr-8">✅ Rs 2,100 0302****789 Withdraw Success </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Account Balance Cards */}
-          <div className="flex gap-4 mb-6">
-            {/* Account Balance - Large Card */}
-            <div className="flex-1 bg-white rounded-lg p-4 text-purple-900 relative overflow-hidden" style={{ boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px' }}>
-              <div className="absolute top-0 right-0 w-20 h-20 bg-purple-200 rounded-full -translate-y-10 translate-x-10 opacity-30"></div>
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium opacity-90">Account balance</p>
-                  <button
-                    onClick={() => loadUserData(true)}
-                    className="text-purple-600 hover:text-purple-700 transition-colors"
-                    title="Refresh balance"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  </button>
-                </div>
-                <p className="text-2xl font-bold mt-1">Rs{totalBalance.toFixed(2)}</p>
-                {referralCommission > 0 && (
-                  <p className="text-xs text-green-600 mt-1 font-medium">✅ Balance includes team commission</p>
-                )}
-              </div>
-            </div>
-            
-            {/* Right Side Cards */}
-            <div className="flex flex-col gap-4 w-1/3">
-              {/* Earn Balance */}
-              <div className="bg-white rounded-lg p-3 text-purple-900 relative overflow-hidden" style={{ boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px' }}>
-                <div className="absolute top-0 right-0 w-12 h-12 bg-purple-200 rounded-full -translate-y-6 translate-x-6 opacity-30"></div>
-                <div className="relative z-10">
-                  <p className="text-xs font-medium opacity-90">Earn Balance</p>
-                  <p className="text-lg font-bold mt-1">Rs{earnBalance.toFixed(2)}</p>
-                  <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
-                    <p className="text-xs text-green-700 font-medium">💰 Team Commission</p>
-                    <p className="text-sm font-bold text-green-600">Rs{referralCommission.toFixed(2)}</p>
-                    <p className="text-xs text-green-600 mt-1 font-medium">✅ WITHDRAWABLE NOW</p>
-                    <p className="text-xs text-green-500">Already in account balance</p>
-                  </div>
-                </div>
-              </div>
-              
+    <div className="meridian">
+      <div className="app">
+        <div className={`overlay ${sidebarOpen ? 'show' : ''}`} onClick={() => setSidebarOpen(false)} />
 
-              
-              {/* Total Recharge */}
-              <div className="bg-white rounded-lg p-3 text-purple-900 relative overflow-hidden" style={{ boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px' }}>
-                <div className="absolute top-0 right-0 w-12 h-12 bg-purple-200 rounded-full -translate-y-6 translate-x-6 opacity-30"></div>
-                <div className="relative z-10">
-                  <p className="text-xs font-medium opacity-90">Total Recharge</p>
-                  <p className="text-lg font-bold mt-1">Rs{totalRecharge.toFixed(2)}</p>
+        <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+          <div className="brand">
+            <div className="brand-mark">M</div>
+            <div>
+              <div className="brand-name">HMHProEarn</div>
+              <div className="brand-sub">Earn · Rise · Repeat</div>
+            </div>
+            <button className="sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Close menu">
+              ×
+            </button>
+          </div>
+
+          <nav className="nav">
+            {NAV.map((item) => (
+              <a
+                key={item.id}
+                href="#"
+                className={`nav-item ${page === item.id ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault()
+                  goTo(item.id)
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d={item.icon} />
+                </svg>
+                <span>{item.label}</span>
+              </a>
+            ))}
+
+            <div className="nav-divider" />
+
+            <a
+              href="#"
+              className="nav-item"
+              style={{ color: 'var(--red)' }}
+              onClick={(e) => {
+                e.preventDefault()
+                showToast('Logged out (preview mode)')
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+              </svg>
+              <span>Logout</span>
+            </a>
+          </nav>
+        </aside>
+
+        <div className="main">
+          <div className="topbar">
+            <button className="hamburger" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 6h18M3 12h18M3 18h18" />
+              </svg>
+            </button>
+
+            <div className="topbar-title">{topbarTitle}</div>
+
+            <div className="bell-wrap">
+              <button className="bell" onClick={() => setBellOpen((v) => !v)} aria-label="Notifications">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                  <path d="M10 21a2 2 0 0 0 4 0" />
+                </svg>
+                <span className="dot" />
+              </button>
+
+              <div className={`bell-panel ${bellOpen ? 'show' : ''}`}>
+                <div className="bell-item">
+                  <b>Streak reminder</b>
+                  <br />
+                  Invite a member today to keep your streak alive.
+                </div>
+                <div className="bell-item">
+                  <b>Leaderboard update</b>
+                  <br />
+                  Top 10 refreshes every 24 hours.
+                </div>
+                <div className="bell-item">
+                  <b>New tier unlocked</b>
+                  <br />
+                  Diamond plan now includes faster withdrawals.
                 </div>
               </div>
             </div>
           </div>
-          
-          {/* Team Commission Section */}
-          <div className="bg-white rounded-lg p-6 mb-6" style={{ boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px' }}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-purple-900 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Team Commission
-              </h3>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleRefreshTeamCommission}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center"
-                >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Refresh
-                </button>
-                <button
-                  onClick={() => handleNavigation('team')}
-                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center"
-                >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  View Team
-                </button>
-                <button
-                  onClick={handleTestTeamCommission}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
-                  title="Test team commission calculation"
-                >
-                  Test
-                </button>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              {/* Total Commission Earned */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-green-700 font-medium">Total Commission</p>
-                    <p className="text-xl font-bold text-green-600">Rs{totalCommissionEarned.toFixed(2)}</p>
-                  </div>
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Available Commission */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border-2 border-green-300 shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-green-700 font-medium">💰 Team Commission</p>
-                    <p className="text-2xl font-bold text-green-600">Rs{referralCommission.toFixed(2)}</p>
-                    <p className="text-xs text-green-600 mt-1 font-medium">✅ WITHDRAWABLE NOW</p>
-                    <p className="text-xs text-green-500 mt-1">Added to your account balance</p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Commission Rate */}
-              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-purple-700 font-medium">Commission Rate</p>
-                    <p className="text-xl font-bold text-purple-600">16%</p>
-                    <p className="text-xs text-purple-600">Level A Only</p>
-                  </div>
-                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  </div>
+
+          {/* DASHBOARD */}
+          <section className={`page ${page === 'dashboard' ? 'active' : ''}`}>
+            <div className="card profile-card">
+              <div className="avatar-ring">{avatarInitial}</div>
+              <div className="profile-meta">
+                <div className="eyebrow">Welcome to HMHPro</div>
+                <h2>{profile.name || 'Member'}</h2>
+                <div className="email">{profile.email || '—'}</div>
+                <div className="uid">ID: 7f19c3e2</div>
+                <div className="badge-row">
+                  <span className="badge">Unranked</span>
+                  <span className="badge gold">Level 0</span>
                 </div>
               </div>
             </div>
-            
-            {/* Commission Info */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-blue-800 mb-2">💡 How Team Commission Works:</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-blue-700">
+
+            <div className="stat-grid">
+              <div className="card stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(79,174,130,.12)' }}>💵</div>
                 <div>
-                  <p className="font-medium">Level A (Direct Referrals)</p>
-                  <p>• 16% commission on plan purchases</p>
-                  <p>• Direct team members only</p>
+                  <div className="stat-label">Today's earning</div>
+                  <div className="stat-value">$0.00</div>
                 </div>
               </div>
-              <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
-                <strong>✅ Available for Withdrawal:</strong> Your team commission is already included in your account balance and can be withdrawn anytime!
+              <div className="card stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(91,127,214,.12)' }}>💼</div>
+                <div>
+                  <div className="stat-label">Total earnings</div>
+                  <div className="stat-value">$0.00</div>
+                </div>
+              </div>
+              <div className="card stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(201,160,74,.12)' }}>🎁</div>
+                <div>
+                  <div className="stat-label">My rewards</div>
+                  <div className="stat-value">$0.00</div>
+                </div>
+              </div>
+              <div className="card stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(201,160,74,.12)' }}>📈</div>
+                <div>
+                  <div className="stat-label">My salary</div>
+                  <div className="stat-value">$0.00</div>
+                </div>
+              </div>
+              <div className="card stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(196,87,74,.12)' }}>📤</div>
+                <div>
+                  <div className="stat-label">Total withdrawals</div>
+                  <div className="stat-value">$0.00</div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Refresh Data Button */}
-          <div className="flex justify-end mb-4 gap-2">
-            <button
-              onClick={handleRefreshTeamCommission}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh Commission
-            </button>
-            <button
-              onClick={() => loadUserData(true)}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh Data
-            </button>
-          </div>
-          
-          {/* Your Current Plans Section */}
-        <div className="bg-white rounded-lg p-6 mb-6" style={{ boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px' }}>
-            <h3 className="text-lg font-bold text-purple-900 mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Your Active Plans ({currentPlans.length})
-            </h3>
-            
-            {currentPlans.length > 0 ? (
-              <div className="space-y-4">
-                {currentPlans.map((plan, index) => {
-                  const planRemainingDays = getRemainingDays(plan)
-                  return (
-                    <div key={plan._id || index} className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
-                      {/* Plan Image */}
-                      <div className="relative h-32 mb-4 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
-                        <img 
-                          src={plan.image ? `/${plan.image}` : '/car1.jpeg'} 
-                          alt={plan.planName || 'Plan Image'}
-                          className="h-full w-full object-cover"
-                          onError={(e) => {
-                            console.log('Image failed to load:', plan.image)
-                            console.log('Full image src:', e.target.src)
-                            e.target.src = '/car1.jpeg'
-                          }}
-                          onLoad={() => {
-                            console.log('Image loaded successfully:', plan.image)
-                          }}
-                        />
-                      </div>
-                      
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-lg font-bold text-purple-900">{plan.planName}</h4>
-                        <div className="flex items-center space-x-2">
-                          <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-                            Active
-                          </span>
-                          <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                            planRemainingDays <= 7 
-                              ? 'bg-red-100 text-red-800' 
-                              : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {planRemainingDays} days left
-                          </span>
-                        </div>
-                      </div>
-                      {planRemainingDays <= 7 && planRemainingDays > 0 && (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
-                          <div className="flex items-center">
-                            <svg className="w-4 h-4 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                            </svg>
-                            <p className="text-sm text-yellow-800">
-                              <strong>Plan Expiring Soon!</strong> Your plan will expire in {planRemainingDays} days. Consider renewing or investing in a new plan.
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                      <p className="text-gray-600 text-sm mb-3">{plan.description}</p>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white rounded-lg p-3">
-                          <p className="text-xs text-gray-500">Investment Amount</p>
-                          <p className="font-bold text-lg text-purple-900">{plan.investAmount}</p>
-                        </div>
-                        <div className="bg-white rounded-lg p-3">
-                          <p className="text-xs text-gray-500">Daily Income</p>
-                          <p className="font-bold text-lg text-green-600">{plan.dailyIncome}</p>
-                        </div>
-                      </div>
-                      <div className="mt-3 bg-white rounded-lg p-3">
-                        <p className="text-xs text-gray-500">Validity Period</p>
-                        <p className="font-bold text-lg text-purple-900">{plan.validity}</p>
-                      </div>
-                      
-                      {/* Running Plan Indicator */}
-                      <div className="mt-4">
-                        <div className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-semibold flex items-center justify-center space-x-2">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                          <span>Running Plan</span>
-                        </div>
-                      </div>
+            <div className="card streak-card">
+              <div className="streak-top">
+                <h3>🔥 Referral streak</h3>
+                <span className="streak-pill">Day 0 / 10</span>
+              </div>
+              <div className="dots-row">
+                {streakDots.map((_, i) => (
+                  <div key={i} className="streak-dot" />
+                ))}
+              </div>
+              <div className="streak-note">Start your streak — invite 1 member today.</div>
+              <div className="streak-note">Complete a 10-day streak to earn a $10 bonus reward.</div>
+            </div>
+
+            <div className="card" style={{ marginBottom: 18 }}>
+              <h3 style={{ margin: '0 0 4px' }}>🎁 Mystery boxes</h3>
+              <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
+                Stay in the Top 3 of the leaderboard for 15 days to claim.
+              </p>
+              <div className="mystery-grid">
+                {[
+                  { medal: '🥇', title: 'Top 1 box', sub: 'Best mystery box' },
+                  { medal: '🥈', title: 'Top 2 box', sub: 'Great mystery box' },
+                  { medal: '🥉', title: 'Top 3 box', sub: 'Small mystery box' }
+                ].map((b) => (
+                  <div key={b.title} className="card mystery-card">
+                    <div className="mystery-medal">{b.medal}</div>
+                    <div className="mystery-title">{b.title}</div>
+                    <div className="mystery-sub">{b.sub}</div>
+                    <div className="lock-pill">🔒 Locked · 15-day streak</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="card">
+              <h3 style={{ margin: '0 0 4px' }}>🏆 Top 10 leaderboard</h3>
+              <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
+                Ranked by total earnings.
+              </p>
+              <div>
+                {leaders.map((u, i) => (
+                  <div key={u.name} className={`leader-row ${i < 3 ? `rank${i + 1}` : ''}`}>
+                    <div className="leader-rank">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</div>
+                    <div className="leader-avatar">{u.name[0]}</div>
+                    <div>
+                      <div className="leader-name">{u.name}</div>
+                      <div className="leader-level">Level {u.level}</div>
                     </div>
-                  )
-                })}
+                    <div className="leader-amt">${u.amt.toFixed(2)}</div>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <div className="bg-gray-50 rounded-lg p-6 text-center border-2 border-dashed border-gray-300">
-                <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <h4 className="text-lg font-medium text-gray-600 mb-2">No Active Plans</h4>
-                <p className="text-gray-500 text-sm mb-4">You haven't purchased any investment plans yet.</p>
-                <button 
-                  onClick={() => handleNavigation('invest')}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  Browse Plans
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-        
+            </div>
+          </section>
 
-      </div>
-
-      {/* Recharge Modal */}
-      {showRechargeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 pb-20">
-          <div className="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Recharge Account</h3>
-
-            {/* Amount Input */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Amount (Rs)</label>
-              
-              {/* Predefined Amount Options */}
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                <button
-                  type="button"
-                  onClick={() => setRechargeAmount('1200')}
-                  className={`p-2 border rounded-lg text-black font-semibold text-center transition-colors ${
-                    rechargeAmount === '1200'
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="text-sm font-medium">Rs 1200</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRechargeAmount('2500')}
-                  className={`p-2 border rounded-lg text-black font-semibold text-center transition-colors ${
-                    rechargeAmount === '2500'
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="text-sm font-medium">Rs 2,500</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRechargeAmount('5000')}
-                  className={`p-2 border rounded-lg text-black font-semibold  text-center transition-colors ${
-                    rechargeAmount === '5000'
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="text-sm font-medium">Rs 5,000</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRechargeAmount('10000')}
-                  className={`p-2 border rounded-lg text-black font-semibold text-center transition-colors ${
-                    rechargeAmount === '10000'
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="text-sm font-medium">Rs 10,000</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRechargeAmount('15000')}
-                  className={`p-2 border rounded-lg text-black font-semibold  text-center transition-colors ${
-                    rechargeAmount === '15000'
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="text-sm font-medium">Rs 15,000</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRechargeAmount('20000')}
-                  className={`p-2 border rounded-lg text-black font-semibold text-center transition-colors ${
-                    rechargeAmount === '20000'
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="text-sm font-medium">Rs 20,000</div>
-                </button>
-              </div>
-              
-              <input
-                type="number"
-                value={rechargeAmount}
-                onChange={(e) => setRechargeAmount(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                placeholder="Enter custom amount (min: Rs 1,000)"
-                min="1000"
-                step="0.01"
-              />
-              <p className="text-xs text-gray-500 mt-1">Minimum recharge amount: Rs 1,000</p>
+          {/* WITHDRAW */}
+          <section className={`page ${page === 'withdraw' ? 'active' : ''}`}>
+            <div className="page-head">
+              <h1>Withdraw funds</h1>
+              <p>Move your earnings to your preferred payout method.</p>
             </div>
 
-            {/* Transaction ID Input */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Transaction ID </label>
-              <input
-                type="text"
-                value={transactionId}
-                onChange={(e) => setTransactionId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                placeholder="Enter transaction ID from payment app"
-              />
+            <div className="card balance-strip">
+              <span style={{ color: 'var(--text-dim)', fontSize: 14 }}>Available balance</span>
+              <span className="amt">$0.00</span>
             </div>
 
-            {/* Payment Method Selection */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedPaymentMethod('easypaisa')}
-                  className={`p-3 border rounded-lg text-black font-semibold text-center transition-colors ${
-                    selectedPaymentMethod === 'easypaisa'
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="text-lg text-black font-semibold">EasyPaisa</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedPaymentMethod('jazzcash')}
-                  className={`p-3 border rounded-lg text-center transition-colors ${
-                    selectedPaymentMethod === 'jazzcash'
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="text-lg text-black font-semibold">JazzCash</div>
+            <div className="card" style={{ marginBottom: 18 }}>
+              <h3 style={{ margin: '0 0 4px' }}>New withdrawal</h3>
+              <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 12.5 }}>Max: $0.00</p>
+
+              <label>Amount ($)</label>
+              <input type="number" value={wdAmount} onChange={(e) => setWdAmount(e.target.value)} placeholder="Enter amount" />
+
+              <label>Payment method</label>
+              <select value={wdMethod} onChange={(e) => setWdMethod(e.target.value)}>
+                <option value="">Select payment method</option>
+                <option>Bank transfer</option>
+                <option>Mobile wallet</option>
+                <option>Card</option>
+              </select>
+
+              <label>Account holder name</label>
+              <input value={wdName} onChange={(e) => setWdName(e.target.value)} placeholder="Account holder name" />
+
+              <label>Account number</label>
+              <input value={wdAccount} onChange={(e) => setWdAccount(e.target.value)} placeholder="Enter account number" />
+
+              <div style={{ marginTop: 18 }}>
+                <button className="btn btn-gold" onClick={submitWithdrawal}>
+                  Submit withdrawal
                 </button>
               </div>
             </div>
 
-            {/* Payment Details */}
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Payment Details</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-xl text-gray-600">Account Number:</span>
-                  <span className="text-xl font-medium text-gray-800">
-                    {paymentDetails[selectedPaymentMethod].number}
-                  </span>
-                </div>
-              </div>
-              <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-                💡 Send the exact amount to the account above. Include your phone number in the payment note.
-              </div>
-            </div>
-
-            <div className="flex space-x-3">
-              <button
-                onClick={handleRechargeSubmit}
-                className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors"
-              >
-                Submit Request
-              </button>
-              <button
-                onClick={() => setShowRechargeModal(false)}
-                className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-400 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Withdraw Modal */}
-      {showWithdrawModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 pb-20">
-          <div className="bg-white rounded-xl p-4 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-gray-800 mb-3">Withdraw Funds</h3>
-            
-            {/* Available Balance */}
-            <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-800">
-                <span className="font-semibold">Available Balance:</span> Rs{userBalance.toFixed(2)}
-              </p>
-              <p className="text-xs text-green-700 mt-1">
-                <span className="font-medium">Includes:</span> Daily income + Team commission + Recharge amount
-              </p>
-              {referralCommission > 0 && (
-                <p className="text-xs text-green-600 mt-1">
-                  <span className="font-medium">Team Commission:</span> Rs{referralCommission.toFixed(2)} (withdrawable)
-                </p>
+            <div className="card">
+              <h3 style={{ margin: '0 0 14px' }}>Withdrawal history</h3>
+              {withdrawHistory.length === 0 ? (
+                <div className="empty-state">No withdrawals yet. Once you request one, it'll show up here.</div>
+              ) : (
+                withdrawHistory.map((h) => (
+                  <div key={h.id} className="history-row">
+                    <span>
+                      ${Number(h.amount).toFixed(2)} · {h.method}
+                    </span>
+                    <span className="history-status status-pending">{h.status}</span>
+                  </div>
+                ))
               )}
             </div>
+          </section>
 
-            {/* Amount Input */}
-            <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Withdrawal Amount (Rs)</label>
-              <input
-                type="number"
-                value={withdrawAmount}
-                onChange={(e) => setWithdrawAmount(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                placeholder="Enter amount (min: Rs 300)"
-                min="300"
-                max={userBalance}
-                step="0.01"
-              />
-              <p className="text-xs text-gray-500 mt-1">Minimum withdrawal amount: Rs 300</p>
+          {/* NETWORK (direct + indirect only) */}
+          <section className={`page ${page === 'network' ? 'active' : ''}`}>
+            <div className="page-head">
+              <h1>My network</h1>
+              <p>Grow your team to unlock higher tiers and bonuses.</p>
             </div>
 
-            {/* Withdrawal Fee Warning */}
-            {withdrawAmount > 0 && (
-              <div className="mb-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                <div className="flex items-center mb-1">
-                  <svg className="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                  <span className="text-sm font-medium text-orange-800">Withdrawal Fee: 25%</span>
-                </div>
-                <div className="text-xs text-orange-700 space-y-1">
-                  <div className="flex justify-between">
-                    <span>Requested Amount:</span>
-                    <span>Rs{parseFloat(withdrawAmount || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Fee (25%):</span>
-                    <span className="text-red-600">-Rs{(parseFloat(withdrawAmount || 0) * 0.25).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between font-medium">
-                    <span>You'll Receive:</span>
-                    <span className="text-green-600">Rs{(parseFloat(withdrawAmount || 0) * 0.75).toFixed(2)}</span>
-                  </div>
+            <div className="stat-pair">
+              <div className="card stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(201,160,74,.12)' }}>👤</div>
+                <div>
+                  <div className="stat-label">Direct referrals</div>
+                  <div className="stat-value">0</div>
                 </div>
               </div>
-            )}
+              <div className="card stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(91,127,214,.12)' }}>🔗</div>
+                <div>
+                  <div className="stat-label">Indirect referrals</div>
+                  <div className="stat-value">0</div>
+                </div>
+              </div>
+            </div>
 
-            {/* Withdrawal Method Selection */}
-            <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Withdrawal Method</label>
-              <div className="grid grid-cols-2 gap-2">
-                                <button
-                  type="button"
-                  onClick={() => setSelectedWithdrawMethod('easypaisa')}
-                  className={`p-2 border rounded-lg text-center transition-colors ${
-                    selectedWithdrawMethod === 'easypaisa'
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
-                      : 'border-gray-300 hover:border-gray-400'
-                }`}
+            <div className="card" style={{ marginBottom: 18 }}>
+              <label style={{ marginTop: 0 }}>Your referral link</label>
+              <div className="link-row">
+                <input type="text" value="https://meridian-earn.app/join/alexrivera" readOnly />
+                <button onClick={copyRefLink}>Copy</button>
+              </div>
+            </div>
+
+            <div className="card" style={{ marginBottom: 18 }}>
+              <h3 style={{ margin: '0 0 14px' }}>👤 Direct referrals (0)</h3>
+              <div className="empty-state">No direct referrals yet. Share your link to start building your team.</div>
+            </div>
+
+            <div className="card">
+              <h3 style={{ margin: '0 0 14px' }}>🔗 Indirect referrals (0)</h3>
+              <div className="empty-state">No indirect referrals yet — these appear once your direct referrals invite others.</div>
+            </div>
+          </section>
+
+          {/* PLANS */}
+          <section className={`page ${page === 'plans' ? 'active' : ''}`}>
+            <div className="page-head">
+              <h1>Upgrade plan</h1>
+              <p>Choose a plan to start earning daily.</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(230px,1fr))', gap: 16 }}>
+              {plans.map((p) => (
+                <div
+                  key={p.name}
+                  className="card"
+                  style={{
+                    textAlign: 'center',
+                    position: 'relative',
+                    borderColor: p.featured ? 'rgba(201,160,74,.4)' : undefined,
+                    boxShadow: p.featured ? '0 0 0 1px rgba(201,160,74,.15) inset' : undefined
+                  }}
                 >
-                  <div className="text-base text-black font-semibold">EasyPaisa</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedWithdrawMethod('jazzcash')}
-                  className={`p-2 border rounded-lg text-center transition-colors ${
-                    selectedWithdrawMethod === 'jazzcash'
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
-                      : 'border-gray-300 hover:border-gray-400'
-                }`}
-                >
-                  <div className="text-base text-black font-semibold">JazzCash</div>
-                </button>
+                  {p.featured ? (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: -11,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: 'var(--gold)',
+                        color: '#181205',
+                        fontSize: 10.5,
+                        fontWeight: 800,
+                        padding: '3px 10px',
+                        borderRadius: 20,
+                        letterSpacing: '.05em'
+                      }}
+                    >
+                      Most popular
+                    </div>
+                  ) : null}
+                  <div style={{ fontSize: 30, marginBottom: 8 }}>{p.icon}</div>
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>{p.name}</div>
+                  <div
+                    style={{
+                      fontFamily:
+                        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                      fontSize: 26,
+                      color: 'var(--gold-bright)',
+                      fontWeight: 700,
+                      margin: '8px 0 2px'
+                    }}
+                  >
+                    ${p.price} <span style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 500 }}>one-time</span>
+                  </div>
+                  <ul style={{ textAlign: 'left', fontSize: 12.8, color: 'var(--text-dim)', margin: '14px 0', padding: 0, listStyle: 'none' }}>
+                    <li style={{ padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>📈 Daily earning: ${p.daily.toFixed(2)}/day</li>
+                    <li style={{ padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>🧩 Tasks: {p.tasks}</li>
+                    <li style={{ padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>👥 Direct referral: ${p.direct.toFixed(2)}</li>
+                    <li style={{ padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>🔗 Indirect referral: ${p.indirect.toFixed(2)}</li>
+                    <li style={{ padding: '5px 0' }}>⚡ Fast withdrawal</li>
+                  </ul>
+                  <button className={`btn ${p.featured ? 'btn-gold' : 'btn-ghost'}`} onClick={() => showToast(`${p.name} plan selected (preview mode)`)}>
+                    Get plan →
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* STORE */}
+          <section className={`page ${page === 'store' ? 'active' : ''}`}>
+            <div className="page-head">
+              <h1>E-commerce</h1>
+                <p>Browse and purchase products with your HMHProEarn balance or card.</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 16 }}>
+              {products.map((p) => (
+                <div key={p.name} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                  <div style={{ height: 150, background: 'linear-gradient(135deg,#2a2116,#171b25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38 }}>
+                    {p.icon}
+                  </div>
+                  <div style={{ padding: 16 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 3 }}>{p.name}</div>
+                    <div style={{ color: 'var(--text-faint)', fontSize: 12, marginBottom: 12 }}>{p.desc}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace', fontWeight: 700, color: 'var(--gold-bright)' }}>
+                        {p.price}
+                      </span>
+                      <button
+                        style={{ background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 12.5 }}
+                        onClick={() => openCheckout(p)}
+                      >
+                        Buy now
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* LEVELS */}
+          <section className={`page ${page === 'levels' ? 'active' : ''}`}>
+            <div className="levels-page">
+              <div className="levels-hero page-head">
+                <h1>Rewards &amp; levels</h1>
+                <p>Track your progress and unlock rewards from level 1 to 50.</p>
               </div>
-            </div>
 
-            {/* Account Details */}
-            <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
-              <input
-                type="text"
-                value={withdrawAccountNumber}
-                onChange={(e) => setWithdrawAccountNumber(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                placeholder="Enter account number"
-              />
-              <p className="text-xs text-gray-500 mt-1">Enter your account number or leave empty to use registered number</p>
-            </div>
+              <div className="levels-summary">
+                <div className="levels-summary-head">
+                  <h3 className="levels-summary-title">
+                    <span className="levels-summary-icon">🏆</span>
+                    <span>Current level</span>
+                  </h3>
+                  <span className="streak-pill">Level 0 / 50</span>
+                </div>
+                <div className="levels-summary-grid">
+                  <div>
+                    <div className="levels-summary-number">0</div>
+                    <div className="levels-summary-sub">0 referrals made</div>
+                  </div>
+                  <div>
+                    <div className="level-bar"><div className="level-bar-fill" style={{ width: '0%' }} /></div>
+                    <div className="levels-summary-footer">
+                      <span className="levels-summary-meta">
+                        <span>Overall progress</span>
+                      </span>
+                      <span>0%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            {/* Account Holder Name */}
-            <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Account Holder Name</label>
-              <input
-                type="text"
-                value={withdrawAccountName}
-                onChange={(e) => setWithdrawAccountName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                placeholder="Enter account holder name"
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">Enter the name registered with your account</p>
-            </div>
-
-            {/* Withdrawal Info */}
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="text-sm font-medium text-blue-800 mb-1">Withdrawal Information:</h4>
-              <ul className="text-xs text-blue-700 space-y-0.5">
-                <li>• Amount will be sent to your {selectedWithdrawMethod === 'easypaisa' ? 'EasyPaisa' : 'JazzCash'} account</li>
-                <li>• Processing time: 5-30 minutes</li>
-                <li>• Make sure account details are correct</li>
-                <li>• Admin will verify and process your withdrawal</li>
-              </ul>
-            </div>
-
-            <div className="flex space-x-3">
-              <button
-                onClick={handleWithdrawSubmit}
-                disabled={!withdrawAccountName.trim() || (!withdrawAccountNumber.trim() && !paymentDetails[selectedWithdrawMethod].number)}
-                className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Submit Withdrawal
-              </button>
-              <button
-                onClick={() => {
-                  setShowWithdrawModal(false)
-                  setWithdrawAccountName('')
-                  setWithdrawAccountNumber('')
-                  setWithdrawAmount('')
-                }}
-                className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-400 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Coupon Modal */}
-      {showCouponModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Redeem Coupon</h3>
-              <p className="text-gray-600 text-sm">Enter your coupon code to get bonus added to both earn balance and total balance!</p>
-            </div>
-
-            {/* Current Balances */}
-            <div className="mb-4 space-y-2">
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800">
-                  <span className="font-semibold">Current Earn Balance:</span> Rs{earnBalance.toFixed(2)}
+              <div className="card levels-rewards-card">
+                <h3 style={{ margin: '0 0 4px' }}>Big rewards await</h3>
+                <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
+                  Major prizes unlock at every 10th milestone.
                 </p>
+                <div className="levels-reward-wall">
+                  {[
+                    { icon: '🎧', title: 'AirPods', level: 4 },
+                    { icon: '💻', title: 'Laptop', level: 20 },
+                    { icon: '📱', title: 'iPhone', level: 30 },
+                    { icon: '💍', title: 'Ring', level: 40 },
+                    { icon: '🚗', title: 'Car', level: 50 },
+                    { icon: '✈️', title: 'Tour', level: 50 }
+                  ].map((reward) => (
+                    <div key={reward.title} className="reward-tile">
+                      <div className="reward-icon">{reward.icon}</div>
+                      <div className="reward-name">{reward.title}</div>
+                      <div className="reward-level">Lv.{reward.level}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <span className="font-semibold">Current Total Balance:</span> Rs{userBalance.toFixed(2)}
-                </p>
+
+              <div className="level-list">
+                {levels.map((level) => (
+                  <div key={level.level} className={`level-row ${level.isMilestone ? 'milestone' : ''}`}>
+                    <div className={`level-badge ${level.isMilestone ? 'level-gold' : levelBadgeClass(level.level)}`}>
+                      <span>LEVEL</span>
+                      <b>{level.level}</b>
+                    </div>
+                    <div className="level-body">
+                      {level.isMilestone ? <div className="milestone-tag">⭐ Milestone level</div> : null}
+                      <div className="level-req">5 Basic · 2 Standard · 2 Diamond · 2 Pro · 2 Premium · 2 Legend · {level.membersRequired} members required</div>
+                      <div className="level-bar"><div className="level-bar-fill" style={{ width: '0%' }} /></div>
+                      <div className="level-progress"><span>0/{level.membersRequired} members</span><span>0%</span></div>
+                      {level.isMilestone ? (
+                        <div className="level-rewards">
+                          <span className="reward-chip">🎁 {level.rewardLabel}</span>
+                          <span className="reward-chip">💰 {level.salaryLabel}</span>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+          </section>
 
-            {/* Coupon Input */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Coupon Code</label>
-              <input
-                type="text"
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                placeholder="Enter coupon code"
-                maxLength="20"
-              />
-              <p className="text-xs text-gray-500 mt-1">Enter the coupon code provided by admin</p>
+          {/* SPIN */}
+          <section className={`page ${page === 'spin' ? 'active' : ''}`}>
+            <div className="page-head">
+              <h1>Lucky spin</h1>
+              <p>Invite 3 members within 24 hours to unlock your spin.</p>
             </div>
 
-            {/* How it works */}
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="text-sm font-medium text-blue-800 mb-2">💡 How it works:</h4>
-              <ul className="text-xs text-blue-700 space-y-1">
-                <li>• Enter the coupon code provided by admin</li>
-                <li>• Bonus amount will be added to both earn balance and total balance</li>
-                <li>• Each coupon can only be used once per user</li>
-                <li>• Invalid or expired codes will be rejected</li>
-              </ul>
+            <div className="card spin-page-card">
+              <div className="spin-progress-card">
+                <div className="spin-progress-copy">Invite 3 more members within 24 hours</div>
+                <div className="spin-progress-bar"><div className="spin-progress-fill" style={{ width: '0%' }} /></div>
+                <div className="spin-progress-meta"><span>0/3 invited</span><span>Resets in 24h</span></div>
+              </div>
+
+              <div className="spin-wheel-holder">
+                <div className="spin-wheel-pointer" />
+                <div className="spin-wheel" style={{ background: spinGradient, transform: `rotate(${spinAngle}deg)` }}>
+                  {spinPrizes.map((prize, index) => {
+                    const angle = index * 30 + 15
+                    return (
+                      <div
+                        key={prize.label + index}
+                        className="spin-wheel-label"
+                        style={{ transform: `rotate(${angle}deg) translateY(-118px) rotate(${-angle}deg)` }}
+                      >
+                        <span className="spin-wheel-icon">{prize.icon}</span>
+                        <span className="spin-wheel-text">{prize.label}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="spin-wheel-hub">🎰</div>
+              </div>
+
+              <div className="spin-actions">
+                <button className="btn btn-gold spin-lock-btn" onClick={startSpin} disabled={spinRunning}>
+                  {spinRunning ? 'Spinning...' : 'Start spin'}
+                </button>
+                <button className="btn btn-outline spin-secondary-btn" onClick={stopSpin} disabled={!spinRunning}>
+                  Stop spin
+                </button>
+                <button className="btn btn-ghost spin-tertiary-btn" onClick={resetSpin}>
+                  Reset
+                </button>
+              </div>
+
+              <div className="spin-result">Result: <b>{spinResult}</b></div>
+
+              <p className="spin-note">The wheel now moves and stops in-app. Use Start spin, then Stop spin to land on a prize.</p>
+            </div>
+          </section>
+
+          {/* MEMBERSHIP */}
+          <section className={`page ${page === 'membership' ? 'active' : ''}`}>
+            <div className="page-head">
+              <h1>Membership card</h1>
+              <p>Your digital identity across the HMHProEarn network.</p>
             </div>
 
-            <div className="flex space-x-3">
-              <button
-                onClick={handleCouponRedeem}
-                disabled={!couponCode.trim()}
-                className="flex-1 bg-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Redeem Coupon
-              </button>
-              <button
-                onClick={() => {
-                  setShowCouponModal(false)
-                  setCouponCode('')
-                }}
-                className="flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-400 transition-colors"
-              >
-                Cancel
-              </button>
+            <div className="membership-shell">
+              <div className="mem-card">
+                <div className="mem-top">
+                  <div className="mem-brand">HMHProEarn</div>
+                  <div className="mem-chip" aria-hidden="true" />
+                </div>
+
+                <div className="mem-name">{profile.name || 'Alex Rivera'}</div>
+                <div className="mem-id">{profile.username ? profile.username.toUpperCase() : '7F19 C3E2 0091'}</div>
+
+                <div className="mem-bottom">
+                  <div className="mem-col">
+                    <div className="mem-label">Tier</div>
+                    <div className="mem-val">Unranked</div>
+                  </div>
+                  <div className="mem-col">
+                    <div className="mem-label">Level</div>
+                    <div className="mem-val">0</div>
+                  </div>
+                  <div className="mem-col">
+                    <div className="mem-label">Member since</div>
+                    <div className="mem-val">2026</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* PROFILE */}
+          <section className={`page ${page === 'profile' ? 'active' : ''}`}>
+            <div className="page-head">
+              <h1>Profile settings</h1>
+              <p>Update your personal information.</p>
+            </div>
+
+            <div className="profile-shell">
+              <div className="card profile-edit-card">
+                <div className="profile-avatar-wrap">
+                  <div className="avatar-ring profile-avatar-large">{avatarInitial}</div>
+                </div>
+
+                <label>Full name</label>
+                <input type="text" value={profileDraft.name} onChange={(e) => setProfileDraft((prev) => ({ ...prev, name: e.target.value }))} />
+
+                <label>Email</label>
+                <input type="text" value={profileDraft.email} onChange={(e) => setProfileDraft((prev) => ({ ...prev, email: e.target.value }))} />
+
+                <label>Username</label>
+                <input type="text" value={profileDraft.username} onChange={(e) => setProfileDraft((prev) => ({ ...prev, username: e.target.value }))} placeholder="Choose a unique username" />
+
+                <label>City</label>
+                <input type="text" value={profileDraft.city} onChange={(e) => setProfileDraft((prev) => ({ ...prev, city: e.target.value }))} placeholder="Enter your city" />
+
+                <label>Address</label>
+                <textarea value={profileDraft.address} onChange={(e) => setProfileDraft((prev) => ({ ...prev, address: e.target.value }))} placeholder="Enter your address" />
+
+                <button type="button" className="btn btn-gold profile-save-btn" onClick={saveProfile}>
+                  {profileSaved ? 'Saved' : 'Save changes'}
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* Placeholders (so sidebar works) */}
+          {['admin'].map((id) => (
+            <section key={id} className={`page ${page === id ? 'active' : ''}`}>
+              <div className="page-head">
+                <h1>{NAV.find((n) => n.id === id)?.label}</h1>
+                <p>Preview build — we’ll wire real data next.</p>
+              </div>
+              <div className="card empty-state">This section is in progress.</div>
+            </section>
+          ))}
+        </div>
+      </div>
+
+      {/* Checkout modal */}
+      <div className={`modal-bg ${checkoutOpen ? 'show' : ''}`} onClick={() => setCheckoutOpen(false)}>
+        <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-head">
+            <h3 style={{ margin: 0 }}>Checkout — delivery details</h3>
+            <button className="modal-close" onClick={() => setCheckoutOpen(false)} aria-label="Close">
+              ×
+            </button>
+          </div>
+
+          <div className="modal-product">
+            <div className="modal-product-img">{checkoutProduct?.icon ?? '🛒'}</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13.5 }}>{checkoutProduct?.name ?? 'Product'}</div>
+              <div style={{ color: 'var(--gold-bright)', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace', fontSize: 13 }}>
+                {checkoutProduct?.price ?? '$0'}
+              </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Signup Bonus Modal */}
-      {showSignupBonusModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-auto shadow-2xl">
-            <div className="text-center">
-              {/* Success Icon */}
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-                <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              
-              {/* Title */}
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                🎉 Welcome Bonus!
-              </h3>
-              
-              {/* Message */}
-              <p className="text-gray-600 mb-4">
-                Congratulations! You have received a signup bonus.
-              </p>
-              
-              {/* Bonus Amount */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <div className="text-3xl font-bold text-green-600 mb-1">
-                  Rs {userData?.signupBonus || 100}
-                </div>
-                <div className="text-sm text-green-700">
-                  Added to your account balance
-                </div>
-              </div>
-              
-              {/* Current Balance */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
-                <div className="text-sm text-blue-700 mb-1">Current Balance</div>
-                <div className="text-xl font-semibold text-blue-800">
-                  Rs {userBalance}
-                </div>
-              </div>
-              
-              {/* Info */}
-              <div className="text-sm text-gray-500 mb-6">
-                <p>• This bonus has been added to your recharge history</p>
-                <p>• You can now start investing in our plans</p>
-                <p>• Refer friends to earn more bonuses!</p>
-              </div>
-              
-              {/* Close Button */}
-              <button
-                onClick={handleSignupBonusClose}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg"
-              >
-                Get Started!
-              </button>
-            </div>
+          <label style={{ marginTop: 0 }}>Full name</label>
+          <input value={coName} onChange={(e) => setCoName(e.target.value)} />
+          <label>Phone number</label>
+          <input value={coPhone} onChange={(e) => setCoPhone(e.target.value)} placeholder="03XXXXXXXXX" />
+          <label>Delivery address</label>
+          <textarea value={coAddress} onChange={(e) => setCoAddress(e.target.value)} placeholder="Full delivery address (house, street, area, city)" />
+
+          <div className="row-2" style={{ marginTop: 18 }}>
+            <button className="btn btn-outline" onClick={() => setCheckoutOpen(false)}>
+              Cancel
+            </button>
+            <button className="btn btn-gold" onClick={confirmOrder}>
+              Continue to payment
+            </button>
           </div>
         </div>
-      )}
+      </div>
 
-      <style jsx global>{`
-        @keyframes scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        
-        .animate-scroll {
-          animation: scroll 15s linear infinite;
-        }
-      `}</style>
-    </>
+      <div className={`toast ${toast ? 'show' : ''}`}>{toast}</div>
+    </div>
   )
 }
+
