@@ -759,9 +759,11 @@ export default function Page() {
               <label>Payment method</label>
               <select value={wdMethod} onChange={(e) => setWdMethod(e.target.value)}>
                 <option value="">Select payment method</option>
+                <option>Easy Paisa</option>
+                <option>Jazzcash</option>
+                <option>SadaPay</option>
                 <option>Bank transfer</option>
-                <option>Mobile wallet</option>
-                <option>Card</option>
+                <option>Binance</option>
               </select>
 
               <label>Account holder name</label>
