@@ -924,23 +924,65 @@ export default function Page() {
             <div className="page-head">
               <h1>Upgrade plan</h1>
               <p>Choose a plan to start earning daily.</p>
+              {activePlanName !== 'Free' && (
+                <div style={{
+                  marginTop: 10,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  background: 'rgba(34,197,94,0.12)',
+                  border: '1px solid rgba(34,197,94,0.3)',
+                  borderRadius: 20,
+                  padding: '6px 16px',
+                  fontSize: 13,
+                  color: '#22c55e',
+                  fontWeight: 600
+                }}>
+                  ✅ Your active plan: <strong>{activePlanName}</strong>
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(230px,1fr))', gap: 16 }}>
-              {plans.map((p) => (
-                <div
-                  key={p.name}
-                  className="card"
-                  style={{
-                    textAlign: 'center',
-                    position: 'relative',
-                    borderColor: p.featured ? 'rgba(201,160,74,.4)' : undefined,
-                    boxShadow: p.featured ? '0 0 0 1px rgba(201,160,74,.15) inset' : undefined
-                  }}
-                >
-                  {p.featured ? (
-                    <div
-                      style={{
+              {plans.map((p) => {
+                const isActive = activePlanName !== 'Free' && activePlanName.toLowerCase() === p.name.toLowerCase()
+                const hasAnyPlan = activePlanName !== 'Free'
+                return (
+                  <div
+                    key={p.name}
+                    className="card"
+                    style={{
+                      textAlign: 'center',
+                      position: 'relative',
+                      borderColor: isActive
+                        ? 'rgba(34,197,94,0.5)'
+                        : p.featured ? 'rgba(201,160,74,.4)' : undefined,
+                      boxShadow: isActive
+                        ? '0 0 0 2px rgba(34,197,94,0.2) inset, 0 0 24px rgba(34,197,94,0.08)'
+                        : p.featured ? '0 0 0 1px rgba(201,160,74,.15) inset' : undefined,
+                      opacity: hasAnyPlan && !isActive ? 0.75 : 1
+                    }}
+                  >
+                    {/* Active badge */}
+                    {isActive ? (
+                      <div style={{
+                        position: 'absolute',
+                        top: -11,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: '#22c55e',
+                        color: '#fff',
+                        fontSize: 10.5,
+                        fontWeight: 800,
+                        padding: '3px 12px',
+                        borderRadius: 20,
+                        letterSpacing: '.05em',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        ✅ Active Plan
+                      </div>
+                    ) : p.featured ? (
+                      <div style={{
                         position: 'absolute',
                         top: -11,
                         left: '50%',
@@ -952,40 +994,62 @@ export default function Page() {
                         padding: '3px 10px',
                         borderRadius: 20,
                         letterSpacing: '.05em'
+                      }}>
+                        Most popular
+                      </div>
+                    ) : null}
+
+                    <div style={{ fontSize: 30, marginBottom: 8 }}>{p.icon}</div>
+                    <div style={{ fontWeight: 700, fontSize: 16 }}>{p.name}</div>
+                    <div
+                      style={{
+                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                        fontSize: 26,
+                        color: isActive ? '#22c55e' : 'var(--gold-bright)',
+                        fontWeight: 700,
+                        margin: '8px 0 2px'
                       }}
                     >
-                      Most popular
+                      ${p.price} <span style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 500 }}>one-time</span>
                     </div>
-                  ) : null}
-                  <div style={{ fontSize: 30, marginBottom: 8 }}>{p.icon}</div>
-                  <div style={{ fontWeight: 700, fontSize: 16 }}>{p.name}</div>
-                  <div
-                    style={{
-                      fontFamily:
-                        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-                      fontSize: 26,
-                      color: 'var(--gold-bright)',
-                      fontWeight: 700,
-                      margin: '8px 0 2px'
-                    }}
-                  >
-                    ${p.price} <span style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 500 }}>one-time</span>
+                    <div style={{ fontSize: 13, color: 'var(--text-dim)', margin: '4px 0 10px' }}>{p.desc}</div>
+                    <ul style={{ textAlign: 'left', fontSize: 12.8, color: 'var(--text-dim)', margin: '14px 0', padding: 0, listStyle: 'none' }}>
+                      {p.features.map((feat, idx) => (
+                        <li key={idx} style={{ padding: '6px 0', borderBottom: idx === p.features.length - 1 ? 'none' : '1px solid var(--border-soft)' }}>
+                          ✅ {feat}
+                        </li>
+                      ))}
+                    </ul>
+
+                    {isActive ? (
+                      <button
+                        className="btn"
+                        disabled
+                        style={{
+                          width: '100%',
+                          background: 'rgba(34,197,94,0.15)',
+                          border: '1px solid rgba(34,197,94,0.4)',
+                          color: '#22c55e',
+                          cursor: 'default',
+                          fontWeight: 700
+                        }}
+                      >
+                        ✅ Active Plan
+                      </button>
+                    ) : (
+                      <button
+                        className={`btn ${p.featured ? 'btn-gold' : 'btn-ghost'}`}
+                        onClick={() => openPlanModal(p)}
+                      >
+                        {hasAnyPlan ? 'Upgrade Plan' : p.buttonLabel}
+                      </button>
+                    )}
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--text-dim)', margin: '4px 0 10px' }}>{p.desc}</div>
-                  <ul style={{ textAlign: 'left', fontSize: 12.8, color: 'var(--text-dim)', margin: '14px 0', padding: 0, listStyle: 'none' }}>
-                    {p.features.map((feat, idx) => (
-                      <li key={idx} style={{ padding: '6px 0', borderBottom: idx === p.features.length - 1 ? 'none' : '1px solid var(--border-soft)' }}>
-                        ✅ {feat}
-                      </li>
-                    ))}
-                  </ul>
-                  <button className={`btn ${p.featured ? 'btn-gold' : 'btn-ghost'}`} onClick={() => openPlanModal(p)}>
-                    {p.buttonLabel}
-                  </button>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </section>
+
 
           {/* STORE */}
           <section className={`page ${page === 'store' ? 'active' : ''}`}>

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -1662,50 +1662,6 @@ export default function AdminDashboard() {
       setActiveTab={setActiveTab}
       onLogout={handleLogout}
     >
-        {activeTab === 'planRequests' && (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ marginBottom: 20, color: '#1a1a2e', fontWeight: 700, fontSize: 22 }}>ðŸ“‹ Plan Requests</h2>
-            {planRequestsLoading ? (
-              <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>Loading plan requests...</div>
-            ) : planRequests.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 40, background: '#f9f9f9', borderRadius: 12, color: '#888', border: '1px dashed #ddd' }}>
-                âœ… No pending plan requests
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {planRequests.map((req, i) => (
-                  <div key={i} style={{ background: '#fff', borderRadius: 12, padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 16, color: '#1a1a2e' }}>{req.userName}</div>
-                      <div style={{ fontSize: 13, color: '#666', marginTop: 2 }}>ðŸ“ž {req.userPhone}</div>
-                      <div style={{ fontSize: 13, color: '#444', marginTop: 4 }}>
-                        <span style={{ background: '#ede9fe', color: '#7c3aed', borderRadius: 6, padding: '2px 10px', fontWeight: 600 }}>{req.planName}</span>
-                        <span style={{ marginLeft: 10, color: '#888' }}>${req.amount}</span>
-                        <span style={{ marginLeft: 10, color: '#aaa', fontSize: 12 }}>{req.startDate ? new Date(req.startDate).toLocaleDateString() : ''}</span>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 10 }}>
-                      <button
-                        onClick={() => handlePlanAction(req.userId, req.planId, 'approve')}
-                        style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}
-                      >
-                        âœ… Approve
-                      </button>
-                      <button
-                        onClick={() => handlePlanAction(req.userId, req.planId, 'reject')}
-                        style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}
-                      >
-                        âŒ Reject
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-
         {activeTab === 'users' && (
           <div className={styles.usersPage}>
             <div className={styles.pageHeadRow}>
@@ -2131,6 +2087,8 @@ export default function AdminDashboard() {
           </div>
         )}
 
+
+
         {activeTab === 'planRequests' && (
           <div className={styles.usersPage}>
             <div className={styles.pageHeadRow}>
@@ -2140,93 +2098,66 @@ export default function AdminDashboard() {
               </div>
               <button
                 type="button"
-                onClick={refreshRechargeHistory}
-                disabled={historyLoading}
+                onClick={() => {
+                  setPlanRequestsLoading(true)
+                  fetch('/api/admin/plans?status=pending')
+                    .then(r => r.ok ? r.json() : [])
+                    .then(data => setPlanRequests(Array.isArray(data) ? data : []))
+                    .catch(() => setPlanRequests([]))
+                    .finally(() => setPlanRequestsLoading(false))
+                }}
+                disabled={planRequestsLoading}
                 className={`${styles.btn} ${styles.btnOutline}`}
               >
                 <svg className={styles.btnIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span>{historyLoading ? 'Loading' : 'Refresh'}</span>
+                <span>{planRequestsLoading ? 'Loading' : 'Refresh'}</span>
               </button>
             </div>
-
-            <div className={styles.tabs}>
-              {['pending', 'approved', 'rejected', 'all'].map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  className={`${styles.tab} ${rechargeFilter === tab ? styles.tabActive : ''}`}
-                  onClick={() => setRechargeFilter(tab)}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
-            </div>
-
-            {getSortedRechargeHistory().length === 0 ? (
+            {planRequestsLoading ? (
+              <div className={styles.empty}><p>Loading plan requests...</p></div>
+            ) : planRequests.length === 0 ? (
               <div className={styles.empty}>
                 <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
                   <circle cx="12" cy="12" r="10" />
                   <path d="M12 8v8M8 12l4-4 4 4" />
                 </svg>
-                <p>No {getPlanRequestEmptyLabel()}plan requests</p>
+                <p>No pending plan requests</p>
               </div>
             ) : (
-              getSortedRechargeHistory().map((request) => (
-                <div className={styles.card} key={request.transactionId || request._id}>
+              planRequests.map((req, i) => (
+                <div className={styles.card} key={req.planId || i}>
                   <div className={styles.cardTop}>
                     <div className={styles.userBlock}>
-                      <div className={styles.avatar}>{getUserInitials(request.userName)}</div>
+                      <div className={styles.avatar}>{getUserInitials(req.userName)}</div>
                       <div>
-                        <div className={styles.userName}>{request.userName || 'Unknown User'}</div>
-                        <div className={styles.userEmail}>{request.userId}</div>
+                        <div className={styles.userName}>{req.userName || 'Unknown User'}</div>
+                        <div className={styles.userEmail}>{req.userPhone}</div>
                       </div>
                     </div>
-                    <span className={`${styles.status} ${styles[request.status] || styles.pending}`}>
-                      {request.status}
-                    </span>
+                    <span className={`${styles.status} ${styles.pending}`}>pending</span>
                   </div>
                   <div className={styles.detailGrid}>
                     <div>
-                      <div className={styles.detailLabel}>Current plan</div>
-                      <div className={styles.detailValue}>Free</div>
-                    </div>
-                    <div>
-                      <div className={styles.detailLabel}>Requested plan</div>
+                      <div className={styles.detailLabel}>Plan</div>
                       <div className={styles.detailValue}>
-                        {request.description || request.paymentMethod || 'Plan Upgrade'}
+                        <span style={{ background: '#ede9fe', color: '#7c3aed', borderRadius: 6, padding: '2px 10px', fontWeight: 600 }}>{req.planName}</span>
                       </div>
                     </div>
                     <div>
-                      <div className={styles.detailLabel}>Price</div>
-                      <div className={`${styles.detailValue} ${styles.amount}`}>
-                        Rs{Number(request.amount || 0).toFixed(2)}
-                      </div>
+                      <div className={styles.detailLabel}>Amount</div>
+                      <div className={`${styles.detailValue} ${styles.amount}`}>${req.amount}</div>
                     </div>
                     <div>
                       <div className={styles.detailLabel}>Requested on</div>
-                      <div className={styles.detailValue}>{formatPakistanDate(request.createdAt)}</div>
+                      <div className={styles.detailValue}>{req.startDate ? new Date(req.startDate).toLocaleDateString() : '-'}</div>
                     </div>
                   </div>
-                  {request.status === 'pending' && (
-                    <div className={styles.cardActions}>
-                      <button
-                        type="button"
-                        className={`${styles.btn} ${styles.btnGreen}`}
-                        onClick={() => handleRechargeApproval(request.transactionId, true)}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.btn} ${styles.btnReject}`}
-                        onClick={() => handleRechargeApproval(request.transactionId, false)}
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  )}
+                  <div className={styles.cardActions}>
+                    <button type="button" className={`${styles.btn} ${styles.btnGreen}`} onClick={() => handlePlanAction(req.userId, req.planId, 'approve')}>Approve</button>
+                    <button type="button" className={`${styles.btn} ${styles.btnReject}`} onClick={() => handlePlanAction(req.userId, req.planId, 'reject')}>Reject</button>
+                  </div>
                 </div>
               ))
             )}
@@ -2884,3 +2815,4 @@ export default function AdminDashboard() {
     </AdminShell>
   )
 } 
+
