@@ -282,7 +282,7 @@ export default function Page() {
     } catch {}
   }
 
-  const topbarTitle = NAV.find((n) => n.id === page)?.label ?? 'HMHProEarn'
+  const topbarTitle = NAV.find((n) => n.id === page)?.label ?? 'HMHPro'
 
   const submitWithdrawal = () => {
     if (!wdAmount || !wdMethod || !wdName || !wdAccount) {
@@ -399,10 +399,14 @@ export default function Page() {
 
         <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <div className="brand">
-            <div className="brand-mark">M</div>
+            <img 
+              src="/logo.jpg" 
+              alt="HMHPro Logo" 
+              style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--gold)' }} 
+            />
             <div>
-              <div className="brand-name">HMHProEarn</div>
-              <div className="brand-sub">Earn · Rise · Repeat</div>
+              <div className="brand-name">HMHPro</div>
+              <div className="brand-sub">Learn · Earn · Grow</div>
             </div>
             <button className="sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Close menu">
               ×
@@ -789,7 +793,7 @@ export default function Page() {
           <section className={`page ${page === 'store' ? 'active' : ''}`}>
             <div className="page-head">
               <h1>E-commerce</h1>
-                <p>Browse and purchase products with your HMHProEarn balance or card.</p>
+                <p>Browse and purchase products with your HMHPro balance or card.</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 16 }}>
@@ -968,13 +972,13 @@ export default function Page() {
           <section className={`page ${page === 'membership' ? 'active' : ''}`}>
             <div className="page-head">
               <h1>Membership card</h1>
-              <p>Your digital identity across the HMHProEarn network.</p>
+              <p>Your digital identity across the HMHPro network.</p>
             </div>
 
             <div className="membership-shell">
               <div className="mem-card">
                 <div className="mem-top">
-                  <div className="mem-brand">HMHProEarn</div>
+                  <div className="mem-brand">HMHPro</div>
                   <div className="mem-chip" aria-hidden="true" />
                 </div>
 

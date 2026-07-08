@@ -50,10 +50,14 @@ function LoginContent() {
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: '24px' }}>
         <div style={{ width: '100%', maxWidth: '460px' }}>
           <div className="card" style={{ marginBottom: '18px', textAlign: 'center', background: 'linear-gradient(150deg, var(--surface), var(--surface-2))' }}>
-            <div className="brand-mark" style={{ margin: '0 auto 14px' }}>M</div>
-            <div className="eyebrow" style={{ marginBottom: '6px' }}>HMHProEarn Access</div>
+            <img 
+              src="/logo.jpg" 
+              alt="HMHPro Logo" 
+              style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 14px', border: '1.5px solid var(--gold)' }} 
+            />
+            <div className="eyebrow" style={{ marginBottom: '6px' }}>HMHPro Access</div>
             <h1 style={{ margin: 0, fontFamily: 'var(--font-fraunces, serif)', fontSize: '30px', fontWeight: 600 }}>Welcome back</h1>
-            <p style={{ margin: '10px 0 0', color: 'var(--text-dim)', fontSize: '14px' }}>Sign in to continue to the HMHProEarn dashboard.</p>
+            <p style={{ margin: '10px 0 0', color: 'var(--text-dim)', fontSize: '14px' }}>Sign in to continue to the HMHPro dashboard.</p>
           </div>
 
           <div className="card" style={{ borderRadius: '16px' }}>

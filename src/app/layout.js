@@ -19,8 +19,8 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata = {
-  title: "HMHProEarn",
-  description: "HMHProEarn dashboard and member experience",
+  title: "HMHPro",
+  description: "HMHPro dashboard and member experience",
 };
 
 export default function RootLayout({ children }) {

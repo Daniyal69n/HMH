@@ -82,10 +82,14 @@ export default function RegisterPage() {
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: '24px' }}>
         <div style={{ width: '100%', maxWidth: '540px' }}>
           <div className="card" style={{ marginBottom: '18px', textAlign: 'center', background: 'linear-gradient(150deg, var(--surface), var(--surface-2))' }}>
-            <div className="brand-mark" style={{ margin: '0 auto 14px' }}>M</div>
-            <div className="eyebrow" style={{ marginBottom: '6px' }}>Join HMHProEarn</div>
+            <img 
+              src="/logo.jpg" 
+              alt="HMHPro Logo" 
+              style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 14px', border: '1.5px solid var(--gold)' }} 
+            />
+            <div className="eyebrow" style={{ marginBottom: '6px' }}>Join HMHPro</div>
             <h1 style={{ margin: 0, fontFamily: 'var(--font-fraunces, serif)', fontSize: '30px', fontWeight: 600 }}>Create your account</h1>
-            <p style={{ margin: '10px 0 0', color: 'var(--text-dim)', fontSize: '14px' }}>Set up your profile and continue to the HMHProEarn flow.</p>
+            <p style={{ margin: '10px 0 0', color: 'var(--text-dim)', fontSize: '14px' }}>Set up your profile and continue to the HMHPro flow.</p>
           </div>
 
           <div className="card" style={{ borderRadius: '16px' }}>
