@@ -1280,30 +1280,97 @@ export default function Page() {
             </div>
 
             <div className="membership-shell">
-              <div className="mem-card">
-                <div className="mem-top">
-                  <div className="mem-brand">HMHPro</div>
-                  <div className="mem-chip" aria-hidden="true" />
-                </div>
+              {(() => {
+                const theme = (() => {
+                  switch (activePlanName.toLowerCase()) {
+                    case 'basic':
+                      return {
+                        background: 'radial-gradient(380px 180px at 100% 0%, rgba(34,197,94,.2), transparent 55%), linear-gradient(135deg, #052e16 0%, #022c22 58%, #0b0f19 100%)',
+                        border: '1px solid rgba(34,197,94,.35)',
+                        boxShadow: '0 18px 50px rgba(0,0,0,.38), 0 0 0 1px rgba(34,197,94,.08) inset',
+                        brandColor: '#4ade80',
+                        chipBg: 'linear-gradient(135deg, #4ade80 0%, #15803d 100%)'
+                      }
+                    case 'standard':
+                      return {
+                        background: 'radial-gradient(380px 180px at 100% 0%, rgba(59,130,246,.25), transparent 55%), linear-gradient(135deg, #1e3a8a 0%, #0f172a 58%, #0f172a 100%)',
+                        border: '1px solid rgba(59,130,246,.4)',
+                        boxShadow: '0 18px 50px rgba(0,0,0,.45), 0 0 0 1px rgba(59,130,246,.12) inset',
+                        brandColor: '#60a5fa',
+                        chipBg: 'linear-gradient(135deg, #60a5fa 0%, #1d4ed8 100%)'
+                      }
+                    case 'diamond':
+                      return {
+                        background: 'radial-gradient(380px 180px at 100% 0%, rgba(6,182,212,.3), transparent 55%), linear-gradient(135deg, #0e7490 0%, #0891b2 58%, #0b132b 100%)',
+                        border: '1px solid rgba(6,182,212,.5)',
+                        boxShadow: '0 18px 50px rgba(6,182,212,.18), 0 0 0 1px rgba(6,182,212,.15) inset',
+                        brandColor: '#22d3ee',
+                        chipBg: 'linear-gradient(135deg, #22d3ee 0%, #0891b2 100%)'
+                      }
+                    case 'pro':
+                      return {
+                        background: 'radial-gradient(380px 180px at 100% 0%, rgba(139,92,246,.3), transparent 55%), linear-gradient(135deg, #4c1d95 0%, #2e1065 58%, #0c0a0f 100%)',
+                        border: '1px solid rgba(139,92,246,.45)',
+                        boxShadow: '0 18px 50px rgba(139,92,246,.15), 0 0 0 1px rgba(139,92,246,.1) inset',
+                        brandColor: '#a78bfa',
+                        chipBg: 'linear-gradient(135deg, #a78bfa 0%, #6d28d9 100%)'
+                      }
+                    case 'premium':
+                      return {
+                        background: 'radial-gradient(380px 180px at 100% 0%, rgba(245,158,11,.3), transparent 55%), linear-gradient(135deg, #78350f 0%, #451a03 58%, #0c0a09 100%)',
+                        border: '1px solid rgba(245,158,11,.45)',
+                        boxShadow: '0 18px 50px rgba(245,158,11,.15), 0 0 0 1px rgba(245,158,11,.1) inset',
+                        brandColor: '#fbbf24',
+                        chipBg: 'linear-gradient(135deg, #fbbf24 0%, #b45309 100%)'
+                      }
+                    case 'legend':
+                      return {
+                        background: 'radial-gradient(380px 180px at 100% 0%, rgba(201,160,74,.35), transparent 55%), linear-gradient(135deg, #1c1917 0%, #0c0a09 58%, #000000 100%)',
+                        border: '1px solid rgba(201,160,74,.6)',
+                        boxShadow: '0 24px 60px rgba(201,160,74,.25), 0 0 0 2px rgba(201,160,74,.2) inset',
+                        brandColor: '#f59e0b',
+                        chipBg: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)'
+                      }
+                    default: // Free / Unranked
+                      return {
+                        background: 'radial-gradient(380px 180px at 100% 0%, rgba(201,160,74,.16), transparent 55%), linear-gradient(135deg, #17120c 0%, #0d1016 58%, #10151d 100%)',
+                        border: '1px solid rgba(201,160,74,.24)',
+                        boxShadow: '0 18px 50px rgba(0,0,0,.38), 0 0 0 1px rgba(201,160,74,.04) inset',
+                        brandColor: 'var(--gold-bright)',
+                        chipBg: 'linear-gradient(135deg, #d9ba63 0%, #a47f2e 100%)'
+                      }
+                  }
+                })()
 
-                <div className="mem-name">{profile.name || 'Member'}</div>
-                <div className="mem-id">{profile._id ? `HMH-${profile._id.substring(profile._id.length - 8).toUpperCase()}` : (profile.phone ? `HMH-${profile.phone.substring(Math.max(0, profile.phone.length - 8))}` : '7F19 C3E2 0091')}</div>
+                const joinYear = profile.createdAt ? new Date(profile.createdAt).getFullYear() : 2026
 
-                <div className="mem-bottom">
-                  <div className="mem-col">
-                    <div className="mem-label">Tier</div>
-                    <div className="mem-val">Unranked</div>
+                return (
+                  <div className="mem-card" style={{ background: theme.background, borderColor: theme.border, boxShadow: theme.boxShadow }}>
+                    <div className="mem-top">
+                      <div className="mem-brand" style={{ color: theme.brandColor }}>HMHPro</div>
+                      <div className="mem-chip" style={{ background: theme.chipBg }} aria-hidden="true" />
+                    </div>
+
+                    <div className="mem-name">{profile.name || 'Member'}</div>
+                    <div className="mem-id">{profile._id ? `HMH-${profile._id.substring(profile._id.length - 8).toUpperCase()}` : (profile.phone ? `HMH-${profile.phone.substring(Math.max(0, profile.phone.length - 8))}` : '7F19 C3E2 0091')}</div>
+
+                    <div className="mem-bottom">
+                      <div className="mem-col">
+                        <div className="mem-label">Tier</div>
+                        <div className="mem-val" style={{ color: theme.brandColor, fontWeight: 700 }}>{activePlanName === 'Free' ? 'Unranked' : activePlanName}</div>
+                      </div>
+                      <div className="mem-col">
+                        <div className="mem-label">Level</div>
+                        <div className="mem-val">{currentLevel}</div>
+                      </div>
+                      <div className="mem-col">
+                        <div className="mem-label">Member since</div>
+                        <div className="mem-val">{joinYear}</div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="mem-col">
-                    <div className="mem-label">Level</div>
-                    <div className="mem-val">0</div>
-                  </div>
-                  <div className="mem-col">
-                    <div className="mem-label">Member since</div>
-                    <div className="mem-val">2026</div>
-                  </div>
-                </div>
-              </div>
+                )
+              })()}
             </div>
           </section>
 
