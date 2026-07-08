@@ -85,6 +85,18 @@ export default function Page() {
 
   const [activePlanName, setActivePlanName] = useState('Free')
 
+  // Plan purchase modal state
+  const [planModalOpen, setPlanModalOpen] = useState(false)
+  const [selectedPlanData, setSelectedPlanData] = useState(null)
+  const [planPaymentMethod, setPlanPaymentMethod] = useState('jazzcash')
+  const [planScreenshot, setPlanScreenshot] = useState(null)
+  const [planScreenshotName, setPlanScreenshotName] = useState('')
+  const [planSubmitting, setPlanSubmitting] = useState(false)
+  const [planPaymentDetails, setPlanPaymentDetails] = useState({
+    jazzcash: { number: '03705318754', accountName: 'Muhammad Haseeb' },
+    easypaisa: { number: '03705318754', accountName: 'Muhammad Haseeb' }
+  })
+
   const NAV = useMemo(
     () => [
       { id: 'dashboard', label: 'Dashboard', icon: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z' },
@@ -434,6 +446,58 @@ export default function Page() {
   const openCheckout = (p) => {
     setCheckoutProduct(p)
     setCheckoutOpen(true)
+  }
+
+  const openPlanModal = async (plan) => {
+    setSelectedPlanData(plan)
+    setPlanPaymentMethod('jazzcash')
+    setPlanScreenshot(null)
+    setPlanScreenshotName('')
+    setPlanModalOpen(true)
+    // Load payment details from DB
+    try {
+      const res = await fetch('/api/settings?key=paymentDetails')
+      if (res.ok) {
+        const data = await res.json()
+        if (data && data.value) {
+          setPlanPaymentDetails(data.value)
+        }
+      }
+    } catch { }
+  }
+
+  const submitPlanRequest = async () => {
+    if (!selectedPlanData) return
+    if (!planScreenshot) {
+      showToast('Please upload a payment screenshot')
+      return
+    }
+    setPlanSubmitting(true)
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      const formData = new FormData()
+      formData.append('userId', user._id || user.phone || '')
+      formData.append('userPhone', user.phone || '')
+      formData.append('planName', selectedPlanData.name)
+      formData.append('amount', selectedPlanData.price)
+      formData.append('paymentMethod', planPaymentMethod === 'jazzcash' ? 'JazzCash' : 'EasyPaisa')
+      formData.append('screenshot', planScreenshot)
+      const res = await fetch('/api/user/plan-request', {
+        method: 'POST',
+        body: formData
+      })
+      if (res.ok) {
+        setPlanModalOpen(false)
+        showToast('Plan request submitted! Admin will activate your plan shortly.')
+      } else {
+        const err = await res.json().catch(() => ({}))
+        showToast(err.message || 'Submission failed. Please try again.')
+      }
+    } catch {
+      showToast('Submission failed. Please try again.')
+    } finally {
+      setPlanSubmitting(false)
+    }
   }
 
   const confirmOrder = () => {
@@ -915,7 +979,7 @@ export default function Page() {
                       </li>
                     ))}
                   </ul>
-                  <button className={`btn ${p.featured ? 'btn-gold' : 'btn-ghost'}`} onClick={() => showToast(`${p.name} plan selected (preview mode)`)}>
+                  <button className={`btn ${p.featured ? 'btn-gold' : 'btn-ghost'}`} onClick={() => openPlanModal(p)}>
                     {p.buttonLabel}
                   </button>
                 </div>
@@ -1246,6 +1310,171 @@ export default function Page() {
           </div>
         </div>
       </div>
+
+      {/* Plan Purchase Modal */}
+      {planModalOpen && selectedPlanData && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 9999, padding: '16px'
+          }}
+          onClick={() => setPlanModalOpen(false)}
+        >
+          <div
+            style={{
+              background: '#1a1f2e', borderRadius: 16, padding: '24px',
+              width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5)', position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ margin: 0, color: '#fff', fontSize: 18, fontWeight: 700 }}>
+                💰 Upgrade to {selectedPlanData.name}
+              </h3>
+              <button
+                onClick={() => setPlanModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: '#aaa', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}
+              >×</button>
+            </div>
+
+            {/* Amount to Pay */}
+            <div style={{ background: '#252b3b', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
+              <div style={{ color: '#aaa', fontSize: 12, marginBottom: 4 }}>Amount to Pay</div>
+              <div style={{ color: '#c9a04a', fontSize: 28, fontWeight: 800 }}>
+                PKR {(selectedPlanData.price * 280).toLocaleString()}
+              </div>
+            </div>
+
+            {/* Send Payment To */}
+            <div style={{ background: '#252b3b', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
+              <div style={{ color: '#fff', fontWeight: 700, marginBottom: 12 }}>💳 Send Payment To:</div>
+              {/* Method tabs */}
+              <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+                <button
+                  onClick={() => setPlanPaymentMethod('jazzcash')}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '6px 14px', borderRadius: 20, border: 'none',
+                    background: planPaymentMethod === 'jazzcash' ? '#c9a04a' : '#374151',
+                    color: planPaymentMethod === 'jazzcash' ? '#181205' : '#fff',
+                    fontWeight: 700, fontSize: 13, cursor: 'pointer'
+                  }}
+                >
+                  <span style={{ background: '#d63a0a', borderRadius: '50%', width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff', fontWeight: 800 }}>JC</span>
+                  JazzCash
+                </button>
+                <button
+                  onClick={() => setPlanPaymentMethod('easypaisa')}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '6px 14px', borderRadius: 20, border: 'none',
+                    background: planPaymentMethod === 'easypaisa' ? '#c9a04a' : '#374151',
+                    color: planPaymentMethod === 'easypaisa' ? '#181205' : '#fff',
+                    fontWeight: 700, fontSize: 13, cursor: 'pointer'
+                  }}
+                >
+                  <span style={{ background: '#00a651', borderRadius: '50%', width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff', fontWeight: 800 }}>EP</span>
+                  EasyPaisa
+                </button>
+              </div>
+              {/* Account Name */}
+              <div style={{ background: '#1a1f2e', borderRadius: 10, padding: '10px 14px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ color: '#888', fontSize: 10, letterSpacing: '0.08em', marginBottom: 2 }}>ACCOUNT NAME</div>
+                  <div style={{ color: '#fff', fontWeight: 600, fontSize: 15 }}>
+                    {planPaymentDetails[planPaymentMethod]?.accountName || 'Muhammad Haseeb'}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(planPaymentDetails[planPaymentMethod]?.accountName || 'Muhammad Haseeb')
+                    showToast('Account name copied!')
+                  }}
+                  style={{ background: '#2a2116', border: '1px solid #c9a04a', color: '#c9a04a', borderRadius: 8, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}
+                >📋 Copy</button>
+              </div>
+              {/* Phone Number */}
+              <div style={{ background: '#1a1f2e', borderRadius: 10, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ color: '#888', fontSize: 10, letterSpacing: '0.08em', marginBottom: 2 }}>PHONE NUMBER</div>
+                  <div style={{ color: '#fff', fontWeight: 600, fontSize: 15 }}>
+                    {planPaymentDetails[planPaymentMethod]?.number || '03705318754'}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(planPaymentDetails[planPaymentMethod]?.number || '03705318754')
+                    showToast('Phone number copied!')
+                  }}
+                  style={{ background: '#2a2116', border: '1px solid #c9a04a', color: '#c9a04a', borderRadius: 8, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}
+                >📋 Copy</button>
+              </div>
+            </div>
+
+            {/* Payment Method Used dropdown */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', color: '#ccc', fontSize: 13, marginBottom: 6 }}>Payment Method Used</label>
+              <select
+                value={planPaymentMethod}
+                onChange={(e) => setPlanPaymentMethod(e.target.value)}
+                style={{
+                  width: '100%', padding: '10px 14px', borderRadius: 10,
+                  background: '#252b3b', border: '1px solid #374151',
+                  color: '#fff', fontSize: 14, outline: 'none'
+                }}
+              >
+                <option value="jazzcash">JazzCash</option>
+                <option value="easypaisa">EasyPaisa</option>
+              </select>
+            </div>
+
+            {/* Upload Screenshot */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', color: '#ccc', fontSize: 13, marginBottom: 6 }}>Upload Payment Screenshot</label>
+              <label style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 14px', borderRadius: 10,
+                background: '#252b3b', border: '1px solid #374151',
+                color: '#aaa', fontSize: 13, cursor: 'pointer'
+              }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files[0]
+                    if (file) {
+                      setPlanScreenshot(file)
+                      setPlanScreenshotName(file.name)
+                    }
+                  }}
+                />
+                <span>Choose file</span>
+                <span style={{ color: planScreenshotName ? '#c9a04a' : '#666' }}>
+                  {planScreenshotName || 'No file chosen'}
+                </span>
+              </label>
+            </div>
+
+            {/* Submit */}
+            <button
+              onClick={submitPlanRequest}
+              disabled={planSubmitting}
+              style={{
+                width: '100%', padding: '14px', borderRadius: 10, border: 'none',
+                background: planSubmitting ? '#5a4a1a' : 'linear-gradient(135deg, #c9a04a, #e8c06a)',
+                color: '#181205', fontWeight: 800, fontSize: 15, cursor: planSubmitting ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+              }}
+            >
+              {planSubmitting ? 'Submitting...' : '⬆ Submit Request'}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className={`toast ${toast ? 'show' : ''}`}>{toast}</div>
     </div>

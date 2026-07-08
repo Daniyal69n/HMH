@@ -90,14 +90,17 @@ const userSchema = new mongoose.Schema({
       amount: Number,
       startDate: Date,
       endDate: Date,
+      paymentMethod: String,
+      screenshotData: String,
       status: {
         type: String,
-        enum: ['active', 'completed', 'cancelled'],
-        default: 'active'
+        enum: ['pending', 'active', 'completed', 'cancelled'],
+        default: 'pending'
       }
     }],
     default: []
   },
+
   rechargeHistory: {
     type: [{
       amount: Number,
