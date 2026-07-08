@@ -41,6 +41,243 @@ export default function AdminDashboard() {
   const [showAddCoupon, setShowAddCoupon] = useState(false)
   const [usedCoupons, setUsedCoupons] = useState([])
 
+  // Earnings control states
+  const EARNINGS_STORAGE_KEY = 'admin_earnings_plans'
+  function seedEarningsData() {
+    return [
+      { id: 'free',   name: 'Free Plan',   perAd: 0.02, referral: 0.10 },
+      { id: 'bronze', name: 'Bronze Plan', perAd: 0.05, referral: 0.25 },
+      { id: 'silver', name: 'Silver Plan', perAd: 0.10, referral: 0.50 },
+      { id: 'gold',   name: 'Gold Plan',   perAd: 0.20, referral: 1.00 },
+    ]
+  }
+  function loadEarningsPlans() {
+    if (typeof window === 'undefined') return seedEarningsData()
+    const raw = localStorage.getItem(EARNINGS_STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+    const seeded = seedEarningsData()
+    localStorage.setItem(EARNINGS_STORAGE_KEY, JSON.stringify(seeded))
+    return seeded
+  }
+  const [earningsPlans, setEarningsPlans] = useState(seedEarningsData)
+  const [earningsSavedMsg, setEarningsSavedMsg] = useState(false)
+
+  // Load earnings plans from localStorage on mount
+  useEffect(() => {
+    setEarningsPlans(loadEarningsPlans())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function handleEarningsFieldChange(id, field, value) {
+    setEarningsPlans(prev =>
+      prev.map(p => p.id === id ? { ...p, [field]: parseFloat(value) || 0 } : p)
+    )
+  }
+
+  function saveEarningsPlans() {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(EARNINGS_STORAGE_KEY, JSON.stringify(earningsPlans))
+    }
+    setEarningsSavedMsg(true)
+    setTimeout(() => setEarningsSavedMsg(false), 2000)
+    showSuccess('Earnings settings saved!')
+  }
+
+  // ── Mystery Boxes state ──────────────────────────────────────────
+  const MB_STORAGE_KEY = 'admin_mystery_boxes'
+  const MB_ENABLE_KEY = 'admin_mystery_boxes_enabled'
+
+  function seedBoxes() {
+    return [
+      { id: 'box_1', rank: 1, medal: '🥇', title: 'Top 1 Mystery Box', desc: '$100 Cash Prize + Gold Badge',   value: 100 },
+      { id: 'box_2', rank: 2, medal: '🥈', title: 'Top 2 Mystery Box', desc: '$50 Cash Prize + Silver Badge',  value: 50  },
+      { id: 'box_3', rank: 3, medal: '🥉', title: 'Top 3 Mystery Box', desc: '$25 Cash Prize + Bronze Badge', value: 25  },
+    ]
+  }
+  function loadBoxes() {
+    if (typeof window === 'undefined') return seedBoxes()
+    const raw = localStorage.getItem(MB_STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+    const seeded = seedBoxes()
+    localStorage.setItem(MB_STORAGE_KEY, JSON.stringify(seeded))
+    return seeded
+  }
+  function loadBoxesEnabled() {
+    if (typeof window === 'undefined') return true
+    return localStorage.getItem(MB_ENABLE_KEY) !== 'false'
+  }
+
+  const [mysteryBoxes, setMysteryBoxes] = useState(seedBoxes)
+  const [mysteryBoxesEnabled, setMysteryBoxesEnabled] = useState(true)
+  const [editingBox, setEditingBox] = useState(null)   // { id, value } while modal is open
+  const [editBoxValue, setEditBoxValue] = useState('')
+
+  useEffect(() => {
+    setMysteryBoxes(loadBoxes())
+    setMysteryBoxesEnabled(loadBoxesEnabled())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function saveMysteryBoxes() {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(MB_STORAGE_KEY, JSON.stringify(mysteryBoxes))
+      localStorage.setItem(MB_ENABLE_KEY, String(mysteryBoxesEnabled))
+    }
+    showSuccess('Mystery Boxes saved!')
+  }
+
+  function openEditBox(box) {
+    setEditingBox(box)
+    setEditBoxValue(String(box.value))
+  }
+
+  function confirmEditBox() {
+    const num = parseFloat(editBoxValue)
+    if (isNaN(num) || num < 0) return
+    setMysteryBoxes(prev => prev.map(b =>
+      b.id === editingBox.id
+        ? { ...b, value: num, desc: '$' + num + ' Cash Prize + ' + b.desc.split('+')[1]?.trim() }
+        : b
+    ))
+    setEditingBox(null)
+  }
+
+  function deleteBox(id) {
+    if (!window.confirm('Delete this mystery box?')) return
+    setMysteryBoxes(prev => prev.filter(b => b.id !== id))
+  }
+
+  // ── E-Commerce state ──────────────────────────────────────────
+  const PRODUCTS_KEY = 'admin_products'
+  const ORDERS_KEY = 'admin_orders'
+
+  function seedProducts() {
+    return [
+      { id:'p_1', name:"Women's loafer (cherry red color)", desc:'Premium edition of loafers', price:3000, currency:'Rs', active:true,
+        img:'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&auto=format&fit=crop&q=60' },
+    ]
+  }
+
+  function seedOrders() {
+    return [
+      { id:'o_1', product:"Women's loafer (cherry red color)", customer:'Ayesha Khan', amount:3000, currency:'Rs', status:'pending' },
+      { id:'o_2', product:"Women's loafer (cherry red color)", customer:'Sara Malik',  amount:3000, currency:'Rs', status:'approved' },
+      { id:'o_3', product:"Women's loafer (cherry red color)", customer:'Bilal Ahmed', amount:3000, currency:'Rs', status:'approved' },
+    ]
+  }
+
+  function loadEcommerceData(key, seedFn) {
+    if (typeof window === 'undefined') return seedFn()
+    const raw = localStorage.getItem(key)
+    if (raw) return JSON.parse(raw)
+    const seeded = seedFn()
+    localStorage.setItem(key, JSON.stringify(seeded))
+    return seeded
+  }
+
+  const [products, setProducts] = useState(seedProducts)
+  const [orders, setOrders] = useState(seedOrders)
+  const [ecommerceTab, setEcommerceTab] = useState('products') // 'products' or 'orders'
+  const [productForm, setProductForm] = useState(null) // null or { id, name, desc, price, img, mode: 'add' | 'edit' }
+
+  useEffect(() => {
+    setProducts(loadEcommerceData(PRODUCTS_KEY, seedProducts))
+    setOrders(loadEcommerceData(ORDERS_KEY, seedOrders))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function toggleProduct(id) {
+    const updated = products.map(p => p.id === id ? { ...p, active: !p.active } : p)
+    setProducts(updated)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(updated))
+    }
+  }
+
+  function openEditProduct(p) {
+    setProductForm({
+      id: p.id,
+      name: p.name,
+      desc: p.desc,
+      price: p.price,
+      img: p.img,
+      mode: 'edit'
+    })
+  }
+
+  function openAddProduct() {
+    setProductForm({
+      id: '',
+      name: '',
+      desc: '',
+      price: 0,
+      img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=60',
+      mode: 'add'
+    })
+  }
+
+  function handleProductImageUpload(e) {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setProductForm(prev => ({ ...prev, img: reader.result }))
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  function saveProductForm() {
+    if (!productForm) return
+    if (!productForm.name.trim()) {
+      showError('Product name is required')
+      return
+    }
+
+    let updated
+    if (productForm.mode === 'add') {
+      const newProd = {
+        id: 'p_' + Date.now(),
+        name: productForm.name,
+        desc: productForm.desc,
+        price: parseFloat(productForm.price) || 0,
+        currency: 'Rs',
+        active: true,
+        img: productForm.img
+      }
+      updated = [...products, newProd]
+      showSuccess('Product added successfully!')
+    } else {
+      updated = products.map(p =>
+        p.id === productForm.id
+          ? {
+              ...p,
+              name: productForm.name,
+              desc: productForm.desc,
+              price: parseFloat(productForm.price) || 0,
+              img: productForm.img
+            }
+          : p
+      )
+      showSuccess('Product updated successfully!')
+    }
+
+    setProducts(updated)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(updated))
+    }
+    setProductForm(null)
+  }
+
+  function deleteProduct(id) {
+    if (!window.confirm('Delete this product?')) return
+    const updated = products.filter(p => p.id !== id)
+    setProducts(updated)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(updated))
+    }
+  }
+
   // Activity states
   const [recentActivities, setRecentActivities] = useState([])
   const [activityLoading, setActivityLoading] = useState(false)
@@ -68,12 +305,62 @@ export default function AdminDashboard() {
             console.log('Found plans:', data)
             setSamplePlans(data)
           } else {
-            console.error('Failed to load plans')
-            showError('Failed to load investment plans')
+            console.warn('Failed to load plans from DB, using fallback plans')
+            setSamplePlans([
+              {
+                _id: 'fallback_1',
+                name: 'Neo Earner Type R',
+                image: 'car1.jpeg',
+                investAmount: '$5,000',
+                dailyIncome: '$25',
+                validity: '200 days',
+                color: 'from-red-500 to-red-700',
+                description: 'High performance variant with turbocharged engine',
+                isActive: true,
+                order: 1
+              },
+              {
+                _id: 'fallback_2',
+                name: 'Neo Earner Sedan',
+                image: 'car2.jpeg',
+                investAmount: '$3,500',
+                dailyIncome: '$17.50',
+                validity: '200 days',
+                color: 'from-blue-500 to-blue-700',
+                description: 'Classic four-door model with excellent fuel economy',
+                isActive: true,
+                order: 2
+              }
+            ])
           }
         } catch (error) {
-          console.error('Error loading plans:', error)
-          showError('Error loading investment plans')
+          console.warn('Error loading plans, using fallback plans:', error.message)
+          setSamplePlans([
+            {
+              _id: 'fallback_1',
+              name: 'Neo Earner Type R',
+              image: 'car1.jpeg',
+              investAmount: '$5,000',
+              dailyIncome: '$25',
+              validity: '200 days',
+              color: 'from-red-500 to-red-700',
+              description: 'High performance variant with turbocharged engine',
+              isActive: true,
+              order: 1
+            },
+            {
+              _id: 'fallback_2',
+              name: 'Neo Earner Sedan',
+              image: 'car2.jpeg',
+              investAmount: '$3,500',
+              dailyIncome: '$17.50',
+              validity: '200 days',
+              color: 'from-blue-500 to-blue-700',
+              description: 'Classic four-door model with excellent fuel economy',
+              isActive: true,
+              order: 2
+            }
+          ])
         }
       }
 
@@ -224,7 +511,7 @@ export default function AdminDashboard() {
         showError(error.error || 'Failed to create plan')
       }
     } catch (error) {
-      console.error('Error creating plan:', error)
+      console.warn('Error creating plan:', error)
       showError('Error creating plan')
     }
   }
@@ -289,7 +576,7 @@ export default function AdminDashboard() {
         showError(error.error || 'Failed to update plan')
       }
     } catch (error) {
-      console.error('Error updating plan:', error)
+      console.warn('Error updating plan:', error)
       showError('Error updating plan')
     }
   }
@@ -315,7 +602,7 @@ export default function AdminDashboard() {
           showError(error.error || 'Failed to delete plan')
         }
       } catch (error) {
-        console.error('Error deleting plan:', error)
+        console.warn('Error deleting plan:', error)
         showError('Error deleting plan')
       }
     }
@@ -351,7 +638,7 @@ export default function AdminDashboard() {
         showError(error.error || 'Failed to toggle plan status')
       }
     } catch (error) {
-      console.error('Error toggling plan status:', error)
+      console.warn('Error toggling plan status:', error)
       showError('Error toggling plan status')
     }
   }
@@ -423,7 +710,7 @@ export default function AdminDashboard() {
             showError(error.error || 'Failed to upload image')
           }
         } catch (error) {
-          console.error('Error uploading image:', error)
+          console.warn('Error uploading image:', error)
           showError('Failed to upload image')
         }
       }
@@ -459,11 +746,11 @@ export default function AdminDashboard() {
             setUsers(data.users || [])
             console.log('Loaded users:', data.users?.length || 0)
           } else {
-            console.error('Failed to load users from API')
+            console.warn('Failed to load users from API')
             setUsers([])
           }
         } catch (error) {
-          console.error('Error loading users:', error)
+          console.warn('Error loading users:', error)
           setUsers([])
         }
       }
@@ -493,7 +780,7 @@ export default function AdminDashboard() {
             setPaymentDetails(defaultPaymentDetails)
           }
         } catch (error) {
-          console.error('Error loading payment details:', error)
+          console.warn('Error loading payment details:', error)
           // Use default payment details on error
           const defaultPaymentDetails = {
             easypaisa: { number: '0300 1234567', accountName: 'Neo Earner' },
@@ -511,11 +798,11 @@ export default function AdminDashboard() {
             const data = await response.json()
             setCoupons(data)
           } else {
-            console.error('Failed to load coupons from API')
+            console.warn('Failed to load coupons from API')
             setCoupons([])
           }
         } catch (error) {
-          console.error('Error loading coupons:', error)
+          console.warn('Error loading coupons:', error)
           setCoupons([])
         }
       }
@@ -534,10 +821,10 @@ export default function AdminDashboard() {
               setUploadedImages(imageMap)
             }
           } else {
-            console.error('Failed to load images from API')
+            console.warn('Failed to load images from API')
           }
         } catch (error) {
-          console.error('Error loading images:', error)
+          console.warn('Error loading images:', error)
         }
       }
 
@@ -557,7 +844,7 @@ export default function AdminDashboard() {
             setPendingWithdrawRequests(withdrawData)
           }
         } catch (error) {
-          console.error('Error loading pending requests:', error)
+          console.warn('Error loading pending requests:', error)
         }
       }
 
@@ -570,11 +857,11 @@ export default function AdminDashboard() {
             const data = await response.json()
             setRechargeHistory(data)
           } else {
-            console.error('Failed to load recharge history')
+            console.warn('Failed to load recharge history')
             setRechargeHistory([])
           }
         } catch (error) {
-          console.error('Error loading recharge history:', error)
+          console.warn('Error loading recharge history:', error)
           setRechargeHistory([])
         } finally {
           setHistoryLoading(false)
@@ -590,11 +877,11 @@ export default function AdminDashboard() {
             const data = await response.json()
             setWithdrawHistory(data)
           } else {
-            console.error('Failed to load withdraw history')
+            console.warn('Failed to load withdraw history')
             setWithdrawHistory([])
           }
         } catch (error) {
-          console.error('Error loading withdraw history:', error)
+          console.warn('Error loading withdraw history:', error)
           setWithdrawHistory([])
         } finally {
           setHistoryLoading(false)
@@ -610,11 +897,11 @@ export default function AdminDashboard() {
             const data = await response.json()
             setRecentActivities(data)
           } else {
-            console.error('Failed to load recent activities')
+            console.warn('Failed to load recent activities')
             setRecentActivities([])
           }
         } catch (error) {
-          console.error('Error loading recent activities:', error)
+          console.warn('Error loading recent activities:', error)
           setRecentActivities([])
         } finally {
           setActivityLoading(false)
@@ -659,11 +946,11 @@ export default function AdminDashboard() {
             const data = await response.json()
             setRechargeHistory(data)
           } else {
-            console.error('Failed to load recharge history')
+            console.warn('Failed to load recharge history')
             setRechargeHistory([])
           }
         } catch (error) {
-          console.error('Error loading recharge history:', error)
+          console.warn('Error loading recharge history:', error)
           setRechargeHistory([])
         } finally {
           setHistoryLoading(false)
@@ -684,11 +971,11 @@ export default function AdminDashboard() {
             const data = await response.json()
             setWithdrawHistory(data)
           } else {
-            console.error('Failed to load withdraw history')
+            console.warn('Failed to load withdraw history')
             setWithdrawHistory([])
           }
         } catch (error) {
-          console.error('Error loading withdraw history:', error)
+          console.warn('Error loading withdraw history:', error)
           setWithdrawHistory([])
         } finally {
           setHistoryLoading(false)
@@ -709,11 +996,11 @@ export default function AdminDashboard() {
             const data = await response.json()
             setRecentActivities(data)
           } else {
-            console.error('Failed to load recent activities')
+            console.warn('Failed to load recent activities')
             setRecentActivities([])
           }
         } catch (error) {
-          console.error('Error loading recent activities:', error)
+          console.warn('Error loading recent activities:', error)
           setRecentActivities([])
         } finally {
           setActivityLoading(false)
@@ -736,7 +1023,7 @@ export default function AdminDashboard() {
         showError('Failed to refresh recharge history')
       }
     } catch (error) {
-      console.error('Error refreshing recharge history:', error)
+      console.warn('Error refreshing recharge history:', error)
       showError('Error refreshing recharge history')
     } finally {
       setHistoryLoading(false)
@@ -755,7 +1042,7 @@ export default function AdminDashboard() {
         showError('Failed to refresh withdraw history')
       }
     } catch (error) {
-      console.error('Error refreshing withdraw history:', error)
+      console.warn('Error refreshing withdraw history:', error)
       showError('Error refreshing withdraw history')
     } finally {
       setHistoryLoading(false)
@@ -779,7 +1066,7 @@ export default function AdminDashboard() {
         showError('Failed to update transaction names')
       }
     } catch (error) {
-      console.error('Error updating transaction names:', error)
+      console.warn('Error updating transaction names:', error)
       showError('Error updating transaction names')
     } finally {
       setHistoryLoading(false)
@@ -896,7 +1183,7 @@ export default function AdminDashboard() {
               setRechargeHistory(rechargeHistoryData)
             }
           } catch (error) {
-            console.error('Error loading pending requests:', error)
+            console.warn('Error loading pending requests:', error)
           }
         }
         loadPendingRequests()
@@ -905,7 +1192,7 @@ export default function AdminDashboard() {
         showError(errorData.message || 'Failed to update transaction status')
       }
     } catch (error) {
-      console.error('Error updating transaction:', error)
+      console.warn('Error updating transaction:', error)
       showError('Failed to update transaction status')
     }
   }
@@ -949,7 +1236,7 @@ export default function AdminDashboard() {
               setWithdrawHistory(withdrawHistoryData)
             }
           } catch (error) {
-            console.error('Error loading pending requests:', error)
+            console.warn('Error loading pending requests:', error)
           }
         }
         loadPendingRequests()
@@ -958,7 +1245,7 @@ export default function AdminDashboard() {
         showError(errorData.message || 'Failed to update transaction status')
       }
     } catch (error) {
-      console.error('Error updating transaction:', error)
+      console.warn('Error updating transaction:', error)
       showError('Failed to update transaction status')
     }
   }
@@ -988,7 +1275,7 @@ export default function AdminDashboard() {
                 setUsers(userData.users || [])
               }
             } catch (error) {
-              console.error('Error refreshing users:', error)
+              console.warn('Error refreshing users:', error)
             }
           }
           loadUsers()
@@ -1000,7 +1287,7 @@ export default function AdminDashboard() {
           showError('Failed to update user status')
         }
       } catch (error) {
-        console.error('Error blocking user:', error)
+        console.warn('Error blocking user:', error)
         showError('Failed to update user status')
       }
     }
@@ -1030,7 +1317,7 @@ export default function AdminDashboard() {
                 setUsers(userData.users || [])
               }
             } catch (error) {
-              console.error('Error refreshing users:', error)
+              console.warn('Error refreshing users:', error)
             }
           }
           loadUsers()
@@ -1040,7 +1327,7 @@ export default function AdminDashboard() {
           showError('Failed to delete user')
         }
       } catch (error) {
-        console.error('Error deleting user:', error)
+        console.warn('Error deleting user:', error)
         showError('Failed to delete user')
       }
     }
@@ -1070,7 +1357,7 @@ export default function AdminDashboard() {
         showError('Failed to refresh users list')
       }
     } catch (error) {
-      console.error('Error refreshing users:', error)
+      console.warn('Error refreshing users:', error)
       showError('Failed to refresh users list')
     }
   }
@@ -1134,7 +1421,7 @@ export default function AdminDashboard() {
         showError(error.message || 'Failed to save payment settings')
       }
     } catch (error) {
-      console.error('Error saving payment settings:', error)
+      console.warn('Error saving payment settings:', error)
       showError('Failed to save payment settings')
     }
   }
@@ -1180,7 +1467,7 @@ export default function AdminDashboard() {
         showError(error.message || 'Failed to create coupon')
       }
     } catch (error) {
-      console.error('Error creating coupon:', error)
+      console.warn('Error creating coupon:', error)
       showError('Failed to create coupon')
     }
   }
@@ -1209,7 +1496,7 @@ export default function AdminDashboard() {
         showError(error.message || 'Failed to update coupon')
       }
     } catch (error) {
-      console.error('Error updating coupon:', error)
+      console.warn('Error updating coupon:', error)
       showError('Failed to update coupon')
     }
   }
@@ -1229,7 +1516,7 @@ export default function AdminDashboard() {
           showError(error.message || 'Failed to delete coupon')
         }
       } catch (error) {
-        console.error('Error deleting coupon:', error)
+        console.warn('Error deleting coupon:', error)
         showError('Failed to delete coupon')
       }
     }
@@ -1482,7 +1769,7 @@ export default function AdminDashboard() {
                             showError('Failed to refresh plans')
                           }
                         } catch (error) {
-                          console.error('Error refreshing plans:', error)
+                          console.warn('Error refreshing plans:', error)
                           showError('Error refreshing plans')
                         }
                       }}
@@ -1856,7 +2143,7 @@ export default function AdminDashboard() {
                                 showError('Failed to delete image');
                               }
                             } catch (error) {
-                              console.error('Error deleting image:', error);
+                              console.warn('Error deleting image:', error);
                               showError('Failed to delete image');
                             }
                           }
@@ -2195,300 +2482,60 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'earningsControl' && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Payment Settings</h3>
-            <p className="text-gray-600 mb-6">Manage payment method details for user recharges.</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* EasyPaisa Settings */}
-              <div className="border border-gray-200 rounded-lg p-6">
-                <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
-                    <span className="text-white font-bold text-sm">EP</span>
-                  </div>
-                  <h4 className="text-lg font-semibold text-gray-800">EasyPaisa</h4>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Account Number</label>
-                    <input
-                      type="text"
-                      value={paymentDetails.easypaisa.number}
-                      onChange={(e) => handleUpdatePaymentDetails('easypaisa', 'number', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                      placeholder="0300 1234567"
-                    />
-                  </div>
-                </div>
-              </div>
+          <div className={styles.earningsPage}>
+            <h1 className={styles.pageTitle}>Earnings Control</h1>
+            <p className={styles.pageSub}>Set per-plan reward rates for ad views and referrals</p>
 
-              {/* JazzCash Settings */}
-              <div className="border border-gray-200 rounded-lg p-6">
-                <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mr-3">
-                    <span className="text-white font-bold text-sm">JC</span>
-                  </div>
-                  <h4 className="text-lg font-semibold text-gray-800">JazzCash</h4>
+            {earningsPlans.map(p => (
+              <div key={p.id} className={styles.planRow}>
+                <div className={styles.planRowHead}>
+                  <span className={styles.planName}>{p.name}</span>
+                  <span className={styles.planBadge}>{p.id}</span>
                 </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Account Number</label>
-                    <input
-                      type="text"
-                      value={paymentDetails.jazzcash.number}
-                      onChange={(e) => handleUpdatePaymentDetails('jazzcash', 'number', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                      placeholder="0300 7654321"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={handleSavePaymentDetails}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
-              >
-                Save Payment Settings
-              </button>
-            </div>
-
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="text-sm font-medium text-blue-800 mb-2">💡 Payment Settings Info:</h4>
-              <ul className="text-sm text-blue-700 space-y-1">
-                <li>• These details will be shown to users when they recharge</li>
-                <li>• Users can choose between EasyPaisa and JazzCash</li>
-                <li>• Click "Save Payment Settings" to save changes</li>
-                <li>• Make sure account numbers are correct and active</li>
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'earningsControl' && (
-          <div className="space-y-6">
-            {/* Add Coupon Form */}
-            {showAddCoupon && (
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Add New Coupon</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Coupon Code *</label>
-                    <input
-                      type="text"
-                      value={newCoupon.code}
-                      onChange={(e) => setNewCoupon({...newCoupon, code: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                      placeholder="WELCOME10"
-                      maxLength="20"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Bonus Amount (Rs) *</label>
+                <div className={styles.planFields}>
+                  <div className={styles.field}>
+                    <label>Reward per ad view ($)</label>
                     <input
                       type="number"
-                      value={newCoupon.bonusAmount}
-                      onChange={(e) => setNewCoupon({...newCoupon, bonusAmount: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                      placeholder="10"
-                      min="1"
                       step="0.01"
+                      min="0"
+                      value={p.perAd.toFixed(2)}
+                      onChange={e => handleEarningsFieldChange(p.id, 'perAd', e.target.value)}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Max Usage (Optional)</label>
+                  <div className={styles.field}>
+                    <label>Referral bonus ($)</label>
                     <input
                       type="number"
-                      value={newCoupon.maxUsage}
-                      onChange={(e) => setNewCoupon({...newCoupon, maxUsage: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                      placeholder="100"
-                      min="1"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Leave empty for unlimited usage</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <select
-                      value={newCoupon.isActive}
-                      onChange={(e) => setNewCoupon({...newCoupon, isActive: e.target.value === 'true'})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                    >
-                      <option value={true}>Active</option>
-                      <option value={false}>Inactive</option>
-                    </select>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea
-                      value={newCoupon.description}
-                      onChange={(e) => setNewCoupon({...newCoupon, description: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                      placeholder="Welcome bonus for new users"
-                      rows="3"
+                      step="0.01"
+                      min="0"
+                      value={p.referral.toFixed(2)}
+                      onChange={e => handleEarningsFieldChange(p.id, 'referral', e.target.value)}
                     />
                   </div>
-                </div>
-                <div className="flex space-x-3 mt-6">
-                  <button
-                    onClick={handleAddCoupon}
-                    className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    Create Coupon
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowAddCoupon(false)
-                      setNewCoupon({
-                        code: '',
-                        bonusAmount: '',
-                        maxUsage: '',
-                        isActive: true,
-                        description: ''
-                      })
-                    }}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-                  >
-                    Cancel
-                  </button>
                 </div>
               </div>
+            ))}
+
+            <button
+              className={`${styles.btn} ${styles.btnGold} ${styles.btnFull}`}
+              style={{ marginTop: '6px' }}
+              onClick={saveEarningsPlans}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+              </svg>
+              Save Changes
+            </button>
+            {earningsSavedMsg && (
+              <p className={styles.savedMsg}>Saved.</p>
             )}
-
-            {/* Coupons List */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-gray-800">Coupon Management</h3>
-                <button
-                  onClick={() => setShowAddCoupon(true)}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  Add New Coupon
-                </button>
-              </div>
-
-              {coupons.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No coupons available</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Code</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Bonus Amount</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Usage</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Description</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {coupons.map((coupon) => (
-                        <tr key={coupon._id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4">
-                            <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded text-black">
-                              {coupon.code}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="font-semibold text-green-600">Rs{coupon.bonusAmount}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-sm text-gray-600">
-                              {coupon.usageCount || 0}
-                              {coupon.maxUsage && ` / ${coupon.maxUsage}`}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              coupon.isActive 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {coupon.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-sm text-gray-600">{coupon.description}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleToggleCouponStatus(coupon._id)}
-                                className={`px-2 py-1 rounded text-xs ${
-                                  coupon.isActive
-                                    ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                                    : 'bg-green-100 text-green-700 hover:bg-green-200'
-                                }`}
-                              >
-                                {coupon.isActive ? 'Deactivate' : 'Activate'}
-                              </button>
-                              <button
-                                onClick={() => handleDeleteCoupon(coupon._id)}
-                                className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* Used Coupons History */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Coupon Usage History</h3>
-              {usedCoupons.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No coupons have been used yet</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">User</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Coupon Code</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Bonus Amount</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Used Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {usedCoupons.map((usedCoupon, index) => (
-                        <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4">
-                            <div>
-                              <div className="font-medium text-gray-800">{usedCoupon.userName}</div>
-                              <div className="text-sm text-gray-500">{usedCoupon.userPhone}</div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded text-black">
-                              {usedCoupon.couponCode}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="font-semibold text-green-600">Rs{usedCoupon.bonusAmount}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-sm text-gray-600">
-                              {new Date(usedCoupon.usedDate).toLocaleDateString()}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
           </div>
         )}
+
+
 
         {/* Recharge History Tab */}
         {false && activeTab === 'planRequests' && (
@@ -2674,17 +2721,309 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === 'mysteryBoxes' && (
-          <div className={styles.placeholder}>
-            <h3>Mystery Boxes</h3>
-            <p>Configure mystery box rewards and odds here.</p>
+{activeTab === 'mysteryBoxes' && (
+          <div className={styles.mysteryPage}>
+            <h1 className={styles.pageTitle}>Mystery Boxes</h1>
+            <p className={styles.pageSub}>Set monthly top-leaderboard rewards</p>
+
+            {/* Enable toggle card */}
+            <div className={styles.enableCard}>
+              <div>
+                <div className={styles.enableCardLabel}>Enable Mystery Boxes</div>
+                <div className={styles.enableCardSub}>Show reward boxes to users on the leaderboard</div>
+              </div>
+              <label className={styles.switch}>
+                <input
+                  type="checkbox"
+                  checked={mysteryBoxesEnabled}
+                  onChange={e => setMysteryBoxesEnabled(e.target.checked)}
+                />
+                <span className={styles.slider}></span>
+              </label>
+            </div>
+
+            {/* Save button */}
+            <button
+              className={`${styles.btn} ${styles.btnGold} ${styles.btnFull}`}
+              style={{ marginBottom: '24px' }}
+              onClick={saveMysteryBoxes}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+              </svg>
+              Save
+            </button>
+
+            {/* Box cards */}
+            {mysteryBoxes.map(b => (
+              <div
+                key={b.id}
+                className={`${styles.boxCard} ${
+                  b.rank === 1 ? styles.boxCardRank1 :
+                  b.rank === 3 ? styles.boxCardRank3 : ''
+                }`}
+              >
+                <div className={styles.boxMedal}>{b.medal}</div>
+                <div className={styles.boxTitle}>{b.title}</div>
+                <div className={styles.boxDesc}>{b.desc}</div>
+                <div className={styles.boxValue}>${b.value}</div>
+                <div className={styles.boxActions}>
+                  <button
+                    className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`}
+                    onClick={() => openEditBox(b)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className={`${styles.btn} ${styles.btnDangerOutline} ${styles.btnSm}`}
+                    onClick={() => deleteBox(b.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Inline edit modal */}
+            {editingBox && (
+              <div className={styles.editModal}>
+                <div className={styles.editModalBox}>
+                  <div className={styles.editModalTitle}>Edit — {editingBox.title}</div>
+                  <div className={styles.field}>
+                    <label>New cash prize amount ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={editBoxValue}
+                      onChange={e => setEditBoxValue(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+                  <div className={styles.editModalActions}>
+                    <button
+                      className={`${styles.btn} ${styles.btnGold}`}
+                      onClick={confirmEditBox}
+                    >
+                      Confirm
+                    </button>
+                    <button
+                      className={`${styles.btn} ${styles.btnOutline}`}
+                      onClick={() => setEditingBox(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === 'ecommerce' && (
-          <div className={styles.placeholder}>
-            <h3>E-Commerce</h3>
-            <p>Manage store products and orders here.</p>
+          <div className={styles.ecommercePage}>
+            <div className={styles.pageHeadRow}>
+              <div>
+                <h1 className={styles.pageTitle}>E-Commerce</h1>
+                <p className={styles.pageSub}>Manage products and view orders</p>
+              </div>
+              <button className={`${styles.btn} ${styles.btnGold}`} onClick={openAddProduct}>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Product
+              </button>
+            </div>
+
+            <div className={styles.tabs} style={{ marginTop: '20px' }}>
+              <button
+                className={`${styles.tab} ${ecommerceTab === 'products' ? styles.tabActive : ''}`}
+                onClick={() => setEcommerceTab('products')}
+              >
+                Products ({products.length})
+              </button>
+              <button
+                className={`${styles.tab} ${ecommerceTab === 'orders' ? styles.tabActive : ''}`}
+                onClick={() => setEcommerceTab('orders')}
+              >
+                Orders ({orders.length})
+              </button>
+            </div>
+
+            <div>
+              {ecommerceTab === 'products' ? (
+                products.length > 0 ? (
+                  <div className={styles.productsGrid}>
+                    {products.map(p => (
+                      <div key={p.id} className={styles.productCard}>
+                        <img className={styles.productImg} src={p.img} alt={p.name} />
+                        <div className={styles.productBody}>
+                          <div className={styles.productTop}>
+                            <div className={styles.productName}>{p.name}</div>
+                            <span
+                              className={`${styles.status} ${p.active ? styles.active : styles.suspended}`}
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => toggleProduct(p.id)}
+                              title="Click to toggle status"
+                            >
+                              {p.active ? 'Active' : 'Hidden'}
+                            </span>
+                          </div>
+                          <div className={styles.productDesc}>{p.desc}</div>
+                          <div className={styles.productPrice}>{p.currency} {p.price.toLocaleString()}</div>
+                          <div className={styles.productActions}>
+                            <button className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`} onClick={() => openEditProduct(p)}>
+                              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                              </svg>
+                              Edit
+                            </button>
+                            <button className={`${styles.btn} ${styles.btnDangerOutline} ${styles.btnSm}`} onClick={() => deleteProduct(p.id)}>
+                              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                              </svg>
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.empty}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                      <path d="M3 6h18"/>
+                      <path d="M16 10a4 4 0 0 1-8 0"/>
+                    </svg>
+                    <p>No products yet. Click "Add Product" to create one.</p>
+                  </div>
+                )
+              ) : (
+                orders.length > 0 ? (
+                  orders.map(o => (
+                    <div key={o.id} className={styles.rowCard}>
+                      <div className={styles.rowIcon}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="9" cy="21" r="1"/>
+                          <circle cx="20" cy="21" r="1"/>
+                          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div className={styles.rowTitle}>{o.product}</div>
+                        <div className={styles.rowSub}>{o.customer} · {o.currency} {o.amount.toLocaleString()}</div>
+                      </div>
+                      <div className={styles.rowActions}>
+                        <span className={`${styles.status} ${styles[o.status] || ''}`}>{o.status}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className={styles.empty}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <circle cx="9" cy="21" r="1"/>
+                      <circle cx="20" cy="21" r="1"/>
+                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                    </svg>
+                    <p>No orders yet.</p>
+                  </div>
+                )
+              )}
+            </div>
+
+            {/* Custom Product Modal (Add/Edit) */}
+            {productForm && (
+              <div className={styles.editModal}>
+                <div className={styles.editModalBox} style={{ maxWidth: '480px' }}>
+                  <div className={styles.editModalTitle}>
+                    {productForm.mode === 'add' ? 'Add New Product' : 'Edit Product'}
+                  </div>
+                  
+                  <div className={styles.field}>
+                    <label>Product Name</label>
+                    <input
+                      type="text"
+                      value={productForm.name}
+                      onChange={e => setProductForm({ ...productForm, name: e.target.value })}
+                      placeholder="Enter product name"
+                    />
+                  </div>
+
+                  <div className={styles.field}>
+                    <label>Short Description</label>
+                    <textarea
+                      value={productForm.desc}
+                      onChange={e => setProductForm({ ...productForm, desc: e.target.value })}
+                      placeholder="Enter product description"
+                      rows="3"
+                    />
+                  </div>
+
+                  <div className={styles.field}>
+                    <label>Price (Rs)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={productForm.price}
+                      onChange={e => setProductForm({ ...productForm, price: e.target.value })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className={styles.field}>
+                    <label>Product Picture</label>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
+                      <img
+                        src={productForm.img}
+                        alt="Preview"
+                        style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'contain', background: 'var(--panel-2)' }}
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProductImageUpload}
+                        style={{ display: 'none' }}
+                        id="modal-image-upload"
+                      />
+                      <label
+                        htmlFor="modal-image-upload"
+                        className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`}
+                        style={{ cursor: 'pointer', margin: 0 }}
+                      >
+                        Upload Image
+                      </label>
+                    </div>
+                    <input
+                      type="text"
+                      value={productForm.img}
+                      onChange={e => setProductForm({ ...productForm, img: e.target.value })}
+                      placeholder="Or enter image URL"
+                      style={{ marginTop: '8px' }}
+                    />
+                  </div>
+
+                  <div className={styles.editModalActions}>
+                    <button
+                      className={`${styles.btn} ${styles.btnGold}`}
+                      onClick={saveProductForm}
+                    >
+                      Save Product
+                    </button>
+                    <button
+                      className={`${styles.btn} ${styles.btnOutline}`}
+                      onClick={() => setProductForm(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
     </AdminShell>

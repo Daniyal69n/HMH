@@ -14,11 +14,11 @@ export async function GET() {
       images: images || {}
     });
   } catch (error) {
-    console.error('Error fetching images:', error);
+    console.warn('Error fetching images (offline mode):', error.message);
     return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to fetch images' 
-    }, { status: 500 });
+      success: true, 
+      images: {} 
+    });
   }
 }
 

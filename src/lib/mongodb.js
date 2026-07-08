@@ -33,8 +33,7 @@ async function connectDB() {
       console.log('MongoDB connected successfully');
       return mongoose;
     }).catch((error) => {
-      console.error('MongoDB connection error:', error.message);
-      console.error('Error details:', error);
+      console.warn('MongoDB connection failed (offline mode):', error.message);
       cached.promise = null;
       throw error;
     });
@@ -44,7 +43,7 @@ async function connectDB() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
-    console.error('MongoDB connection failed:', e.message);
+    console.warn('MongoDB connection error (offline mode):', e.message);
     throw e;
   }
 

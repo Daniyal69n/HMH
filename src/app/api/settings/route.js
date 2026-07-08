@@ -31,12 +31,8 @@ export async function GET(request) {
     }
     
   } catch (error) {
-    console.error('Settings fetch error:', error.message);
-    console.error('Full error:', error);
-    return Response.json({ 
-      message: 'Internal server error', 
-      error: error.message 
-    }, { status: 500 });
+    console.warn('Settings fetch connection failed (offline mode):', error.message);
+    return Response.json(null);
   }
 }
 

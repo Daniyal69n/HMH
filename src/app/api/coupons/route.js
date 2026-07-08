@@ -25,8 +25,8 @@ export async function GET(request) {
     });
     
   } catch (error) {
-    console.error('Coupon fetch error:', error);
-    return Response.json({ message: 'Internal server error' }, { status: 500 });
+    console.warn('Coupon fetch connection failed (offline mode):', error.message);
+    return Response.json([]);
   }
 }
 
