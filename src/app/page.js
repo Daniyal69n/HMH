@@ -404,7 +404,9 @@ export default function Page() {
   }
 
   const copyRefLink = async () => {
-    const link = typeof window !== 'undefined' ? `${window.location.origin}/register?ref=${profile.phone || ''}` : ''
+    const idStr = (profile._id || '').toString()
+    const shortId = idStr.length >= 8 ? idStr.slice(-8) : profile.phone
+    const link = typeof window !== 'undefined' ? `${window.location.origin}/register?ref=${shortId}` : ''
     try {
       await navigator.clipboard.writeText(link)
     } catch { }
@@ -799,7 +801,7 @@ export default function Page() {
             <div className="card" style={{ marginBottom: 18 }}>
               <label style={{ marginTop: 0 }}>Your referral link</label>
               <div className="link-row">
-                <input type="text" value={typeof window !== 'undefined' ? `${window.location.origin}/register?ref=${profile.phone || ''}` : ''} readOnly />
+                <input type="text" value={(() => { const idStr = (profile._id || '').toString(); const shortId = idStr.length >= 8 ? idStr.slice(-8) : (profile.phone || ''); return typeof window !== 'undefined' ? `${window.location.origin}/register?ref=${shortId}` : '' })()} readOnly />
                 <button onClick={copyRefLink}>Copy</button>
               </div>
             </div>
