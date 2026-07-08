@@ -24,6 +24,13 @@ export default function AdminDashboard() {
   const [planRequestsLoading, setPlanRequestsLoading] = useState(false)
   const [previewReceiptUrl, setPreviewReceiptUrl] = useState(null)
   const [users, setUsers] = useState([])
+  const [dashboardStats, setDashboardStats] = useState({
+    totalUsers: 0,
+    pendingWithdrawals: 0,
+    pendingPlanRequests: 0,
+    totalEarningsDistributed: 0,
+    totalWithdrawalsPaid: 0
+  })
   const [userSearchQuery, setUserSearchQuery] = useState('')
   const [ads, setAds] = useState([])
   const [newAd, setNewAd] = useState({ title: '', url: '' })
@@ -891,6 +898,19 @@ export default function AdminDashboard() {
         }
       }
 
+      // Load dashboard stats
+      const loadDashboardStats = async () => {
+        try {
+          const response = await fetch('/api/admin/stats')
+          if (response.ok) {
+            const data = await response.json()
+            setDashboardStats(data)
+          }
+        } catch (error) {
+          console.warn('Error loading dashboard stats:', error)
+        }
+      }
+
       // Load recent activities
       const loadRecentActivities = async () => {
         try {
@@ -912,6 +932,7 @@ export default function AdminDashboard() {
       }
       
       // Load all data
+      loadDashboardStats()
       loadUsers()
       loadPaymentDetails()
       loadCoupons()
@@ -921,8 +942,9 @@ export default function AdminDashboard() {
       loadWithdrawHistory()
       loadRecentActivities()
       
-      // Set up periodic refresh every 30 seconds
+      // Set up periodic refresh every 10 seconds for real-time dashboard feel
       const refreshInterval = setInterval(() => {
+        loadDashboardStats()
         loadUsers()
         loadPaymentDetails()
         loadCoupons()
@@ -930,7 +952,7 @@ export default function AdminDashboard() {
         loadRechargeHistory()
         loadWithdrawHistory()
         loadRecentActivities()
-      }, 30000)
+      }, 10000)
       
       return () => {
         clearInterval(refreshInterval)
@@ -1805,7 +1827,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <div className={styles.statLabel}>Total Users</div>
-                  <div className={styles.statValue}>{users.length}</div>
+                  <div className={styles.statValue}>{dashboardStats.totalUsers}</div>
                 </div>
               </div>
 
@@ -1816,7 +1838,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <div className={styles.statLabel}>Pending Withdrawals</div>
-                  <div className={styles.statValue}>{pendingWithdrawRequests.length}</div>
+                  <div className={styles.statValue}>{dashboardStats.pendingWithdrawals}</div>
                 </div>
               </div>
 
@@ -1827,7 +1849,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <div className={styles.statLabel}>Pending Plan Requests</div>
-                  <div className={styles.statValue}>{pendingRechargeRequests.length}</div>
+                  <div className={styles.statValue}>{dashboardStats.pendingPlanRequests}</div>
                 </div>
               </div>
 
@@ -1862,7 +1884,7 @@ export default function AdminDashboard() {
                 <div>
                   <div className={styles.statLabel}>Total Earnings Distributed</div>
                   <div className={styles.statValue}>
-                    Rs{withdrawHistory.reduce((sum, r) => sum + Number(r.amount || 0), 0).toFixed(2)}
+                    Rs{Number(dashboardStats.totalEarningsDistributed || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
               </div>
@@ -1875,7 +1897,7 @@ export default function AdminDashboard() {
                 <div>
                   <div className={styles.statLabel}>Total Withdrawals Paid</div>
                   <div className={styles.statValue}>
-                    Rs{withdrawHistory.filter(r => r.status === 'approved').reduce((sum, r) => sum + Number(r.amount || 0), 0).toFixed(2)}
+                    Rs{Number(dashboardStats.totalWithdrawalsPaid || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
               </div>
