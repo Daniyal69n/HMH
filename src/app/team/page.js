@@ -34,9 +34,10 @@ export default function TeamPage() {
         if (user) {
           setUserData(user)
           
-          // Generate referral link for this user
+          // Generate referral link using short user ID (last 8 chars of _id)
+          const shortId = user._id ? user._id.substring(user._id.length - 8) : user.phone
           const baseUrl = window.location.origin
-          const userReferralLink = `${baseUrl}/register?ref=${user.phone}`
+          const userReferralLink = `${baseUrl}/register?ref=${shortId}`
           setReferralLink(userReferralLink)
         }
       } catch (error) {

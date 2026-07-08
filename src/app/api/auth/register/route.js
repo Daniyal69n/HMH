@@ -30,7 +30,12 @@ export async function POST(request) {
     // Validate referral code if provided
     let referrer = null;
     if (referralCode) {
+      // Try matching by phone first (backward compat), then by short _id (last 8 chars)
       referrer = await User.findOne({ phone: referralCode });
+      if (!referrer) {
+        // Match users whose _id ends with the provided short ID
+        referrer = await User.findOne({ _id: { $regex: new RegExp(referralCode + '$', 'i') } }).catch(() => null);
+      }
       if (!referrer) {
         return NextResponse.json(
           { error: 'Invalid referral code' },

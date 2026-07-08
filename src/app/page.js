@@ -608,7 +608,6 @@ export default function Page() {
               <div className="profile-meta">
                 <div className="eyebrow">Welcome to HMHPro</div>
                 <h2>{profile.name || 'Member'}</h2>
-                <div className="email">{profile.email || '—'}</div>
                 <div className="uid">ID: {profile._id ? profile._id.substring(profile._id.length - 8) : (profile.phone ? profile.phone.substring(Math.max(0, profile.phone.length - 8)) : '7f19c3e2')}</div>
                 <div className="badge-row">
                   <span className="badge">Unranked</span>
