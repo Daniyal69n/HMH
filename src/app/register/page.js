@@ -8,6 +8,7 @@ export default function RegisterPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
     phone: '',
     password: '',
     confirmPassword: '',
@@ -35,7 +36,7 @@ export default function RegisterPage() {
     }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     setError('')
 
@@ -50,10 +51,30 @@ export default function RegisterPage() {
     }
 
     setLoading(true)
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+          referralCode: formData.referralCode
+        })
+      })
+
+      const data = await response.json()
+      if (response.ok) {
+        router.push('/login?registered=true')
+      } else {
+        setError(data.error || 'Registration failed.')
+      }
+    } catch (err) {
+      setError('Connection error. Please try again.')
+    } finally {
       setLoading(false)
-      router.push('/login')
-    }, 450)
+    }
   }
 
   return (
@@ -78,6 +99,17 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 placeholder="Enter your full name"
               />
+
+              <label htmlFor="email">Email address</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter your email address"
+              />
+
 
               <label htmlFor="phone">Phone number</label>
               <input

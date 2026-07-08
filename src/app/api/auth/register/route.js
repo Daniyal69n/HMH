@@ -7,7 +7,7 @@ export async function POST(request) {
   try {
     await connectDB();
     
-    const { name, phone, password, referralCode } = await request.json();
+    const { name, email, phone, password, referralCode } = await request.json();
 
     // Validate required fields
     if (!name || !phone || !password) {
@@ -39,16 +39,14 @@ export async function POST(request) {
       }
     }
 
-    // Create new user with signup bonus
-    const signupBonusAmount = 100; // Rs 100 signup bonus
-    
     const user = new User({
       name,
+      email: email || null,
       phone,
       password,
       referralCode: referralCode || null,
-      balance: signupBonusAmount, // Add signup bonus to account balance
-      signupBonus: signupBonusAmount, // Track signup bonus separately
+      balance: 0,
+      signupBonus: 0,
       investmentPlans: [],
       rechargeHistory: [],
       withdrawHistory: [],
@@ -57,19 +55,6 @@ export async function POST(request) {
     });
 
     await user.save();
-
-    // Create transaction record for signup bonus
-    const signupTransaction = new Transaction({
-      userId: user.phone,
-      userName: user.name,
-      type: 'signup_bonus',
-      amount: signupBonusAmount,
-      status: 'completed',
-      description: 'Welcome bonus for new user registration',
-      transactionId: 'SIGNUP' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
-    });
-
-    await signupTransaction.save();
 
     // Add user to referrer's team if referral code was used
     if (referrer) {
@@ -92,14 +77,14 @@ export async function POST(request) {
     const userData = user.toPublicJSON();
 
     return NextResponse.json({
-      message: `Registration successful! Welcome bonus of Rs ${signupBonusAmount} has been added to your account.`,
+      message: 'Registration successful! Please sign in.',
       ...userData
     }, { status: 201 });
 
   } catch (error) {
     console.error('Registration error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
   }

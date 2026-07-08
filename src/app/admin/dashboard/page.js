@@ -1293,6 +1293,78 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleApproveUser = async (userId) => {
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          action: 'approve'
+        }),
+      })
+
+      if (response.ok) {
+        const loadUsers = async () => {
+          try {
+            const userResponse = await fetch('/api/admin/users')
+            if (userResponse.ok) {
+              const userData = await userResponse.json()
+              setUsers(userData.users || [])
+            }
+          } catch (error) {
+            console.warn('Error refreshing users:', error)
+          }
+        }
+        await loadUsers()
+        showSuccess(`User registration approved successfully`)
+      } else {
+        showError('Failed to approve user')
+      }
+    } catch (error) {
+      console.warn('Error approving user:', error)
+      showError('Failed to approve user')
+    }
+  }
+
+  const handleRejectUser = async (userId) => {
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          action: 'reject'
+        }),
+      })
+
+      if (response.ok) {
+        const loadUsers = async () => {
+          try {
+            const userResponse = await fetch('/api/admin/users')
+            if (userResponse.ok) {
+              const userData = await userResponse.json()
+              setUsers(userData.users || [])
+            }
+          } catch (error) {
+            console.warn('Error refreshing users:', error)
+          }
+        }
+        await loadUsers()
+        showSuccess(`User registration rejected successfully`)
+      } else {
+        showError('Failed to reject user')
+      }
+    } catch (error) {
+      console.warn('Error rejecting user:', error)
+      showError('Failed to reject user')
+    }
+  }
+
   const handleDeleteUser = async (userId) => {
     if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       try {
@@ -1935,6 +2007,13 @@ export default function AdminDashboard() {
                     <span className={`${styles.status} ${user.isBlocked ? styles.suspended : styles.active}`}>
                       {user.isBlocked ? 'suspended' : 'active'}
                     </span>
+                    <span className={`${styles.status} ${
+                      user.status === 'approved' ? styles.approved :
+                      user.status === 'rejected' ? styles.rejected :
+                      styles.pending
+                    }`} style={{ marginLeft: '8px' }}>
+                      {user.status || 'pending'}
+                    </span>
                   </div>
                   <div className={styles.detailGrid}>
                     <div>
@@ -1961,6 +2040,25 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div className={styles.cardActions}>
+                    {user.status !== 'approved' && (
+                      <button
+                        type="button"
+                        className={`${styles.btn}`}
+                        style={{ backgroundColor: 'var(--green)', color: '#fff', borderColor: 'var(--green)' }}
+                        onClick={() => handleApproveUser(getUserKey(user))}
+                      >
+                        Approve Registration
+                      </button>
+                    )}
+                    {user.status !== 'rejected' && user.status !== 'approved' && (
+                      <button
+                        type="button"
+                        className={`${styles.btn} ${styles.btnDangerOutline}`}
+                        onClick={() => handleRejectUser(getUserKey(user))}
+                      >
+                        Reject
+                      </button>
+                    )}
                     <button
                       type="button"
                       className={`${styles.btn} ${styles.btnOutline}`}

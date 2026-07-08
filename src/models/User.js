@@ -7,6 +7,12 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Name is required'],
     trim: true
   },
+  email: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    default: null
+  },
   phone: {
     type: String,
     required: [true, 'Phone number is required'],
@@ -35,6 +41,11 @@ const userSchema = new mongoose.Schema({
   isBlocked: {
     type: Boolean,
     default: false
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
   },
   isAdmin: {
     type: Boolean,
@@ -187,6 +198,9 @@ userSchema.methods.toPublicJSON = function() {
   return userObject;
 };
 
+if (mongoose.models && mongoose.models.User) {
+  delete mongoose.models.User;
+}
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 export default User; 

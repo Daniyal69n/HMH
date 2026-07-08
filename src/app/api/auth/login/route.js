@@ -40,6 +40,23 @@ export async function POST(request) {
       );
     }
 
+    // Check if user is approved
+    if (user.status === 'pending') {
+      console.log('User login attempted but status is pending:', user.name);
+      return NextResponse.json(
+        { error: 'Your account registration is pending admin approval.' },
+        { status: 403 }
+      );
+    }
+
+    if (user.status === 'rejected') {
+      console.log('User login attempted but status is rejected:', user.name);
+      return NextResponse.json(
+        { error: 'Your account registration request has been rejected by the admin.' },
+        { status: 403 }
+      );
+    }
+
     // Verify password
     console.log('Verifying password...');
     const isPasswordValid = await user.comparePassword(password);
@@ -65,7 +82,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Login failed. Please try again.' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
   }

@@ -2,16 +2,18 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const registered = searchParams.get('registered')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     setError('')
 
@@ -21,10 +23,26 @@ export default function LoginPage() {
     }
 
     setLoading(true)
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, password })
+      })
+
+      const data = await response.json()
+      if (response.ok) {
+        // Save user info in localStorage
+        localStorage.setItem('user', JSON.stringify(data))
+        router.push('/')
+      } else {
+        setError(data.error || 'Invalid credentials.')
+      }
+    } catch (err) {
+      setError('Connection error. Please try again.')
+    } finally {
       setLoading(false)
-      router.push('/')
-    }, 450)
+    }
   }
 
   return (
@@ -57,6 +75,12 @@ export default function LoginPage() {
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Enter your password"
               />
+
+              {registered ? (
+                <div style={{ marginBottom: '14px', padding: '12px 14px', borderRadius: '10px', background: 'rgba(62, 207, 142, 0.12)', border: '1px solid rgba(62, 207, 142, 0.35)', color: '#3ecf8e', fontSize: '13px' }}>
+                  🎉 Registration successful! Please sign in below.
+                </div>
+              ) : null}
 
               {error ? (
                 <div style={{ marginTop: '14px', padding: '12px 14px', borderRadius: '10px', background: 'rgba(196, 87, 74, 0.12)', border: '1px solid rgba(196, 87, 74, 0.35)', color: 'var(--red)', fontSize: '13px' }}>

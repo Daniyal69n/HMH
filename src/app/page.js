@@ -17,14 +17,16 @@ function loadStoredProfile() {
   let merged = { ...EMPTY_PROFILE }
 
   try {
-    const userData = sessionStorage.getItem('userData')
+    const userData = localStorage.getItem('user')
     if (userData) {
       const user = JSON.parse(userData)
       merged = {
         ...merged,
-        name: user.name || merged.name,
-        email: user.email || merged.email,
-        username: user.username || user.phone || merged.username
+        name: user.name || '',
+        email: user.email || '',
+        username: user.phone || '',
+        phone: user.phone || '',
+        _id: user._id || ''
       }
     }
   } catch {}
@@ -32,7 +34,12 @@ function loadStoredProfile() {
   try {
     const savedProfile = localStorage.getItem('hmh-profile')
     if (savedProfile) {
-      merged = { ...merged, ...JSON.parse(savedProfile) }
+      const saved = JSON.parse(savedProfile)
+      if (saved.name) merged.name = saved.name
+      if (saved.email) merged.email = saved.email
+      if (saved.username) merged.username = saved.username
+      if (saved.city) merged.city = saved.city
+      if (saved.address) merged.address = saved.address
     }
   } catch {}
 
@@ -69,6 +76,12 @@ export default function Page() {
   const [spinRunning, setSpinRunning] = useState(false)
   const [spinResult, setSpinResult] = useState('Locked')
   const spinAngleRef = useRef(0)
+
+  const [teamData, setTeamData] = useState({
+    totalMembers: 0,
+    totalTeamEarnings: 0,
+    levelA: { count: 0, members: [] }
+  })
 
   const NAV = useMemo(
     () => [
@@ -165,6 +178,18 @@ export default function Page() {
     []
   )
 
+  const currentLevel = useMemo(() => {
+    let lvl = 0
+    for (let i = 0; i < levels.length; i++) {
+      if (teamData.totalMembers >= levels[i].membersRequired) {
+        lvl = levels[i].level
+      } else {
+        break
+      }
+    }
+    return lvl
+  }, [teamData.totalMembers, levels])
+
   const levelBadgeClass = (level) => {
     const palette = ['level-blue', 'level-green', 'level-red', 'level-amber', 'level-gold']
     return palette[(level - 1) % palette.length]
@@ -177,12 +202,37 @@ export default function Page() {
   }
 
   useLayoutEffect(() => {
+    if (typeof window !== 'undefined') {
+      const user = localStorage.getItem('user')
+      if (!user) {
+        router.replace('/login')
+        return
+      }
+    }
+
     const storedProfile = loadStoredProfile()
     setProfile(storedProfile)
     setProfileDraft(storedProfile)
     if (storedProfile.name) setCoName(storedProfile.name)
     profileReady.current = true
-  }, [])
+  }, [router])
+
+  useEffect(() => {
+    if (profile && profile.phone) {
+      const loadTeamData = async () => {
+        try {
+          const response = await fetch(`/api/user/team?userId=${profile.phone}`)
+          if (response.ok) {
+            const data = await response.json()
+            setTeamData(data)
+          }
+        } catch (error) {
+          console.warn('Error loading team data:', error)
+        }
+      }
+      loadTeamData()
+    }
+  }, [profile])
 
   useEffect(() => {
     const savedSpinAngle = localStorage.getItem('hmh-spin-angle')
@@ -251,7 +301,7 @@ export default function Page() {
   }
 
   const copyRefLink = async () => {
-    const link = 'https://meridian-earn.app/join/alexrivera'
+    const link = typeof window !== 'undefined' ? `${window.location.origin}/register?ref=${profile.phone || ''}` : ''
     try {
       await navigator.clipboard.writeText(link)
     } catch {}
@@ -322,10 +372,11 @@ export default function Page() {
     showToast('Profile saved')
 
     try {
-      const userData = sessionStorage.getItem('userData')
+      localStorage.setItem('hmh-profile', JSON.stringify(nextProfile))
+      const userData = localStorage.getItem('user')
       if (userData) {
         const user = JSON.parse(userData)
-        sessionStorage.setItem('userData', JSON.stringify({ ...user, name: nextProfile.name, email: nextProfile.email }))
+        localStorage.setItem('user', JSON.stringify({ ...user, name: nextProfile.name, email: nextProfile.email }))
       }
     } catch {}
   }
@@ -442,10 +493,10 @@ export default function Page() {
                 <div className="eyebrow">Welcome to HMHPro</div>
                 <h2>{profile.name || 'Member'}</h2>
                 <div className="email">{profile.email || '—'}</div>
-                <div className="uid">ID: 7f19c3e2</div>
+                <div className="uid">ID: {profile._id ? profile._id.substring(profile._id.length - 8) : (profile.phone ? profile.phone.substring(Math.max(0, profile.phone.length - 8)) : '7f19c3e2')}</div>
                 <div className="badge-row">
                   <span className="badge">Unranked</span>
-                  <span className="badge gold">Level 0</span>
+                  <span className="badge gold">Level {currentLevel}</span>
                 </div>
               </div>
             </div>
@@ -491,14 +542,19 @@ export default function Page() {
             <div className="card streak-card">
               <div className="streak-top">
                 <h3>🔥 Referral streak</h3>
-                <span className="streak-pill">Day 0 / 10</span>
+                <span className="streak-pill">Day {teamData.totalMembers} / 10</span>
               </div>
               <div className="dots-row">
                 {streakDots.map((_, i) => (
-                  <div key={i} className="streak-dot" />
+                  <div key={i} className={`streak-dot ${i < teamData.totalMembers ? 'active' : ''}`} />
                 ))}
               </div>
-              <div className="streak-note">Start your streak — invite 1 member today.</div>
+              <div className="streak-note">
+                {teamData.totalMembers > 0 
+                  ? `Your streak is active! You have referred ${teamData.totalMembers} approved member(s).`
+                  : 'Start your streak — invite 1 member today.'
+                }
+              </div>
               <div className="streak-note">Complete a 10-day streak to earn a $10 bonus reward.</div>
             </div>
 
@@ -613,7 +669,7 @@ export default function Page() {
                 <div className="stat-icon" style={{ background: 'rgba(201,160,74,.12)' }}>👤</div>
                 <div>
                   <div className="stat-label">Direct referrals</div>
-                  <div className="stat-value">0</div>
+                  <div className="stat-value">{teamData.levelA.count}</div>
                 </div>
               </div>
               <div className="card stat-card">
@@ -628,14 +684,30 @@ export default function Page() {
             <div className="card" style={{ marginBottom: 18 }}>
               <label style={{ marginTop: 0 }}>Your referral link</label>
               <div className="link-row">
-                <input type="text" value="https://meridian-earn.app/join/alexrivera" readOnly />
+                <input type="text" value={typeof window !== 'undefined' ? `${window.location.origin}/register?ref=${profile.phone || ''}` : ''} readOnly />
                 <button onClick={copyRefLink}>Copy</button>
               </div>
             </div>
 
             <div className="card" style={{ marginBottom: 18 }}>
-              <h3 style={{ margin: '0 0 14px' }}>👤 Direct referrals (0)</h3>
-              <div className="empty-state">No direct referrals yet. Share your link to start building your team.</div>
+              <h3 style={{ margin: '0 0 14px' }}>👤 Direct referrals ({teamData.levelA.count})</h3>
+              {teamData.levelA.members.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {teamData.levelA.members.map((member, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--text)' }}>{member.name}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{member.phone}</div>
+                      </div>
+                      <div style={{ fontSize: 13, color: 'var(--text-dim)', alignSelf: 'center' }}>
+                        Joined: {new Date(member.joinDate).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">No direct referrals yet. Share your link to start building your team.</div>
+              )}
             </div>
 
             <div className="card">
@@ -758,20 +830,25 @@ export default function Page() {
                     <span className="levels-summary-icon">🏆</span>
                     <span>Current level</span>
                   </h3>
-                  <span className="streak-pill">Level 0 / 50</span>
+                  <span className="streak-pill">Level {currentLevel} / 50</span>
                 </div>
                 <div className="levels-summary-grid">
                   <div>
-                    <div className="levels-summary-number">0</div>
-                    <div className="levels-summary-sub">0 referrals made</div>
+                    <div className="levels-summary-number">{currentLevel}</div>
+                    <div className="levels-summary-sub">{teamData.totalMembers} referral{teamData.totalMembers === 1 ? '' : 's'} made</div>
                   </div>
                   <div>
-                    <div className="level-bar"><div className="level-bar-fill" style={{ width: '0%' }} /></div>
+                    <div className="level-bar">
+                      <div 
+                        className="level-bar-fill" 
+                        style={{ width: `${Math.min(100, Math.round((currentLevel / 50) * 100))}%` }} 
+                      />
+                    </div>
                     <div className="levels-summary-footer">
                       <span className="levels-summary-meta">
                         <span>Overall progress</span>
                       </span>
-                      <span>0%</span>
+                      <span>{Math.min(100, Math.round((currentLevel / 50) * 100))}%</span>
                     </div>
                   </div>
                 </div>
@@ -810,8 +887,16 @@ export default function Page() {
                     <div className="level-body">
                       {level.isMilestone ? <div className="milestone-tag">⭐ Milestone level</div> : null}
                       <div className="level-req">5 Basic · 2 Standard · 2 Diamond · 2 Pro · 2 Premium · 2 Legend · {level.membersRequired} members required</div>
-                      <div className="level-bar"><div className="level-bar-fill" style={{ width: '0%' }} /></div>
-                      <div className="level-progress"><span>0/{level.membersRequired} members</span><span>0%</span></div>
+                      <div className="level-bar">
+                        <div 
+                          className="level-bar-fill" 
+                          style={{ width: `${Math.min(100, (teamData.totalMembers / level.membersRequired) * 100)}%` }} 
+                        />
+                      </div>
+                      <div className="level-progress">
+                        <span>{Math.min(level.membersRequired, teamData.totalMembers)}/{level.membersRequired} members</span>
+                        <span>{Math.min(100, Math.round((teamData.totalMembers / level.membersRequired) * 100))}%</span>
+                      </div>
                       {level.isMilestone ? (
                         <div className="level-rewards">
                           <span className="reward-chip">🎁 {level.rewardLabel}</span>
@@ -891,8 +976,8 @@ export default function Page() {
                   <div className="mem-chip" aria-hidden="true" />
                 </div>
 
-                <div className="mem-name">{profile.name || 'Alex Rivera'}</div>
-                <div className="mem-id">{profile.username ? profile.username.toUpperCase() : '7F19 C3E2 0091'}</div>
+                <div className="mem-name">{profile.name || 'Member'}</div>
+                <div className="mem-id">{profile._id ? `HMH-${profile._id.substring(profile._id.length - 8).toUpperCase()}` : (profile.phone ? `HMH-${profile.phone.substring(Math.max(0, profile.phone.length - 8))}` : '7F19 C3E2 0091')}</div>
 
                 <div className="mem-bottom">
                   <div className="mem-col">

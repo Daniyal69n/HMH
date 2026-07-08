@@ -113,6 +113,12 @@ export async function PUT(request) {
       case 'unblock':
         updateData = { isBlocked: false };
         break;
+      case 'approve':
+        updateData = { status: 'approved' };
+        break;
+      case 'reject':
+        updateData = { status: 'rejected' };
+        break;
       case 'toggleBlock':
         // Find the user first to get current blocked status
         let userToToggle;
