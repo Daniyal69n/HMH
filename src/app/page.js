@@ -117,12 +117,103 @@ export default function Page() {
 
   const plans = useMemo(
     () => [
-      { icon: '💰', name: 'Basic', price: 5, daily: 0.15, tasks: 'Watch 5 ads daily', direct: 1.0, indirect: 0.25 },
-      { icon: '🚀', name: 'Standard', price: 10, daily: 0.35, tasks: 'Watch 8 ads daily', direct: 2.0, indirect: 0.5 },
-      { icon: '💎', name: 'Diamond', price: 25, daily: 1.0, tasks: 'Watch 10 ads daily', direct: 5.0, indirect: 1.25, featured: true },
-      { icon: '⭐', name: 'Pro', price: 50, daily: 2.1, tasks: 'Watch 12 ads daily', direct: 10.0, indirect: 2.5 },
-      { icon: '👑', name: 'Premium', price: 100, daily: 4.5, tasks: 'Watch 15 ads daily', direct: 20.0, indirect: 5.0 },
-      { icon: '🏆', name: 'Legend', price: 250, daily: 12.0, tasks: 'Watch 20 ads daily', direct: 50.0, indirect: 12.5 }
+      { 
+        icon: '🟢', 
+        name: 'Basic', 
+        price: 5, 
+        desc: 'Perfect for Beginners',
+        buttonLabel: 'Get Started',
+        features: [
+          'Daily Earning',
+          'Direct commission',
+          'Referral Rewards',
+          'Fast Withdrawal',
+          '24/7 Support'
+        ]
+      },
+      { 
+        icon: '🔵', 
+        name: 'Standard', 
+        price: 10, 
+        desc: 'Best for Regular Earners',
+        featured: true, 
+        buttonLabel: 'Get Started',
+        features: [
+          'Higher Daily Earning',
+          'More Daily Tasks',
+          'Better Referral Rewards',
+          'Fast Withdrawal',
+          'Priority Support',
+          'Direct commission',
+          'Indirect commission'
+        ]
+      },
+      { 
+        icon: '💎', 
+        name: 'Diamond', 
+        price: 20, 
+        desc: 'Grow Your Income Faster',
+        buttonLabel: 'Get Started',
+        features: [
+          'Increased Daily Earning',
+          'Higher Referral Bonuses',
+          'Premium Features',
+          'Priority Withdrawal',
+          'Direct commission',
+          'Indirect commission',
+          '24/7 Support'
+        ]
+      },
+      { 
+        icon: '🟣', 
+        name: 'Pro', 
+        price: 30, 
+        desc: 'For Serious Earners',
+        buttonLabel: 'Get Started',
+        features: [
+          'High Daily Earnings',
+          'Bigger Referral Rewards',
+          'Advanced Features',
+          'Faster Withdrawals',
+          'Premium Support',
+          'Direct commission',
+          'Indirect commission'
+        ]
+      },
+      { 
+        icon: '👑', 
+        name: 'Premium', 
+        price: 40, 
+        desc: 'Maximum Value & Benefits',
+        buttonLabel: 'Get Started',
+        features: [
+          'Excellent Daily Earnings',
+          'Exclusive Rewards',
+          'VIP Benefits',
+          'Priority Support',
+          'Fast Withdrawals',
+          'Direct commission',
+          'Indirect commission',
+          'Downline Commission'
+        ]
+      },
+      { 
+        icon: '🌟', 
+        name: 'Legend', 
+        price: 50, 
+        desc: 'Ultimate Membership Experience',
+        buttonLabel: 'Join Legend',
+        features: [
+          'Highest Daily Earnings',
+          'Maximum Referral Rewards',
+          'Exclusive VIP Features',
+          'Fastest Withdrawals',
+          'Dedicated Premium Support',
+          'Direct commission',
+          'Indirect commission',
+          'Downline Commission'
+        ]
+      }
     ],
     []
   )
@@ -787,15 +878,16 @@ export default function Page() {
                   >
                     ${p.price} <span style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 500 }}>one-time</span>
                   </div>
+                  <div style={{ fontSize: 13, color: 'var(--text-dim)', margin: '4px 0 10px' }}>{p.desc}</div>
                   <ul style={{ textAlign: 'left', fontSize: 12.8, color: 'var(--text-dim)', margin: '14px 0', padding: 0, listStyle: 'none' }}>
-                    <li style={{ padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>📈 Daily earning: ${p.daily.toFixed(2)}/day</li>
-                    <li style={{ padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>🧩 Tasks: {p.tasks}</li>
-                    <li style={{ padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>👥 Direct referral: ${p.direct.toFixed(2)}</li>
-                    <li style={{ padding: '5px 0', borderBottom: '1px solid var(--border-soft)' }}>🔗 Indirect referral: ${p.indirect.toFixed(2)}</li>
-                    <li style={{ padding: '5px 0' }}>⚡ Fast withdrawal</li>
+                    {p.features.map((feat, idx) => (
+                      <li key={idx} style={{ padding: '6px 0', borderBottom: idx === p.features.length - 1 ? 'none' : '1px solid var(--border-soft)' }}>
+                        ✅ {feat}
+                      </li>
+                    ))}
                   </ul>
                   <button className={`btn ${p.featured ? 'btn-gold' : 'btn-ghost'}`} onClick={() => showToast(`${p.name} plan selected (preview mode)`)}>
-                    Get plan →
+                    {p.buttonLabel}
                   </button>
                 </div>
               ))}
