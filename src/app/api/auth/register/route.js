@@ -30,11 +30,10 @@ export async function POST(request) {
     // Validate referral code if provided
     let referrer = null;
     if (referralCode) {
-      // Try matching by phone first (backward compat), then by short _id (last 8 chars)
-      referrer = await User.findOne({ phone: referralCode });
+      // Try matching by shortId field first, then phone (backward compat)
+      referrer = await User.findOne({ shortId: referralCode });
       if (!referrer) {
-        // Match users whose _id ends with the provided short ID
-        referrer = await User.findOne({ _id: { $regex: new RegExp(referralCode + '$', 'i') } }).catch(() => null);
+        referrer = await User.findOne({ phone: referralCode });
       }
       if (!referrer) {
         return NextResponse.json(
@@ -59,6 +58,10 @@ export async function POST(request) {
       teamMembers: []
     });
 
+    await user.save();
+
+    // Store shortId (last 8 chars of _id) for referral link lookups
+    user.shortId = user._id.toString().slice(-8);
     await user.save();
 
     // Add user to referrer's team if referral code was used

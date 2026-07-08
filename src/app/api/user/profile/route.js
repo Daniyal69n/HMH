@@ -33,6 +33,12 @@ export async function GET(request) {
       await user.save();
     }
 
+    // Auto-populate shortId for existing users that don't have it yet
+    if (!user.shortId) {
+      user.shortId = user._id.toString().slice(-8);
+      await user.save();
+    }
+
     // Return user data without password
     const userData = user.toPublicJSON();
     

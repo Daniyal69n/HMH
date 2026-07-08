@@ -30,12 +30,13 @@ export default function TeamPage() {
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        const user = await getCurrentUser()
+        const user = await getCurrentUser(true) // force refresh to get _id from DB
         if (user) {
           setUserData(user)
           
-          // Generate referral link using short user ID (last 8 chars of _id)
-          const shortId = user._id ? user._id.substring(user._id.length - 8) : user.phone
+          // Generate referral link using shortId from DB (or derive from _id as fallback)
+          const idStr = user._id ? user._id.toString() : ''
+          const shortId = user.shortId || (idStr.length >= 8 ? idStr.slice(-8) : user.phone)
           const baseUrl = window.location.origin
           const userReferralLink = `${baseUrl}/register?ref=${shortId}`
           setReferralLink(userReferralLink)

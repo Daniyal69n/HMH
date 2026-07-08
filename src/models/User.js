@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  shortId: {
+    type: String,
+    default: null
+  },
   referredBy: {
     type: String,
     default: null
@@ -187,6 +191,11 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 userSchema.methods.toPublicJSON = function() {
   const userObject = this.toObject();
   delete userObject.password;
+  
+  // Add shortId derived from _id if not already stored
+  if (!userObject.shortId && userObject._id) {
+    userObject.shortId = userObject._id.toString().slice(-8);
+  }
   
   // Ensure arrays are properly initialized
   if (!userObject.investmentPlans) userObject.investmentPlans = [];
