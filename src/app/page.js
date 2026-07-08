@@ -925,9 +925,22 @@ export default function Page() {
 
             <div className="card spin-page-card">
               <div className="spin-progress-card">
-                <div className="spin-progress-copy">Invite 3 more members within 24 hours</div>
-                <div className="spin-progress-bar"><div className="spin-progress-fill" style={{ width: '0%' }} /></div>
-                <div className="spin-progress-meta"><span>0/3 invited</span><span>Resets in 24h</span></div>
+                <div className="spin-progress-copy">
+                  {teamData.totalMembers >= 3 
+                    ? 'Goal achieved! Spin wheel unlocked.' 
+                    : `Invite ${3 - teamData.totalMembers} more member${3 - teamData.totalMembers === 1 ? '' : 's'} within 24 hours`
+                  }
+                </div>
+                <div className="spin-progress-bar">
+                  <div 
+                    className="spin-progress-fill" 
+                    style={{ width: `${Math.min(100, (teamData.totalMembers / 3) * 100)}%` }} 
+                  />
+                </div>
+                <div className="spin-progress-meta">
+                  <span>{Math.min(3, teamData.totalMembers)}/3 invited</span>
+                  <span>Resets in 24h</span>
+                </div>
               </div>
 
               <div className="spin-wheel-holder">
