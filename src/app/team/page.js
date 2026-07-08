@@ -30,22 +30,25 @@ export default function TeamPage() {
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        // Read from same localStorage key the main dashboard uses
-        const stored = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+        // Get phone from localStorage (set by login page)
+        const stored = localStorage.getItem('user')
         const localUser = stored ? JSON.parse(stored) : null
+        const phone = localUser?.phone || localUser?.username
 
-        // Also try getCurrentUser as fallback
-        const user = localUser || await getCurrentUser(true)
-        if (user) {
-          setUserData(user)
-          
-          // Build shortId from _id (MongoDB ObjectId last 8 chars)
-          const idStr = (user._id || user.shortId || '').toString()
-          const shortId = idStr.length >= 8 ? idStr.slice(-8) : (user.shortId || user.phone)
-          const baseUrl = window.location.origin
-          const userReferralLink = `${baseUrl}/register?ref=${shortId}`
-          setReferralLink(userReferralLink)
-        }
+        if (!phone) return
+
+        // Always fetch fresh from DB to get correct _id as string
+        const res = await fetch(`/api/user/profile?phone=${encodeURIComponent(phone)}&_t=${Date.now()}`)
+        if (!res.ok) return
+        const freshUser = await res.json()
+
+        setUserData(freshUser)
+
+        // _id from API is always a 24-char hex string
+        const idStr = (freshUser._id || '').toString()
+        const shortId = freshUser.shortId || (idStr.length >= 8 ? idStr.slice(-8) : phone)
+        const baseUrl = window.location.origin
+        setReferralLink(`${baseUrl}/register?ref=${shortId}`)
       } catch (error) {
         console.error('Error loading user data:', error)
       }
