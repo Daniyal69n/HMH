@@ -1020,9 +1020,8 @@ export default function Page() {
                         margin: '8px 0 2px'
                       }}
                     >
-                      PKR {(p.price * PKR_RATE).toLocaleString()}
+                      ${p.price} <span style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 500 }}>one-time</span>
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 2 }}>(${p.price} one-time)</div>
                     <div style={{ fontSize: 13, color: 'var(--text-dim)', margin: '4px 0 10px' }}>{p.desc}</div>
                     <ul style={{ textAlign: 'left', fontSize: 12.8, color: 'var(--text-dim)', margin: '14px 0', padding: 0, listStyle: 'none' }}>
                       {p.features.map((feat, idx) => (
