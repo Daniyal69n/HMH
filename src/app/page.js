@@ -435,7 +435,9 @@ export default function Page() {
               style={{ color: 'var(--red)' }}
               onClick={(e) => {
                 e.preventDefault()
-                showToast('Logged out (preview mode)')
+                localStorage.removeItem('user')
+                localStorage.removeItem('hmh-profile')
+                router.replace('/login')
               }}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
