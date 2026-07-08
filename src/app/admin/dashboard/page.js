@@ -1579,242 +1579,86 @@ export default function AdminDashboard() {
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
             {/* Key Metrics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className={styles.statsGrid}>
               {/* Total Users */}
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Users</p>
-                    <p className="text-2xl font-bold text-gray-800">{users.length}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                    </svg>
-                  </div>
+              <div className={styles.statCard}>
+                <div className={styles.statIcon} style={{ background: 'rgba(111, 168, 220, 0.15)', color: '#6fa8dc' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div>
+                  <div className={styles.statLabel}>Total Users</div>
+                  <div className={styles.statValue}>{users.length}</div>
                 </div>
               </div>
 
-              {/* Total Investments */}
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Investments</p>
-                    <p className="text-2xl font-bold text-gray-800">
-                      {recentActivities.filter(activity => activity.type === 'investment').length}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
+              {/* Pending Withdrawals */}
+              <div className={styles.statCard}>
+                <div className={styles.statIcon} style={{ background: 'rgba(217, 169, 78, 0.15)', color: '#d9a94e' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+                </div>
+                <div>
+                  <div className={styles.statLabel}>Pending Withdrawals</div>
+                  <div className={styles.statValue}>{pendingWithdrawRequests.length}</div>
                 </div>
               </div>
 
-              {/* Total Revenue */}
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                    <p className="text-2xl font-bold text-gray-800">
-                      Rs{(() => {
-                        let totalRevenue = 0;
-                        recentActivities.forEach(activity => {
-                          if (activity.type === 'recharge' && activity.status === 'approved') {
-                            totalRevenue += activity.amount || 0;
-                          }
-                        });
-                        return totalRevenue.toFixed(2);
-                      })()}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                  </div>
+              {/* Pending Plan Requests */}
+              <div className={styles.statCard}>
+                <div className={styles.statIcon} style={{ background: 'rgba(62, 207, 142, 0.15)', color: '#3ecf8e' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12l4-4 4 4"/></svg>
+                </div>
+                <div>
+                  <div className={styles.statLabel}>Pending Plan Requests</div>
+                  <div className={styles.statValue}>{pendingRechargeRequests.length}</div>
                 </div>
               </div>
 
-              {/* Active Coupons */}
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Active Coupons</p>
-                    <p className="text-2xl font-bold text-gray-800">
-                      {coupons.filter(coupon => coupon.isActive).length}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                    </svg>
-                  </div>
+              {/* Active Ads */}
+              <div className={styles.statCard}>
+                <div className={styles.statIcon} style={{ background: 'rgba(164, 140, 224, 0.15)', color: '#a48ce0' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 </div>
-              </div>
-            </div>
-
-            {/* Detailed Analytics */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Recent Activity */}
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold text-gray-800">Recent Activity</h3>
-                  <button
-                    onClick={async () => {
-                      try {
-                        setActivityLoading(true)
-                        const response = await fetch('/api/admin/activity?limit=10')
-                        if (response.ok) {
-                          const data = await response.json()
-                          setRecentActivities(data)
-                          showSuccess('Recent activities refreshed successfully!')
-                        } else {
-                          showError('Failed to refresh recent activities')
-                        }
-                      } catch (error) {
-                        console.error('Error refreshing activities:', error)
-                        showError('Error refreshing recent activities')
-                      } finally {
-                        setActivityLoading(false)
-                      }
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm flex items-center space-x-1 transition-colors"
-                    disabled={activityLoading}
-                  >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span>{activityLoading ? 'Loading...' : 'Refresh'}</span>
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  {activityLoading ? (
-                    <div className="text-center py-4">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                      <p className="text-sm text-gray-500 mt-2">Loading activities...</p>
-                    </div>
-                  ) : recentActivities.length > 0 ? (
-                    recentActivities.slice(0, 5).map((activity, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <div className={`w-8 h-8 rounded-full ${activity.bgColor} flex items-center justify-center`}>
-                          <span className="text-sm">{activity.icon}</span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-800">{activity.message}</p>
-                          <p className="text-xs text-gray-500">
-                            {formatPakistanDate(activity.date)} {formatPakistanTime(activity.date)}
-                          </p>
-                        </div>
-                        {activity.amount && (
-                          <div className="text-right">
-                            <p className={`text-xs font-medium ${activity.color}`}>
-                              Rs{activity.amount}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4">
-                      <p className="text-gray-500">No recent activities found</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Investment Plan Performance */}
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Investment Plan Performance</h3>
-                <div className="space-y-3">
-                  {(() => {
-                    const planStats = {};
-                    
-                    // Calculate stats for each plan from recent activities
-                    recentActivities.forEach(activity => {
-                      if (activity.type === 'investment') {
-                        const planName = activity.message.replace('User invested in ', '');
-                        if (!planStats[planName]) {
-                          planStats[planName] = {
-                            count: 0,
-                            totalAmount: 0
-                          };
-                        }
-                        planStats[planName].count++;
-                        if (activity.amount) {
-                          // Convert string amount to number (remove Rs and commas)
-                          const amount = parseFloat(activity.amount.replace(/[Rs,]/g, '')) || 0;
-                          planStats[planName].totalAmount += amount;
+                <div>
+                  <div className={styles.statLabel}>Active Ads</div>
+                  <div className={styles.statValue}>
+                    {(() => {
+                      if (typeof window !== 'undefined') {
+                        try {
+                          const ads = JSON.parse(localStorage.getItem('admin_ads') || '[]');
+                          return ads.filter(a => a.active).length;
+                        } catch (e) {
+                          return 0;
                         }
                       }
-                    });
-                    
-                    const planEntries = Object.entries(planStats);
-                    
-                    if (planEntries.length === 0) {
-                      return (
-                        <div className="text-center py-4">
-                          <p className="text-gray-500">No investment data available</p>
-                        </div>
-                      );
-                    }
-                    
-                    return planEntries
-                      .sort((a, b) => b[1].count - a[1].count)
-                      .map(([planName, stats]) => (
-                        <div key={planName} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                          <div>
-                            <p className="font-medium text-gray-800">{planName}</p>
-                            <p className="text-sm text-gray-600">{stats.count} investments</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold text-green-600">Rs{stats.totalAmount.toFixed(2)}</p>
-                            <p className="text-xs text-gray-500">Total Value</p>
-                          </div>
-                        </div>
-                      ));
-                  })()}
+                      return 0;
+                    })()}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Financial Summary */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Financial Summary</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-600">Total Recharges</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    Rs{(() => {
-                      return recentActivities
-                        .filter(activity => activity.type === 'recharge' && activity.status === 'approved')
-                        .reduce((sum, activity) => sum + (activity.amount || 0), 0)
-                        .toFixed(2);
-                    })()}
-                  </p>
+              {/* Total Earnings Distributed */}
+              <div className={styles.statCard}>
+                <div className={styles.statIcon} style={{ background: 'rgba(217, 169, 78, 0.15)', color: '#d9a94e' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                 </div>
-                <div className="text-center p-4 bg-red-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-600">Total Withdrawals</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    Rs{(() => {
-                      return recentActivities
-                        .filter(activity => activity.type === 'withdraw' && activity.status === 'approved')
-                        .reduce((sum, activity) => sum + (activity.amount || 0), 0)
-                        .toFixed(2);
-                    })()}
-                  </p>
+                <div>
+                  <div className={styles.statLabel}>Total Earnings Distributed</div>
+                  <div className={styles.statValue}>
+                    Rs{withdrawHistory.reduce((sum, r) => sum + Number(r.amount || 0), 0).toFixed(2)}
+                  </div>
                 </div>
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-600">Coupon Bonuses</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    Rs{(() => {
-                      return recentActivities
-                        .filter(activity => activity.type === 'coupon_redeem')
-                        .reduce((sum, activity) => sum + (activity.amount || 0), 0)
-                        .toFixed(2);
-                    })()}
-                  </p>
+              </div>
+
+              {/* Total Withdrawals Paid */}
+              <div className={styles.statCard}>
+                <div className={styles.statIcon} style={{ background: 'rgba(226, 88, 77, 0.15)', color: '#e2584d' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                </div>
+                <div>
+                  <div className={styles.statLabel}>Total Withdrawals Paid</div>
+                  <div className={styles.statValue}>
+                    Rs{withdrawHistory.filter(r => r.status === 'approved').reduce((sum, r) => sum + Number(r.amount || 0), 0).toFixed(2)}
+                  </div>
                 </div>
               </div>
             </div>

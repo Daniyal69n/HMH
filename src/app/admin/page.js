@@ -86,10 +86,10 @@ export default function AdminPage() {
   // Show loading while checking authentication
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0b0d12] flex items-center justify-center" style={{ background: 'radial-gradient(1200px 600px at 15% -10%, rgba(201, 160, 74, 0.08), transparent 60%), #0b0d12' }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white">Checking admin access...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#e2b968] mx-auto mb-4"></div>
+          <p className="text-[#f2eee3]">Checking admin access...</p>
         </div>
       </div>
     )
@@ -101,30 +101,30 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'radial-gradient(1200px 600px at 15% -10%, rgba(201, 160, 74, 0.08), transparent 60%), #0b0d12' }}>
       <div className="w-full max-w-md">
         {/* Admin Logo/Header */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
-            <svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-20 h-20 bg-[#12151d] border border-[#262b38] rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
+            <svg className="w-10 h-10 text-[#e2b968]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Access</h1>
-          <p className="text-purple-100">Sign in to manage your platform</p>
+          <h1 className="text-3xl font-bold text-[#f2eee3] mb-2 font-serif" style={{ fontFamily: 'var(--font-fraunces), serif' }}>Admin Access</h1>
+          <p className="text-[#9598a3]">Sign in to manage your platform</p>
         </div>
 
         {/* Admin Login Form */}
-        <div className="bg-white rounded-2xl p-8 shadow-xl" style={{ boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px' }}>
+        <div className="bg-[#12151d] border border-[#262b38] rounded-2xl p-8 shadow-xl" style={{ boxShadow: 'var(--shadow)' }}>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Username */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="username" className="block text-sm font-medium text-[#9598a3] mb-2">
                 Admin Username
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-[#5c606c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
@@ -134,23 +134,23 @@ export default function AdminPage() {
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors text-black ${
-                    errors.username ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full pl-10 pr-4 py-3 bg-[#0b0d12] border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#c9a04a] focus:border-[#c9a04a] transition-all text-[#f2eee3] placeholder-[#5c606c] ${
+                    errors.username ? 'border-red-500/80 focus:ring-red-500 focus:border-red-500' : 'border-[#262b38]'
                   }`}
                   placeholder="Enter admin username"
                 />
               </div>
-              {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
+              {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username}</p>}
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-[#9598a3] mb-2">
                 Admin Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-[#5c606c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
@@ -160,26 +160,24 @@ export default function AdminPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors text-black ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full pl-10 pr-4 py-3 bg-[#0b0d12] border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#c9a04a] focus:border-[#c9a04a] transition-all text-[#f2eee3] placeholder-[#5c606c] ${
+                    errors.password ? 'border-red-500/80 focus:ring-red-500 focus:border-red-500' : 'border-[#262b38]'
                   }`}
                   placeholder="Enter admin password"
                 />
               </div>
-              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+              {errors.password && <p className="mt-1 text-sm text-red-400">{errors.password}</p>}
             </div>
-
-       
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#c9a04a] text-[#0b0d12] py-3 px-4 rounded-lg font-semibold hover:bg-[#e2b968] focus:outline-none focus:ring-2 focus:ring-[#c9a04a] focus:ring-offset-2 focus:ring-offset-[#12151d] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-[#0b0d12]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -195,7 +193,7 @@ export default function AdminPage() {
           <div className="mt-6 text-center">
             <button 
               onClick={() => router.push('/')}
-              className="text-purple-600 hover:text-purple-700 font-semibold"
+              className="text-[#c9a04a] hover:text-[#e2b968] font-semibold transition-colors"
             >
               ← Back to Main Site
             </button>

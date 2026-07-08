@@ -79,89 +79,247 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="admin-login-page">
+      <style>{`
+        .admin-login-page {
+          min-height: 100vh;
+          background: #0b0d12;
+          background-image: radial-gradient(1200px 600px at 15% -10%, rgba(201, 160, 74, 0.06), transparent 60%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 16px;
+          font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+          -webkit-font-smoothing: antialiased;
+        }
+        .admin-login-inner {
+          width: 100%;
+          max-width: 420px;
+        }
+        .admin-login-header {
+          text-align: center;
+          margin-bottom: 32px;
+        }
+        .admin-login-logo {
+          width: 72px;
+          height: 72px;
+          border-radius: 50%;
+          margin: 0 auto 16px;
+          background: conic-gradient(from 200deg, #7a6535, #c9a04a, #e2b968, #7a6535);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          font-size: 24px;
+          color: #0b0d12;
+          box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+        }
+        .admin-login-header h1 {
+          font-size: 26px;
+          font-weight: 600;
+          color: #e2b968;
+          margin: 0 0 6px;
+        }
+        .admin-login-header p {
+          margin: 0;
+          color: #5c606c;
+          font-size: 14px;
+        }
+        .admin-login-card {
+          background: #12151d;
+          border: 1px solid #1d212b;
+          border-radius: 16px;
+          padding: 32px 28px;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+        }
+        .admin-login-card form {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        .admin-login-field label {
+          display: block;
+          font-size: 13px;
+          font-weight: 500;
+          color: #9598a3;
+          margin-bottom: 8px;
+        }
+        .admin-login-input-wrap {
+          position: relative;
+        }
+        .admin-login-input-wrap .input-icon {
+          position: absolute;
+          left: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 18px;
+          height: 18px;
+          color: #5c606c;
+          pointer-events: none;
+          flex: none;
+        }
+        .admin-login-input-wrap .input-icon svg {
+          width: 18px;
+          height: 18px;
+        }
+        .admin-login-field input {
+          width: 100%;
+          background: #171b25;
+          border: 1px solid #262b38;
+          border-radius: 10px;
+          padding: 12px 14px 12px 42px;
+          color: #f2eee3;
+          font-size: 14px;
+          font-family: inherit;
+          transition: border-color 0.2s;
+          box-sizing: border-box;
+        }
+        .admin-login-field input:focus {
+          outline: none;
+          border-color: #7a6535;
+        }
+        .admin-login-field input.error {
+          border-color: #c4574a;
+        }
+        .admin-login-field .field-error {
+          margin-top: 6px;
+          font-size: 12.5px;
+          color: #c4574a;
+        }
+        .admin-login-submit {
+          width: 100%;
+          background: linear-gradient(135deg, #e2b968, #c9a04a);
+          color: #181205;
+          border: none;
+          border-radius: 12px;
+          padding: 14px 20px;
+          font-weight: 700;
+          font-size: 15px;
+          cursor: pointer;
+          transition: opacity 0.2s;
+          font-family: inherit;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          min-height: 48px;
+        }
+        .admin-login-submit:hover {
+          opacity: 0.9;
+        }
+        .admin-login-submit:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .admin-login-submit .spinner {
+          width: 18px;
+          height: 18px;
+          border: 2px solid rgba(24, 18, 5, 0.3);
+          border-top-color: #181205;
+          border-radius: 50%;
+          animation: admin-spin 0.6s linear infinite;
+        }
+        @keyframes admin-spin {
+          to { transform: rotate(360deg); }
+        }
+        .admin-login-footer {
+          margin-top: 20px;
+          text-align: center;
+        }
+        .admin-login-footer button {
+          background: none;
+          border: none;
+          color: #c9a04a;
+          font-weight: 600;
+          font-size: 14px;
+          cursor: pointer;
+          font-family: inherit;
+          padding: 4px 8px;
+        }
+        .admin-login-footer button:hover {
+          color: #e2b968;
+        }
+        @media (max-width: 480px) {
+          .admin-login-card {
+            padding: 24px 18px;
+          }
+          .admin-login-logo {
+            width: 60px;
+            height: 60px;
+            font-size: 20px;
+          }
+          .admin-login-header h1 {
+            font-size: 22px;
+          }
+        }
+      `}</style>
+
+      <div className="admin-login-inner">
         {/* Admin Logo/Header */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
-            <svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Access</h1>
-          <p className="text-purple-100">Sign in to manage your platform</p>
+        <div className="admin-login-header">
+          <div className="admin-login-logo">A</div>
+          <h1>Admin Access</h1>
+          <p>Sign in to manage your platform</p>
         </div>
 
         {/* Admin Login Form */}
-        <div className="bg-white rounded-2xl p-8 shadow-xl" style={{ boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px' }}>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="admin-login-card">
+          <form onSubmit={handleSubmit}>
             {/* Username */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Admin Username
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            <div className="admin-login-field">
+              <label htmlFor="username">Admin Username</label>
+              <div className="admin-login-input-wrap">
+                <span className="input-icon">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                </div>
+                </span>
                 <input
                   type="text"
                   id="username"
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
-                    errors.username ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={errors.username ? 'error' : ''}
                   placeholder="Enter admin username"
                 />
               </div>
-              {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
+              {errors.username && <p className="field-error">{errors.username}</p>}
             </div>
 
             {/* Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Admin Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            <div className="admin-login-field">
+              <label htmlFor="password">Admin Password</label>
+              <div className="admin-login-input-wrap">
+                <span className="input-icon">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                </div>
+                </span>
                 <input
                   type="password"
                   id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={errors.password ? 'error' : ''}
                   placeholder="Enter admin password"
                 />
               </div>
-              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+              {errors.password && <p className="field-error">{errors.password}</p>}
             </div>
 
-            
             {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="admin-login-submit"
             >
               {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                <>
+                  <span className="spinner"></span>
                   Signing In...
-                </div>
+                </>
               ) : (
                 'Sign In as Admin'
               )}
@@ -169,11 +327,8 @@ export default function AdminLoginPage() {
           </form>
 
           {/* Back to Site Link */}
-          <div className="mt-6 text-center">
-            <button 
-              onClick={() => router.push('/')}
-              className="text-purple-600 hover:text-purple-700 font-semibold"
-            >
+          <div className="admin-login-footer">
+            <button onClick={() => router.push('/')}>
               ← Back to Main Site
             </button>
           </div>
@@ -181,4 +336,4 @@ export default function AdminLoginPage() {
       </div>
     </div>
   )
-} 
+}
