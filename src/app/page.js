@@ -350,7 +350,7 @@ export default function Page() {
         const res = await fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone)}&_t=${Date.now()}`)
         if (res.ok) {
           const data = await res.json()
-          const activePlan = (data.investmentPlans || []).find(p => p.status === 'active')
+          const activePlan = [...(data.investmentPlans || [])].reverse().find(p => p.status === 'active')
           setActivePlanName(activePlan ? activePlan.planName : 'Free')
         }
       } catch { }

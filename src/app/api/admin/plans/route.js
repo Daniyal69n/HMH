@@ -57,17 +57,33 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'action must be approve or reject' }, { status: 400 });
     }
 
-    const newStatus = action === 'approve' ? 'active' : 'cancelled';
+    const user = await User.findById(userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: { 'investmentPlans.$[plan].status': newStatus } },
-      {
-        arrayFilters: [{ 'plan._id': planId }],
-        new: true,
-        runValidators: false
+    if (action === 'approve') {
+      // Find the plan request to approve
+      const planToApprove = user.investmentPlans.find(p => p._id.toString() === planId.toString());
+      if (planToApprove) {
+        // Deactivate all other active plans
+        for (const p of user.investmentPlans) {
+          if (p.status === 'active') {
+            p.status = 'completed';
+          }
+        }
+        // Activate this plan
+        planToApprove.status = 'active';
       }
-    ).select('-password');
+    } else {
+      // Reject
+      const planToReject = user.investmentPlans.find(p => p._id.toString() === planId.toString());
+      if (planToReject) {
+        planToReject.status = 'cancelled';
+      }
+    }
+
+    await user.save();
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });

@@ -1755,7 +1755,7 @@ export default function AdminDashboard() {
                     <div>
                       <div className={styles.detailLabel}>Plan</div>
                       <div className={styles.detailValue}>
-                        {user.investmentPlans?.find((plan) => plan.status === 'active')?.planName || 'Free'}
+                        {[...(user.investmentPlans || [])].reverse().find((plan) => plan.status === 'active')?.planName || 'Free'}
                       </div>
                     </div>
                     <div>
