@@ -85,6 +85,9 @@ export default function Page() {
 
   const [activePlanName, setActivePlanName] = useState('Free')
 
+  // PKR conversion: $1 = PKR 300
+  const PKR_RATE = 300
+
   // Plan purchase modal state
   const [planModalOpen, setPlanModalOpen] = useState(false)
   const [selectedPlanData, setSelectedPlanData] = useState(null)
@@ -475,11 +478,18 @@ export default function Page() {
     setPlanSubmitting(true)
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}')
+      // Calculate upgrade difference
+      const currentPlanPrice = plans.find(p => p.name.toLowerCase() === activePlanName.toLowerCase())?.price || 0
+      const newPlanPKR = selectedPlanData.price * PKR_RATE
+      const currentPlanPKR = currentPlanPrice * PKR_RATE
+      const amountToPay = activePlanName === 'Free' ? newPlanPKR : Math.max(0, newPlanPKR - currentPlanPKR)
       const formData = new FormData()
       formData.append('userId', user._id || user.phone || '')
       formData.append('userPhone', user.phone || '')
       formData.append('planName', selectedPlanData.name)
-      formData.append('amount', selectedPlanData.price)
+      formData.append('previousPlan', activePlanName)
+      formData.append('amount', amountToPay)
+      formData.append('fullPlanPKR', newPlanPKR)
       formData.append('paymentMethod', planPaymentMethod === 'jazzcash' ? 'JazzCash' : 'EasyPaisa')
       formData.append('screenshot', planScreenshot)
       const res = await fetch('/api/user/plan-request', {
@@ -1010,8 +1020,9 @@ export default function Page() {
                         margin: '8px 0 2px'
                       }}
                     >
-                      ${p.price} <span style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 500 }}>one-time</span>
+                      PKR {(p.price * PKR_RATE).toLocaleString()}
                     </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 2 }}>(${p.price} one-time)</div>
                     <div style={{ fontSize: 13, color: 'var(--text-dim)', margin: '4px 0 10px' }}>{p.desc}</div>
                     <ul style={{ textAlign: 'left', fontSize: 12.8, color: 'var(--text-dim)', margin: '14px 0', padding: 0, listStyle: 'none' }}>
                       {p.features.map((feat, idx) => (
@@ -1405,12 +1416,39 @@ export default function Page() {
             </div>
 
             {/* Amount to Pay */}
-            <div style={{ background: '#252b3b', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
-              <div style={{ color: '#aaa', fontSize: 12, marginBottom: 4 }}>Amount to Pay</div>
-              <div style={{ color: '#c9a04a', fontSize: 28, fontWeight: 800 }}>
-                PKR {(selectedPlanData.price * 280).toLocaleString()}
-              </div>
-            </div>
+            {(() => {
+              const currentPlanPrice = plans.find(p => p.name.toLowerCase() === activePlanName.toLowerCase())?.price || 0
+              const newPlanPKR = selectedPlanData.price * PKR_RATE
+              const currentPlanPKR = currentPlanPrice * PKR_RATE
+              const isUpgrade = activePlanName !== 'Free'
+              const amountToPay = isUpgrade ? Math.max(0, newPlanPKR - currentPlanPKR) : newPlanPKR
+              return (
+                <div style={{ background: '#252b3b', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
+                  <div style={{ color: '#aaa', fontSize: 12, marginBottom: 6 }}>
+                    {isUpgrade ? `Upgrading from ${activePlanName} → ${selectedPlanData.name}` : 'Amount to Pay'}
+                  </div>
+                  <div style={{ color: '#c9a04a', fontSize: 28, fontWeight: 800, marginBottom: isUpgrade ? 10 : 0 }}>
+                    PKR {amountToPay.toLocaleString()}
+                  </div>
+                  {isUpgrade && (
+                    <div style={{ borderTop: '1px solid #374151', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#aaa' }}>
+                        <span>New plan total</span>
+                        <span>PKR {newPlanPKR.toLocaleString()}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#22c55e' }}>
+                        <span>Already paid ({activePlanName})</span>
+                        <span>- PKR {currentPlanPKR.toLocaleString()}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#c9a04a', fontWeight: 700, marginTop: 4, borderTop: '1px solid #374151', paddingTop: 6 }}>
+                        <span>Remaining to pay</span>
+                        <span>PKR {amountToPay.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
             {/* Send Payment To */}
             <div style={{ background: '#252b3b', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
