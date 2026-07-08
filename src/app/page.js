@@ -453,8 +453,9 @@ export default function Page() {
     setSpinResult(prize.label)
 
     // Compute final angle so pointer lands exactly on chosen sector
+    // (360 - (chosenIndex*30 + 15)) centers pointer in the middle of that sector
     const baseRotations = Math.ceil(Math.abs(spinAngleRef.current) / 360) * 360 + 720
-    const targetSectorAngle = (360 - chosenIndex * 30 + 15) % 360
+    const targetSectorAngle = (360 - (chosenIndex * 30 + 15) + 360) % 360
     const finalAngle = baseRotations + targetSectorAngle
     spinAngleRef.current = finalAngle
     setSpinAngle(finalAngle)
