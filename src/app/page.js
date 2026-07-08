@@ -257,6 +257,15 @@ export default function Page() {
   }, [profileSaved])
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedPage = localStorage.getItem('hmh-active-page')
+      if (savedPage) {
+        setPage(savedPage)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
     if (typeof window === 'undefined' || !profileReady.current) return
     window.localStorage.setItem('hmh-profile', JSON.stringify(profile))
   }, [profile])
@@ -275,6 +284,9 @@ export default function Page() {
       return
     }
     setPage(id)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hmh-active-page', id)
+    }
     setSidebarOpen(false)
     setBellOpen(false)
     try {
@@ -441,6 +453,7 @@ export default function Page() {
                 e.preventDefault()
                 localStorage.removeItem('user')
                 localStorage.removeItem('hmh-profile')
+                localStorage.removeItem('hmh-active-page')
                 router.replace('/login')
               }}
             >
