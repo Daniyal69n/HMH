@@ -964,8 +964,19 @@ export default function Page() {
               </div>
 
               <div className="spin-actions">
-                <button className="btn btn-gold spin-lock-btn" onClick={startSpin} disabled={spinRunning}>
-                  {spinRunning ? 'Spinning...' : 'Start spin'}
+                <button 
+                  className="btn btn-gold spin-lock-btn" 
+                  onClick={startSpin} 
+                  disabled={teamData.totalMembers < 3 || spinRunning}
+                  style={{
+                    opacity: teamData.totalMembers < 3 ? 0.65 : 1,
+                    cursor: teamData.totalMembers < 3 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {teamData.totalMembers < 3 
+                    ? '🔒 Locked (Invite 3 members)' 
+                    : (spinRunning ? 'Spinning...' : 'Start spin')
+                  }
                 </button>
                 <button className="btn btn-outline spin-secondary-btn" onClick={stopSpin} disabled={!spinRunning}>
                   Stop spin
