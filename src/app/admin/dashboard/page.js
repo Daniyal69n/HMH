@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -20,6 +20,8 @@ export default function AdminDashboard() {
   const [uploadedImages, setUploadedImages] = useState({})
   const [pendingRechargeRequests, setPendingRechargeRequests] = useState([])
   const [pendingWithdrawRequests, setPendingWithdrawRequests] = useState([])
+  const [planRequests, setPlanRequests] = useState([])
+  const [planRequestsLoading, setPlanRequestsLoading] = useState(false)
   const [users, setUsers] = useState([])
   const [userSearchQuery, setUserSearchQuery] = useState('')
   const [ads, setAds] = useState([])
@@ -83,15 +85,15 @@ export default function AdminDashboard() {
     showSuccess('Earnings settings saved!')
   }
 
-  // ── Mystery Boxes state ──────────────────────────────────────────
+  // â”€â”€ Mystery Boxes state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const MB_STORAGE_KEY = 'admin_mystery_boxes'
   const MB_ENABLE_KEY = 'admin_mystery_boxes_enabled'
 
   function seedBoxes() {
     return [
-      { id: 'box_1', rank: 1, medal: '🥇', title: 'Top 1 Mystery Box', desc: '$100 Cash Prize + Gold Badge',   value: 100 },
-      { id: 'box_2', rank: 2, medal: '🥈', title: 'Top 2 Mystery Box', desc: '$50 Cash Prize + Silver Badge',  value: 50  },
-      { id: 'box_3', rank: 3, medal: '🥉', title: 'Top 3 Mystery Box', desc: '$25 Cash Prize + Bronze Badge', value: 25  },
+      { id: 'box_1', rank: 1, medal: 'ðŸ¥‡', title: 'Top 1 Mystery Box', desc: '$100 Cash Prize + Gold Badge',   value: 100 },
+      { id: 'box_2', rank: 2, medal: 'ðŸ¥ˆ', title: 'Top 2 Mystery Box', desc: '$50 Cash Prize + Silver Badge',  value: 50  },
+      { id: 'box_3', rank: 3, medal: 'ðŸ¥‰', title: 'Top 3 Mystery Box', desc: '$25 Cash Prize + Bronze Badge', value: 25  },
     ]
   }
   function loadBoxes() {
@@ -147,7 +149,7 @@ export default function AdminDashboard() {
     setMysteryBoxes(prev => prev.filter(b => b.id !== id))
   }
 
-  // ── E-Commerce state ──────────────────────────────────────────
+  // â”€â”€ E-Commerce state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const PRODUCTS_KEY = 'admin_products'
   const ORDERS_KEY = 'admin_orders'
 
@@ -960,6 +962,49 @@ export default function AdminDashboard() {
     }
   }, [isAdminLoggedIn, isCheckingAuth, activeTab])
 
+  // Load plan requests when tab is activated
+  useEffect(() => {
+    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'planRequests') {
+      const loadPlanRequests = async () => {
+        setPlanRequestsLoading(true)
+        try {
+          const res = await fetch('/api/admin/plans?status=pending')
+          if (res.ok) {
+            const data = await res.json()
+            setPlanRequests(data)
+          } else {
+            setPlanRequests([])
+          }
+        } catch {
+          setPlanRequests([])
+        } finally {
+          setPlanRequestsLoading(false)
+        }
+      }
+      loadPlanRequests()
+    }
+  }, [isAdminLoggedIn, isCheckingAuth, activeTab])
+
+  const handlePlanAction = async (userId, planId, action) => {
+    try {
+      const res = await fetch('/api/admin/plans', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, planId, action })
+      })
+      if (res.ok) {
+        showSuccess(`Plan ${action === 'approve' ? 'approved' : 'rejected'} successfully`)
+        // Remove from list
+        setPlanRequests(prev => prev.filter(p => p.planId?.toString() !== planId?.toString()))
+      } else {
+        const data = await res.json()
+        showError(data.error || 'Failed to update plan')
+      }
+    } catch {
+      showError('Network error')
+    }
+  }
+
   // Load withdraw history when tab is activated
   useEffect(() => {
     if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'withdrawals') {
@@ -1617,337 +1662,49 @@ export default function AdminDashboard() {
       setActiveTab={setActiveTab}
       onLogout={handleLogout}
     >
-        {false && activeTab === 'planRequests' && (
-          <div className="space-y-6">
-            {/* Add/Edit Plan Form */}
-            {showAddPlan && (
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">
-                  {editingPlan ? 'Edit Plan' : 'Add New Plan'}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Plan Name</label>
-                    <input
-                      type="text"
-                      value={newPlan.name}
-                      onChange={(e) => setNewPlan({...newPlan, name: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                      placeholder="Neo Earner Type R"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Image File</label>
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={newPlan.image}
-                        onChange={(e) => setNewPlan({...newPlan, image: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                        placeholder="car1.jpeg"
-                      />
-                      <div className="text-xs text-gray-500">
-                        Available images: car1.jpeg, car2.jpeg, car3.jpeg, car4.jpeg, car5.jpeg
+        {activeTab === 'planRequests' && (
+          <div style={{ padding: '24px' }}>
+            <h2 style={{ marginBottom: 20, color: '#1a1a2e', fontWeight: 700, fontSize: 22 }}>ðŸ“‹ Plan Requests</h2>
+            {planRequestsLoading ? (
+              <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>Loading plan requests...</div>
+            ) : planRequests.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 40, background: '#f9f9f9', borderRadius: 12, color: '#888', border: '1px dashed #ddd' }}>
+                âœ… No pending plan requests
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {planRequests.map((req, i) => (
+                  <div key={i} style={{ background: '#fff', borderRadius: 12, padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 16, color: '#1a1a2e' }}>{req.userName}</div>
+                      <div style={{ fontSize: 13, color: '#666', marginTop: 2 }}>ðŸ“ž {req.userPhone}</div>
+                      <div style={{ fontSize: 13, color: '#444', marginTop: 4 }}>
+                        <span style={{ background: '#ede9fe', color: '#7c3aed', borderRadius: 6, padding: '2px 10px', fontWeight: 600 }}>{req.planName}</span>
+                        <span style={{ marginLeft: 10, color: '#888' }}>${req.amount}</span>
+                        <span style={{ marginLeft: 10, color: '#aaa', fontSize: 12 }}>{req.startDate ? new Date(req.startDate).toLocaleDateString() : ''}</span>
                       </div>
-                      <div className="flex space-x-2 flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => setNewPlan({...newPlan, image: 'car1.jpeg'})}
-                          className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                        >
-                          Car 1
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setNewPlan({...newPlan, image: 'car2.jpeg'})}
-                          className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                        >
-                          Car 2
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setNewPlan({...newPlan, image: 'car3.jpeg'})}
-                          className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                        >
-                          Car 3
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setNewPlan({...newPlan, image: 'car4.jpeg'})}
-                          className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                        >
-                          Car 4
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setNewPlan({...newPlan, image: 'car5.jpeg'})}
-                          className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                        >
-                          Car 5
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const input = document.createElement('input');
-                            input.type = 'file';
-                            input.accept = 'image/*';
-                            input.onchange = (e) => {
-                              const file = e.target.files[0];
-                              if (file) {
-                                if (file.size > 5 * 1024 * 1024) {
-                                  showError('File size must be less than 5MB');
-                                  return;
-                                }
-                                if (!file.type.startsWith('image/')) {
-                                  showError('Please select an image file');
-                                  return;
-                                }
-                                const reader = new FileReader();
-                                reader.onload = (e) => {
-                                  setNewPlan({...newPlan, image: e.target.result});
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            };
-                            input.click();
-                          }}
-                          className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200"
-                        >
-                          📷 Upload New
-                        </button>
-                      </div>
-                      {newPlan.image && (
-                        <div className="mt-2">
-                          <label className="block text-xs text-gray-600 mb-1">Preview:</label>
-                          <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden">
-                            <img 
-                              src={getImageSrc(newPlan.image)} 
-                              alt="Preview"
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'flex';
-                              }}
-                            />
-                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs" style={{display: 'none'}}>
-                              No Image
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button
+                        onClick={() => handlePlanAction(req.userId, req.planId, 'approve')}
+                        style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}
+                      >
+                        âœ… Approve
+                      </button>
+                      <button
+                        onClick={() => handlePlanAction(req.userId, req.planId, 'reject')}
+                        style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}
+                      >
+                        âŒ Reject
+                      </button>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Investment Amount</label>
-                    <input
-                      type="text"
-                      value={newPlan.investAmount}
-                      onChange={(e) => setNewPlan({...newPlan, investAmount: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                      placeholder="$5,000"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Daily Income</label>
-                    <input
-                      type="text"
-                      value={newPlan.dailyIncome}
-                      onChange={(e) => setNewPlan({...newPlan, dailyIncome: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                      placeholder="$25"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Validity Period</label>
-                    <input
-                      type="text"
-                      value={newPlan.validity}
-                      onChange={(e) => setNewPlan({...newPlan, validity: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                      placeholder="200 days"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Color Theme</label>
-                    <select
-                      value={newPlan.color}
-                      onChange={(e) => setNewPlan({...newPlan, color: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                    >
-                      <option value="from-red-500 to-red-700">Red</option>
-                      <option value="from-blue-500 to-blue-700">Blue</option>
-                      <option value="from-green-500 to-green-700">Green</option>
-                      <option value="from-yellow-500 to-yellow-700">Yellow</option>
-                      <option value="from-purple-500 to-purple-700">Purple</option>
-                      <option value="from-indigo-500 to-indigo-700">Indigo</option>
-                    </select>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea
-                      value={newPlan.description}
-                      onChange={(e) => setNewPlan({...newPlan, description: e.target.value})}
-                      rows="3"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
-                      placeholder="High performance variant with turbocharged engine"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newPlan.isActive}
-                        onChange={(e) => setNewPlan({...newPlan, isActive: e.target.checked})}
-                        className="mr-2"
-                      />
-                      <span className="text-sm font-medium text-gray-700">Active Plan</span>
-                    </label>
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    onClick={handleCancelEdit}
-                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={editingPlan ? handleUpdatePlan : handleAddPlan}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    {editingPlan ? 'Update Plan' : 'Add Plan'}
-                  </button>
-                </div>
+                ))}
               </div>
             )}
-
-            {/* Plans List */}
-            <div className="bg-white rounded-lg shadow-lg">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold text-gray-800">Investment Plans</h3>
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={async () => {
-                        console.log('Manual refresh of plans')
-                        try {
-                          const response = await fetch('/api/plans')
-                          if (response.ok) {
-                            const data = await response.json()
-                            console.log('Refreshing plans:', data.plans)
-                            setSamplePlans(data.plans)
-                            showSuccess('Plans refreshed successfully!')
-                          } else {
-                            showError('Failed to refresh plans')
-                          }
-                        } catch (error) {
-                          console.warn('Error refreshing plans:', error)
-                          showError('Error refreshing plans')
-                        }
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      <span>Refresh</span>
-                    </button>
-                    {!showAddPlan && (
-                      <button
-                        onClick={() => setShowAddPlan(true)}
-                        className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-                      >
-                        Add New Plan
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Investment</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Daily Income</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {plans && plans.length > 0 ? plans.map((plan) => (
-                      <tr key={plan.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden mr-3">
-                                                          <img 
-                              src={getImageSrc(plan.image)} 
-                              alt={plan.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'flex';
-                              }}
-                            />
-                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs" style={{display: 'none'}}>
-                                No Image
-                              </div>
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">{plan.name}</div>
-                              <div className="text-sm text-gray-500">{plan.description}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{plan.investAmount}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">{plan.dailyIncome}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            plan.isActive 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {plan.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleEditPlan(plan)}
-                              className="text-purple-600 hover:text-purple-900"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleTogglePlanStatus(plan._id)}
-                              className={`${
-                                plan.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
-                              }`}
-                            >
-                              {plan.isActive ? 'Deactivate' : 'Activate'}
-                            </button>
-                            <button
-                              onClick={() => handleDeletePlan(plan._id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )) : (
-                      <tr>
-                        <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                          No plans found. Loading...
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
           </div>
         )}
+
 
         {activeTab === 'users' && (
           <div className={styles.usersPage}>
@@ -2259,10 +2016,10 @@ export default function AdminDashboard() {
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <h4 className="text-sm font-medium text-blue-800 mb-2">Image Upload Instructions:</h4>
               <ul className="text-sm text-blue-700 space-y-1">
-                <li>• Supported formats: JPEG, PNG, GIF</li>
-                <li>• Recommended size: 800x600 pixels or larger</li>
-                <li>• File size: Maximum 5MB per image</li>
-                <li>• Images should be placed in the public folder of your project</li>
+                <li>â€¢ Supported formats: JPEG, PNG, GIF</li>
+                <li>â€¢ Recommended size: 800x600 pixels or larger</li>
+                <li>â€¢ File size: Maximum 5MB per image</li>
+                <li>â€¢ Images should be placed in the public folder of your project</li>
               </ul>
             </div>
           </div>
@@ -2888,7 +2645,7 @@ export default function AdminDashboard() {
             {editingBox && (
               <div className={styles.editModal}>
                 <div className={styles.editModalBox}>
-                  <div className={styles.editModalTitle}>Edit — {editingBox.title}</div>
+                  <div className={styles.editModalTitle}>Edit â€” {editingBox.title}</div>
                   <div className={styles.field}>
                     <label>New cash prize amount ($)</label>
                     <input
@@ -3014,7 +2771,7 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <div className={styles.rowTitle}>{o.product}</div>
-                        <div className={styles.rowSub}>{o.customer} · {o.currency} {o.amount.toLocaleString()}</div>
+                        <div className={styles.rowSub}>{o.customer} Â· {o.currency} {o.amount.toLocaleString()}</div>
                       </div>
                       <div className={styles.rowActions}>
                         <span className={`${styles.status} ${styles[o.status] || ''}`}>{o.status}</span>

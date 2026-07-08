@@ -83,6 +83,8 @@ export default function Page() {
     levelA: { count: 0, members: [] }
   })
 
+  const [activePlanName, setActivePlanName] = useState('Free')
+
   const NAV = useMemo(
     () => [
       { id: 'dashboard', label: 'Dashboard', icon: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z' },
@@ -323,6 +325,22 @@ export default function Page() {
       }
       loadTeamData()
     }
+  }, [profile])
+
+  // Fetch user's active plan from DB
+  useEffect(() => {
+    if (!profile || !profile.phone) return
+    const fetchActivePlan = async () => {
+      try {
+        const res = await fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone)}&_t=${Date.now()}`)
+        if (res.ok) {
+          const data = await res.json()
+          const activePlan = (data.investmentPlans || []).find(p => p.status === 'active')
+          setActivePlanName(activePlan ? activePlan.planName : 'Free')
+        }
+      } catch { }
+    }
+    fetchActivePlan()
   }, [profile])
 
   useEffect(() => {
@@ -612,7 +630,9 @@ export default function Page() {
                 <h2>{profile.name || 'Member'}</h2>
                 <div className="uid">ID: {profile._id ? profile._id.substring(profile._id.length - 8) : (profile.phone ? profile.phone.substring(Math.max(0, profile.phone.length - 8)) : '7f19c3e2')}</div>
                 <div className="badge-row">
-                  <span className="badge">Unranked</span>
+                  <span className="badge gold" style={{ background: activePlanName === 'Free' ? 'rgba(255,255,255,0.08)' : 'rgba(201,160,74,0.18)', color: activePlanName === 'Free' ? 'var(--text-dim)' : 'var(--gold-bright)', border: activePlanName === 'Free' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(201,160,74,0.4)' }}>
+                    {activePlanName === 'Free' ? '🆓 Free' : `⭐ ${activePlanName} Plan`}
+                  </span>
                   <span className="badge gold">Level {currentLevel}</span>
                 </div>
               </div>
