@@ -29,7 +29,7 @@ function loadStoredProfile() {
         _id: user._id || ''
       }
     }
-  } catch {}
+  } catch { }
 
   try {
     const savedProfile = localStorage.getItem('hmh-profile')
@@ -41,7 +41,7 @@ function loadStoredProfile() {
       if (saved.city) merged.city = saved.city
       if (saved.address) merged.address = saved.address
     }
-  } catch {}
+  } catch { }
 
   return merged
 }
@@ -117,10 +117,10 @@ export default function Page() {
 
   const plans = useMemo(
     () => [
-      { 
-        icon: '🟢', 
-        name: 'Basic', 
-        price: 5, 
+      {
+        icon: '🟢',
+        name: 'Basic',
+        price: 5,
         desc: 'Perfect for Beginners',
         buttonLabel: 'Get Started',
         features: [
@@ -131,12 +131,12 @@ export default function Page() {
           '24/7 Support'
         ]
       },
-      { 
-        icon: '🔵', 
-        name: 'Standard', 
-        price: 10, 
+      {
+        icon: '🔵',
+        name: 'Standard',
+        price: 10,
         desc: 'Best for Regular Earners',
-        featured: true, 
+        featured: true,
         buttonLabel: 'Get Started',
         features: [
           'Higher Daily Earning',
@@ -148,10 +148,10 @@ export default function Page() {
           'Indirect commission'
         ]
       },
-      { 
-        icon: '💎', 
-        name: 'Diamond', 
-        price: 20, 
+      {
+        icon: '💎',
+        name: 'Diamond',
+        price: 20,
         desc: 'Grow Your Income Faster',
         buttonLabel: 'Get Started',
         features: [
@@ -164,10 +164,10 @@ export default function Page() {
           '24/7 Support'
         ]
       },
-      { 
-        icon: '🟣', 
-        name: 'Pro', 
-        price: 30, 
+      {
+        icon: '🟣',
+        name: 'Pro',
+        price: 30,
         desc: 'For Serious Earners',
         buttonLabel: 'Get Started',
         features: [
@@ -180,10 +180,10 @@ export default function Page() {
           'Indirect commission'
         ]
       },
-      { 
-        icon: '👑', 
-        name: 'Premium', 
-        price: 40, 
+      {
+        icon: '👑',
+        name: 'Premium',
+        price: 40,
         desc: 'Maximum Value & Benefits',
         buttonLabel: 'Get Started',
         features: [
@@ -197,10 +197,10 @@ export default function Page() {
           'Downline Commission'
         ]
       },
-      { 
-        icon: '🌟', 
-        name: 'Legend', 
-        price: 50, 
+      {
+        icon: '🌟',
+        name: 'Legend',
+        price: 50,
         desc: 'Ultimate Membership Experience',
         buttonLabel: 'Join Legend',
         features: [
@@ -230,18 +230,18 @@ export default function Page() {
 
   const spinPrizes = useMemo(
     () => [
-      { label: '$2 Cash', icon: '💵', color: '#caa84d' },
-      { label: '$3 Cash', icon: '💵', color: '#d08a28' },
-      { label: 'Smartwatch', icon: '⌚', color: '#6b63e6' },
-      { label: '$3 Cash', icon: '💵', color: '#d08a28' },
-      { label: 'Laptop', icon: '💻', color: '#5aa17a' },
-      { label: '$2 Cash', icon: '💵', color: '#d08a28' },
-      { label: 'AirPods', icon: '🎧', color: '#7b56e8' },
-      { label: '$3 Cash', icon: '💵', color: '#d08a28' },
-      { label: 'Diamond Ring', icon: '💍', color: '#d34588' },
-      { label: '$2 Cash', icon: '💵', color: '#d08a28' },
-      { label: 'Tour Package', icon: '✈️', color: '#58a0c7' },
-      { label: '$3 Cash', icon: '💵', color: '#c54d3f' }
+      { label: '1$', icon: '💵', color: '#caa84d' },
+      { label: '2$', icon: '💵', color: '#d08a28' },
+      { label: '3$', icon: '💵', color: '#c54d3f' },
+      { label: 'Smart watch', icon: '⌚', color: '#6b63e6' },
+      { label: '4$', icon: '💵', color: '#5aa17a' },
+      { label: '5$', icon: '💵', color: '#58a0c7' },
+      { label: 'Airpods', icon: '🎧', color: '#7b56e8' },
+      { label: 'Laptop', icon: '💻', color: '#d34588' },
+      { label: 'Android mobile', icon: '📱', color: '#3ecf8e' },
+      { label: '1$', icon: '💵', color: '#caa84d' },
+      { label: '2$', icon: '💵', color: '#d08a28' },
+      { label: '3$', icon: '💵', color: '#c54d3f' }
     ],
     []
   )
@@ -382,7 +382,7 @@ export default function Page() {
     setBellOpen(false)
     try {
       window.scrollTo(0, 0)
-    } catch {}
+    } catch { }
   }
 
   const topbarTitle = NAV.find((n) => n.id === page)?.label ?? 'HMHPro'
@@ -407,7 +407,7 @@ export default function Page() {
     const link = typeof window !== 'undefined' ? `${window.location.origin}/register?ref=${profile.phone || ''}` : ''
     try {
       await navigator.clipboard.writeText(link)
-    } catch {}
+    } catch { }
     showToast('Referral link copied')
   }
 
@@ -446,14 +446,19 @@ export default function Page() {
     spinTimer.current = null
     setSpinRunning(false)
 
-    const normalizedAngle = ((spinAngleRef.current % 360) + 360) % 360
-    const prizeIndex = Math.floor((((360 - normalizedAngle) + 15) % 360) / 30) % spinPrizes.length
-    const prize = spinPrizes[prizeIndex]
+    // Always land on 1$ (index 0 or 9) or 2$ (index 1 or 10)
+    const winningIndices = [0, 1, 9, 10]
+    const chosenIndex = winningIndices[Math.floor(Math.random() * winningIndices.length)]
+    const prize = spinPrizes[chosenIndex]
     setSpinResult(prize.label)
-    const finalAngle = spinAngleRef.current + 720 + prizeIndex * 30
+
+    // Compute final angle so pointer lands exactly on chosen sector
+    const baseRotations = Math.ceil(Math.abs(spinAngleRef.current) / 360) * 360 + 720
+    const targetSectorAngle = (360 - chosenIndex * 30 + 15) % 360
+    const finalAngle = baseRotations + targetSectorAngle
     spinAngleRef.current = finalAngle
     setSpinAngle(finalAngle)
-    showToast(`Spin stopped on ${prize.label}`)
+    showToast(`🎉 You won ${prize.label}!`)
   }
 
   const resetSpin = () => {
@@ -481,7 +486,7 @@ export default function Page() {
         const user = JSON.parse(userData)
         localStorage.setItem('user', JSON.stringify({ ...user, name: nextProfile.name, email: nextProfile.email }))
       }
-    } catch {}
+    } catch { }
   }
 
   useEffect(() => {
@@ -502,10 +507,10 @@ export default function Page() {
 
         <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <div className="brand">
-            <img 
-              src="/logo.jpg" 
-              alt="HMHPro Logo" 
-              style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--gold)' }} 
+            <img
+              src="/logo.jpg"
+              alt="HMHPro Logo"
+              style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--gold)' }}
             />
             <div>
               <div className="brand-name">HMHPro</div>
@@ -660,7 +665,7 @@ export default function Page() {
                 ))}
               </div>
               <div className="streak-note">
-                {teamData.totalMembers > 0 
+                {teamData.totalMembers > 0
                   ? `Your streak is active! You have referred ${teamData.totalMembers} approved member(s).`
                   : 'Start your streak — invite 1 member today.'
                 }
@@ -898,7 +903,7 @@ export default function Page() {
           <section className={`page ${page === 'store' ? 'active' : ''}`}>
             <div className="page-head">
               <h1>E-commerce</h1>
-                <p>Browse and purchase products with your HMHPro balance or card.</p>
+              <p>Browse and purchase products with your HMHPro balance or card.</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 16 }}>
@@ -950,9 +955,9 @@ export default function Page() {
                   </div>
                   <div>
                     <div className="level-bar">
-                      <div 
-                        className="level-bar-fill" 
-                        style={{ width: `${Math.min(100, Math.round((currentLevel / 50) * 100))}%` }} 
+                      <div
+                        className="level-bar-fill"
+                        style={{ width: `${Math.min(100, Math.round((currentLevel / 50) * 100))}%` }}
                       />
                     </div>
                     <div className="levels-summary-footer">
@@ -999,9 +1004,9 @@ export default function Page() {
                       {level.isMilestone ? <div className="milestone-tag">⭐ Milestone level</div> : null}
                       <div className="level-req">5 Basic · 2 Standard · 2 Diamond · 2 Pro · 2 Premium · 2 Legend · {level.membersRequired} members required</div>
                       <div className="level-bar">
-                        <div 
-                          className="level-bar-fill" 
-                          style={{ width: `${Math.min(100, (teamData.totalMembers / level.membersRequired) * 100)}%` }} 
+                        <div
+                          className="level-bar-fill"
+                          style={{ width: `${Math.min(100, (teamData.totalMembers / level.membersRequired) * 100)}%` }}
                         />
                       </div>
                       <div className="level-progress">
@@ -1031,15 +1036,15 @@ export default function Page() {
             <div className="card spin-page-card">
               <div className="spin-progress-card">
                 <div className="spin-progress-copy">
-                  {teamData.totalMembers >= 3 
-                    ? 'Goal achieved! Spin wheel unlocked.' 
+                  {teamData.totalMembers >= 3
+                    ? 'Goal achieved! Spin wheel unlocked.'
                     : `Invite ${3 - teamData.totalMembers} more member${3 - teamData.totalMembers === 1 ? '' : 's'} within 24 hours`
                   }
                 </div>
                 <div className="spin-progress-bar">
-                  <div 
-                    className="spin-progress-fill" 
-                    style={{ width: `${Math.min(100, (teamData.totalMembers / 3) * 100)}%` }} 
+                  <div
+                    className="spin-progress-fill"
+                    style={{ width: `${Math.min(100, (teamData.totalMembers / 3) * 100)}%` }}
                   />
                 </div>
                 <div className="spin-progress-meta">
@@ -1069,17 +1074,17 @@ export default function Page() {
               </div>
 
               <div className="spin-actions">
-                <button 
-                  className="btn btn-gold spin-lock-btn" 
-                  onClick={startSpin} 
+                <button
+                  className="btn btn-gold spin-lock-btn"
+                  onClick={startSpin}
                   disabled={teamData.totalMembers < 3 || spinRunning}
                   style={{
                     opacity: teamData.totalMembers < 3 ? 0.65 : 1,
                     cursor: teamData.totalMembers < 3 ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  {teamData.totalMembers < 3 
-                    ? '🔒 Locked (Invite 3 members)' 
+                  {teamData.totalMembers < 3
+                    ? '🔒 Locked (Invite 3 members)'
                     : (spinRunning ? 'Spinning...' : 'Start spin')
                   }
                 </button>
