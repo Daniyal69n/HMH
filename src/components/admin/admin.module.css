@@ -262,3 +262,508 @@
   font-weight: 700;
   color: #f2eee4;
 }
+
+/* ============ All Users page ============ */
+.usersPage {
+  --bg: #0a0e17;
+  --panel: #121826;
+  --panel-2: #161d2e;
+  --line: rgba(255, 255, 255, 0.08);
+  --gold: #d9a94e;
+  --gold-dim: #8a6f35;
+  --text: #f2eee4;
+  --muted: #8b93a6;
+  --green: #3ecf8e;
+  --red: #e2584d;
+  --blue: #6fa8dc;
+  --purple: #a48ce0;
+  --radius: 14px;
+  max-width: 720px;
+  margin: 0 auto;
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.pageTitle {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 32px;
+  margin: 6px 0 4px;
+}
+
+.pageSub {
+  color: var(--muted);
+  font-size: 15px;
+  margin: 0 0 22px;
+}
+
+.pageHeadRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 11px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btnOutline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.btnOutline:hover {
+  background: var(--panel);
+}
+
+.btnGold {
+  background: var(--gold);
+  color: #1a1406;
+  border: none;
+}
+
+.btnGold:hover {
+  filter: brightness(1.08);
+}
+
+.btnGreen {
+  background: var(--green);
+  color: #0b1a12;
+  border: none;
+}
+
+.btnGreen:hover {
+  filter: brightness(1.08);
+}
+
+.btnReject {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid rgba(226, 88, 77, 0.5);
+}
+
+.btnReject:hover {
+  background: rgba(226, 88, 77, 0.1);
+}
+
+.btnDangerOutline {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid rgba(226, 88, 77, 0.4);
+}
+
+.btnDangerOutline:hover {
+  background: rgba(226, 88, 77, 0.1);
+}
+
+.btnIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.btnFull {
+  width: 100%;
+}
+
+.tabs {
+  display: flex;
+  background: var(--panel);
+  border-radius: 999px;
+  padding: 5px;
+  gap: 4px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: background 0.2s, color 0.2s;
+}
+
+.tabActive {
+  background: var(--text);
+  color: #151515;
+}
+
+.empty {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 64px 24px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.empty svg {
+  width: 48px;
+  height: 48px;
+  stroke: var(--muted);
+  margin-bottom: 14px;
+}
+
+.empty p {
+  margin: 0;
+  font-size: 15px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.userBlock {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #1a1406;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.userName {
+  font-weight: 600;
+  font-size: 15.5px;
+}
+
+.userEmail {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.status {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.active {
+  background: rgba(62, 207, 142, 0.15);
+  color: var(--green);
+}
+
+.pending {
+  background: rgba(217, 169, 78, 0.15);
+  color: var(--gold);
+}
+
+.approved {
+  background: rgba(62, 207, 142, 0.15);
+  color: var(--green);
+}
+
+.rejected {
+  background: rgba(226, 88, 77, 0.15);
+  color: var(--red);
+}
+
+.suspended {
+  background: rgba(226, 88, 77, 0.15);
+  color: var(--red);
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 14px;
+}
+
+.detailLabel {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.detailValue {
+  font-size: 14.5px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.amount {
+  color: var(--gold);
+  font-size: 19px;
+  font-family: 'Playfair Display', serif;
+}
+
+.cardActions {
+  display: flex;
+  gap: 10px;
+}
+
+.cardActions .btn {
+  flex: 1;
+}
+
+.formTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 18px;
+  color: var(--gold);
+}
+
+.field {
+  margin-bottom: 16px;
+}
+
+.field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 14.5px;
+  font-family: inherit;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #5b6274;
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.note {
+  display: flex;
+  gap: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 13px 14px;
+  font-size: 13.5px;
+  color: var(--muted);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.note svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--blue);
+}
+
+.rowCard {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.rowIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--panel-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--purple);
+}
+
+.rowIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.rowTitle {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.rowSub {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.iconBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--red);
+  padding: 6px;
+}
+
+.iconBtn svg {
+  width: 19px;
+  height: 19px;
+}
+
+.switch {
+  position: relative;
+  width: 44px;
+  height: 25px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #3a4155;
+  border-radius: 999px;
+  transition: 0.2s;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 19px;
+  width: 19px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.switch input:checked + .slider {
+  background: var(--gold);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(19px);
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.searchBox svg {
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.searchBox input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 14.5px;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.searchBox input:focus {
+  outline: none;
+}
+
+.searchBox input::placeholder {
+  color: #5b6274;
+}
+
+@media (min-width: 640px) {
+  .cardTop {
+    align-items: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .cardActions {
+    flex-direction: column;
+  }
+}

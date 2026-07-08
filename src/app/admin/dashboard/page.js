@@ -21,6 +21,9 @@ export default function AdminDashboard() {
   const [pendingRechargeRequests, setPendingRechargeRequests] = useState([])
   const [pendingWithdrawRequests, setPendingWithdrawRequests] = useState([])
   const [users, setUsers] = useState([])
+  const [userSearchQuery, setUserSearchQuery] = useState('')
+  const [ads, setAds] = useState([])
+  const [newAd, setNewAd] = useState({ title: '', url: '' })
   const [paymentDetails, setPaymentDetails] = useState({
     easypaisa: { number: '', accountName: '' },
     jazzcash: { number: '', accountName: '' }
@@ -46,8 +49,8 @@ export default function AdminDashboard() {
   const [rechargeHistory, setRechargeHistory] = useState([])
   const [withdrawHistory, setWithdrawHistory] = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
-  const [rechargeFilter, setRechargeFilter] = useState('all') // all, approved, rejected, pending
-  const [withdrawFilter, setWithdrawFilter] = useState('all') // all, approved, rejected, pending
+  const [rechargeFilter, setRechargeFilter] = useState('pending') // all, approved, rejected, pending
+  const [withdrawFilter, setWithdrawFilter] = useState('pending') // all, approved, rejected, pending
 
   // Sample plans data - in a real app, this would come from your backend
   const [samplePlans, setSamplePlans] = useState([])
@@ -112,6 +115,62 @@ export default function AdminDashboard() {
       setIsCheckingAuth(false)
     }
   }, [router])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const raw = localStorage.getItem('admin_ads')
+    if (raw) {
+      try {
+        setAds(JSON.parse(raw))
+      } catch (error) {
+        setAds([])
+      }
+      return
+    }
+
+    const seededAds = [
+      { id: 'ad_1', title: 'Bsnns', url: 'https://youtube.com/watch?v=demo1', active: true },
+      { id: 'ad_2', title: 'Hmh', url: 'https://youtube.com/watch?v=demo2', active: true },
+    ]
+    localStorage.setItem('admin_ads', JSON.stringify(seededAds))
+    setAds(seededAds)
+  }, [])
+
+  const saveAds = (nextAds) => {
+    setAds(nextAds)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_ads', JSON.stringify(nextAds))
+    }
+  }
+
+  const handleAddAd = () => {
+    const title = newAd.title.trim()
+    const url = newAd.url.trim()
+
+    if (!title || !url) {
+      showError('Please enter both a title and a video URL.')
+      return
+    }
+
+    saveAds([
+      ...ads,
+      { id: `ad_${Date.now()}`, title, url, active: true },
+    ])
+    setNewAd({ title: '', url: '' })
+    showSuccess('Ad added successfully')
+  }
+
+  const handleToggleAd = (id) => {
+    saveAds(ads.map((ad) => (
+      ad.id === id ? { ...ad, active: !ad.active } : ad
+    )))
+  }
+
+  const handleDeleteAd = (id) => {
+    saveAds(ads.filter((ad) => ad.id !== id))
+    showSuccess('Ad deleted successfully')
+  }
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout from admin panel?')) {
@@ -733,9 +792,34 @@ export default function AdminDashboard() {
     return rechargeHistory.filter(transaction => transaction.status === rechargeFilter)
   }
 
+  const getSortedRechargeHistory = () => {
+    return [...getFilteredRechargeHistory()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  }
+
+  const getPlanRequestEmptyLabel = () => {
+    return rechargeFilter === 'all' ? '' : `${rechargeFilter} `
+  }
+
   const getFilteredWithdrawHistory = () => {
     if (withdrawFilter === 'all') return withdrawHistory
     return withdrawHistory.filter(transaction => transaction.status === withdrawFilter)
+  }
+
+  const getSortedWithdrawHistory = () => {
+    return [...getFilteredWithdrawHistory()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  }
+
+  const getWithdrawalAmount = (transaction) => {
+    const amount = transaction.amountAfterFee || transaction.amount || 0
+    return Number(amount).toFixed(2)
+  }
+
+  const getWithdrawalAccount = (transaction) => {
+    return transaction.withdrawalNumber || transaction.withdrawalAccountNumber || 'Not provided'
+  }
+
+  const getWithdrawalEmptyLabel = () => {
+    return withdrawFilter === 'all' ? '' : `${withdrawFilter} `
   }
 
   // Helper function to format date in Pakistan timezone
@@ -790,11 +874,12 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         showSuccess(`Recharge request ${approved ? 'approved' : 'rejected'} successfully`);
-        // Refresh the pending requests list
+        // Refresh the pending requests list and recharge history
         const loadPendingRequests = async () => {
           try {
             const rechargeResponse = await fetch('/api/transactions?type=recharge&status=pending')
             const withdrawResponse = await fetch('/api/transactions?type=withdraw&status=pending')
+            const rechargeHistoryResponse = await fetch('/api/transactions?type=recharge&status=all')
             
             if (rechargeResponse.ok) {
               const rechargeData = await rechargeResponse.json()
@@ -804,6 +889,11 @@ export default function AdminDashboard() {
             if (withdrawResponse.ok) {
               const withdrawData = await withdrawResponse.json()
               setPendingWithdrawRequests(withdrawData)
+            }
+
+            if (rechargeHistoryResponse.ok) {
+              const rechargeHistoryData = await rechargeHistoryResponse.json()
+              setRechargeHistory(rechargeHistoryData)
             }
           } catch (error) {
             console.error('Error loading pending requests:', error)
@@ -837,11 +927,12 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         showSuccess(`Withdrawal request ${approved ? 'approved' : 'rejected'} successfully`);
-        // Refresh the pending requests list
+        // Refresh the pending requests list and withdrawal history
         const loadPendingRequests = async () => {
           try {
             const rechargeResponse = await fetch('/api/transactions?type=recharge&status=pending')
             const withdrawResponse = await fetch('/api/transactions?type=withdraw&status=pending')
+            const withdrawHistoryResponse = await fetch('/api/transactions?type=withdraw&status=all')
             
             if (rechargeResponse.ok) {
               const rechargeData = await rechargeResponse.json()
@@ -851,6 +942,11 @@ export default function AdminDashboard() {
             if (withdrawResponse.ok) {
               const withdrawData = await withdrawResponse.json()
               setPendingWithdrawRequests(withdrawData)
+            }
+
+            if (withdrawHistoryResponse.ok) {
+              const withdrawHistoryData = await withdrawHistoryResponse.json()
+              setWithdrawHistory(withdrawHistoryData)
             }
           } catch (error) {
             console.error('Error loading pending requests:', error)
@@ -962,6 +1058,46 @@ export default function AdminDashboard() {
       showSuccess('Password reset initiated. User will be prompted to set a new password on next login.')
     }
   }
+
+  const refreshUsers = async () => {
+    try {
+      const response = await fetch('/api/admin/users?limit=1000')
+      if (response.ok) {
+        const data = await response.json()
+        setUsers(data.users || [])
+        showSuccess(`Users list refreshed successfully! Found ${data.users?.length || 0} users.`)
+      } else {
+        showError('Failed to refresh users list')
+      }
+    } catch (error) {
+      console.error('Error refreshing users:', error)
+      showError('Failed to refresh users list')
+    }
+  }
+
+  const getUserKey = (user) => user.phone || user._id
+
+  const getUserInitials = (name = '') => {
+    const initials = name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase()
+
+    return initials || 'U'
+  }
+
+  const filteredUsers = users.filter((user) => {
+    const q = userSearchQuery.trim().toLowerCase()
+    if (!q) return true
+
+    return [user.name, user.phone, user.referralCode, user._id]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(q))
+  })
 
   // Handle payment details update
   const handleUpdatePaymentDetails = (method, field, value) => {
@@ -1122,7 +1258,7 @@ export default function AdminDashboard() {
       setActiveTab={setActiveTab}
       onLogout={handleLogout}
     >
-        {activeTab === 'planRequests' && (
+        {false && activeTab === 'planRequests' && (
           <div className="space-y-6">
             {/* Add/Edit Plan Form */}
             {showAddPlan && (
@@ -1455,123 +1591,106 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'users' && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex justify-between items-center mb-4">
+          <div className={styles.usersPage}>
+            <div className={styles.pageHeadRow}>
               <div>
-                <h3 className="text-lg font-bold text-gray-800">User Management</h3>
-                <p className="text-gray-600">Manage registered users and their accounts. Total users: {users.length}</p>
+                <h2 className={styles.pageTitle}>All Users</h2>
+                <p className={styles.pageSub}>
+                  {users.length} registered user{users.length === 1 ? '' : 's'}
+                </p>
               </div>
               <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/admin/users?limit=1000')
-                    if (response.ok) {
-                      const data = await response.json()
-                      setUsers(data.users || [])
-                      showSuccess(`Users list refreshed successfully! Found ${data.users?.length || 0} users.`)
-                    } else {
-                      showError('Failed to refresh users list')
-                    }
-                  } catch (error) {
-                    console.error('Error refreshing users:', error)
-                    showError('Failed to refresh users list')
-                  }
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                type="button"
+                onClick={refreshUsers}
+                className={`${styles.btn} ${styles.btnOutline}`}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={styles.btnIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 <span>Refresh</span>
               </button>
             </div>
+
+            <div className={styles.searchBox}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                value={userSearchQuery}
+                onChange={(event) => setUserSearchQuery(event.target.value)}
+                placeholder="Search by name or email..."
+              />
+            </div>
             
-            {users.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                  </svg>
-                </div>
-                <p className="text-gray-500">No registered users found</p>
+            {filteredUsers.length === 0 ? (
+              <div className={styles.empty}>
+                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                <p>No users found</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registration Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {users.map((user) => (
-                      <tr key={user.phone} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center mr-3">
-                              <span className="text-white text-sm font-bold">
-                                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                              </span>
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                              <div className="text-sm text-gray-500">{user.referralCode ? `Ref: ${user.referralCode}` : 'No referral'}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.phone}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {user.createdAt ? (
-                            <div>
-                              <div>{formatPakistanDate(user.createdAt)}</div>
-                              <div className="text-xs text-gray-400">{formatPakistanTime(user.createdAt)}</div>
-                            </div>
-                          ) : 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            user.isBlocked 
-                              ? 'bg-red-100 text-red-800' 
-                              : 'bg-green-100 text-green-800'
-                          }`}>
-                            {user.isBlocked ? 'Blocked' : 'Active'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleBlockUser(user.phone)}
-                              className={`${
-                                user.isBlocked 
-                                  ? 'text-green-600 hover:text-green-900' 
-                                  : 'text-yellow-600 hover:text-yellow-900'
-                              }`}
-                            >
-                              {user.isBlocked ? 'Unblock' : 'Block'}
-                            </button>
-                            <button
-                              onClick={() => handleResetUserPassword(user.phone)}
-                              className="text-blue-600 hover:text-blue-900"
-                            >
-                              Reset Password
-                            </button>
-                            <button
-                              onClick={() => handleDeleteUser(user.phone)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              filteredUsers.map((user) => (
+                <div className={styles.card} key={getUserKey(user)}>
+                  <div className={styles.cardTop}>
+                    <div className={styles.userBlock}>
+                      <div className={styles.avatar}>{getUserInitials(user.name)}</div>
+                      <div>
+                        <div className={styles.userName}>{user.name || 'Unknown User'}</div>
+                        <div className={styles.userEmail}>{user.phone || 'No phone number'}</div>
+                      </div>
+                    </div>
+                    <span className={`${styles.status} ${user.isBlocked ? styles.suspended : styles.active}`}>
+                      {user.isBlocked ? 'suspended' : 'active'}
+                    </span>
+                  </div>
+                  <div className={styles.detailGrid}>
+                    <div>
+                      <div className={styles.detailLabel}>Plan</div>
+                      <div className={styles.detailValue}>
+                        {user.investmentPlans?.find((plan) => plan.status === 'active')?.planName || 'Free'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className={styles.detailLabel}>Balance</div>
+                      <div className={`${styles.detailValue} ${styles.amount}`}>
+                        Rs{Number(user.balance || 0).toFixed(2)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className={styles.detailLabel}>Joined</div>
+                      <div className={styles.detailValue}>
+                        {user.createdAt ? formatPakistanDate(user.createdAt) : 'N/A'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className={styles.detailLabel}>User ID</div>
+                      <div className={styles.detailValue}>{user.phone || user._id}</div>
+                    </div>
+                  </div>
+                  <div className={styles.cardActions}>
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnOutline}`}
+                      onClick={() => handleBlockUser(getUserKey(user))}
+                    >
+                      {user.isBlocked ? 'Reactivate' : 'Suspend'}
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnDangerOutline}`}
+                      onClick={() => handleDeleteUser(getUserKey(user))}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         )}
@@ -1665,7 +1784,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === 'manageAds' && (
+        {false && activeTab === 'manageAds' && (
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h3 className="text-lg font-bold text-gray-800 mb-4">Image Management</h3>
             <p className="text-gray-600 mb-6">Manage car images for your investment plans.</p>
@@ -1764,86 +1883,313 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === 'planRequests' && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Pending Recharge Requests ({pendingRechargeRequests.length})</h3>
-            {pendingRechargeRequests.length === 0 ? (
-              <p className="text-gray-500">No pending recharge requests</p>
+        {activeTab === 'manageAds' && (
+          <div className={styles.usersPage}>
+            <h2 className={styles.pageTitle}>Manage Ads</h2>
+            <p className={styles.pageSub}>Add and manage video ads for users</p>
+
+            <div className={styles.card}>
+              <div className={styles.formTitle}>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add New Ad
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="adTitle">Title</label>
+                <input
+                  type="text"
+                  id="adTitle"
+                  value={newAd.title}
+                  onChange={(event) => setNewAd({ ...newAd, title: event.target.value })}
+                  placeholder="Ad title"
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="adUrl">Video URL</label>
+                <input
+                  type="url"
+                  id="adUrl"
+                  value={newAd.url}
+                  onChange={(event) => setNewAd({ ...newAd, url: event.target.value })}
+                  placeholder="https://youtube.com/..."
+                />
+              </div>
+
+              <div className={styles.note}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                Reward amounts are automatically set based on each user's plan - no manual setting needed.
+              </div>
+
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnGold} ${styles.btnFull}`}
+                onClick={handleAddAd}
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add Ad
+              </button>
+            </div>
+
+            {ads.length === 0 ? (
+              <div className={styles.empty}>
+                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                <p>No ads yet. Add one above.</p>
+              </div>
             ) : (
-              <div className="space-y-3">
-                {pendingRechargeRequests.map((request) => (
-                  <div key={request.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex justify-between items-center">
+              ads.map((ad) => (
+                <div className={styles.rowCard} key={ad.id}>
+                  <div className={styles.rowIcon}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className={styles.rowTitle}>{ad.title}</div>
+                    <div className={styles.rowSub}>Reward based on user plan</div>
+                  </div>
+                  <div className={styles.rowActions}>
+                    <label className={styles.switch}>
+                      <input
+                        type="checkbox"
+                        checked={ad.active}
+                        onChange={() => handleToggleAd(ad.id)}
+                      />
+                      <span className={styles.slider}></span>
+                    </label>
+                    <button
+                      type="button"
+                      className={styles.iconBtn}
+                      onClick={() => handleDeleteAd(ad.id)}
+                      aria-label="Delete ad"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                        <path d="M10 11v6M14 11v6" />
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {activeTab === 'planRequests' && (
+          <div className={styles.usersPage}>
+            <div className={styles.pageHeadRow}>
+              <div>
+                <h2 className={styles.pageTitle}>Plan Upgrade Requests</h2>
+                <p className={styles.pageSub}>Approve or reject user plan upgrades</p>
+              </div>
+              <button
+                type="button"
+                onClick={refreshRechargeHistory}
+                disabled={historyLoading}
+                className={`${styles.btn} ${styles.btnOutline}`}
+              >
+                <svg className={styles.btnIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>{historyLoading ? 'Loading' : 'Refresh'}</span>
+              </button>
+            </div>
+
+            <div className={styles.tabs}>
+              {['pending', 'approved', 'rejected', 'all'].map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  className={`${styles.tab} ${rechargeFilter === tab ? styles.tabActive : ''}`}
+                  onClick={() => setRechargeFilter(tab)}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {getSortedRechargeHistory().length === 0 ? (
+              <div className={styles.empty}>
+                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v8M8 12l4-4 4 4" />
+                </svg>
+                <p>No {getPlanRequestEmptyLabel()}plan requests</p>
+              </div>
+            ) : (
+              getSortedRechargeHistory().map((request) => (
+                <div className={styles.card} key={request.transactionId || request._id}>
+                  <div className={styles.cardTop}>
+                    <div className={styles.userBlock}>
+                      <div className={styles.avatar}>{getUserInitials(request.userName)}</div>
                       <div>
-                        <p className="font-semibold text-gray-800">{request.userName}</p>
-                        <p className="text-sm text-gray-600">Phone: {request.userId}</p>
-                        <p className="text-sm text-gray-600">Amount: ${request.amount}</p>
-                        <p className="text-sm text-gray-600">Payment Method: {request.paymentMethod}</p>
-                        <p className="text-sm text-blue-600">User Transaction ID: {request.userTransactionId || 'Not provided'}</p>
-                        <p className="text-xs text-gray-500">System Transaction ID: {request.transactionId}</p>
-                        <p className="text-xs text-gray-500">Date: {formatPakistanDate(request.createdAt)} {formatPakistanTime(request.createdAt)}</p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleRechargeApproval(request.transactionId, true)}
-                          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleRechargeApproval(request.transactionId, false)}
-                          className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-                        >
-                          Reject
-                        </button>
+                        <div className={styles.userName}>{request.userName || 'Unknown User'}</div>
+                        <div className={styles.userEmail}>{request.userId}</div>
                       </div>
                     </div>
+                    <span className={`${styles.status} ${styles[request.status] || styles.pending}`}>
+                      {request.status}
+                    </span>
                   </div>
-                ))}
-              </div>
+                  <div className={styles.detailGrid}>
+                    <div>
+                      <div className={styles.detailLabel}>Current plan</div>
+                      <div className={styles.detailValue}>Free</div>
+                    </div>
+                    <div>
+                      <div className={styles.detailLabel}>Requested plan</div>
+                      <div className={styles.detailValue}>
+                        {request.description || request.paymentMethod || 'Plan Upgrade'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className={styles.detailLabel}>Price</div>
+                      <div className={`${styles.detailValue} ${styles.amount}`}>
+                        Rs{Number(request.amount || 0).toFixed(2)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className={styles.detailLabel}>Requested on</div>
+                      <div className={styles.detailValue}>{formatPakistanDate(request.createdAt)}</div>
+                    </div>
+                  </div>
+                  {request.status === 'pending' && (
+                    <div className={styles.cardActions}>
+                      <button
+                        type="button"
+                        className={`${styles.btn} ${styles.btnGreen}`}
+                        onClick={() => handleRechargeApproval(request.transactionId, true)}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.btn} ${styles.btnReject}`}
+                        onClick={() => handleRechargeApproval(request.transactionId, false)}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
             )}
           </div>
         )}
 
         {activeTab === 'withdrawals' && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Withdrawal Requests ({pendingWithdrawRequests.length})</h3>
-            {pendingWithdrawRequests.length === 0 ? (
-              <p className="text-gray-500">No pending withdraw requests</p>
+          <div className={styles.usersPage}>
+            <div className={styles.pageHeadRow}>
+              <div>
+                <h2 className={styles.pageTitle}>Withdrawal Requests</h2>
+                <p className={styles.pageSub}>Approve or reject user withdrawals</p>
+              </div>
+              <button
+                type="button"
+                onClick={refreshWithdrawHistory}
+                disabled={historyLoading}
+                className={`${styles.btn} ${styles.btnOutline}`}
+              >
+                <svg className={styles.btnIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>{historyLoading ? 'Loading' : 'Refresh'}</span>
+              </button>
+            </div>
+
+            <div className={styles.tabs}>
+              {['pending', 'approved', 'rejected', 'all'].map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  className={`${styles.tab} ${withdrawFilter === tab ? styles.tabActive : ''}`}
+                  onClick={() => setWithdrawFilter(tab)}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {getSortedWithdrawHistory().length === 0 ? (
+              <div className={styles.empty}>
+                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
+                  <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+                  <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+                  <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+                </svg>
+                <p>No {getWithdrawalEmptyLabel()}withdrawal requests</p>
+              </div>
             ) : (
-              <div className="space-y-3">
-                {pendingWithdrawRequests.map((request) => (
-                  <div key={request.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex justify-between items-center">
+              getSortedWithdrawHistory().map((request) => (
+                <div className={styles.card} key={request.transactionId || request._id}>
+                  <div className={styles.cardTop}>
+                    <div className={styles.userBlock}>
+                      <div className={styles.avatar}>{getUserInitials(request.userName)}</div>
                       <div>
-                        <p className="font-semibold text-gray-800">{request.userName}</p>
-                        <p className="text-sm text-gray-600">Phone: {request.userId}</p>
-                        <p className="text-sm text-gray-600">Amount: ${request.amountAfterFee || (request.amount * 0.75).toFixed(2)} (After 25% fee)</p>
-                        <p className="text-xs text-gray-500">Original: ${request.amount} | Fee: ${request.withdrawalFee || (request.amount * 0.25).toFixed(2)}</p>
-                        <p className="text-sm text-gray-600">Method: {request.withdrawalMethod}</p>
-                        <p className="text-sm text-gray-600">Account Name: {request.withdrawalAccountName}</p>
-                        <p className="text-sm text-gray-600">Account Number: {request.withdrawalNumber || 'Not provided'}</p>
-                        <p className="text-xs text-gray-500">Transaction ID: {request.transactionId}</p>
-                        <p className="text-xs text-gray-500">Date: {formatPakistanDate(request.createdAt)} {formatPakistanTime(request.createdAt)}</p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleWithdrawApproval(request.transactionId, true)}
-                          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleWithdrawApproval(request.transactionId, false)}
-                          className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-                        >
-                          Reject
-                        </button>
+                        <div className={styles.userName}>{request.userName || 'Unknown User'}</div>
+                        <div className={styles.userEmail}>{request.userId}</div>
                       </div>
                     </div>
+                    <span className={`${styles.status} ${styles[request.status] || styles.pending}`}>
+                      {request.status}
+                    </span>
                   </div>
-                ))}
-              </div>
+                  <div className={styles.detailGrid}>
+                    <div>
+                      <div className={styles.detailLabel}>Amount</div>
+                      <div className={`${styles.detailValue} ${styles.amount}`}>
+                        Rs{getWithdrawalAmount(request)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className={styles.detailLabel}>Requested on</div>
+                      <div className={styles.detailValue}>
+                        {formatPakistanDate(request.createdAt)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className={styles.detailLabel}>Method</div>
+                      <div className={styles.detailValue}>{request.withdrawalMethod || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className={styles.detailLabel}>Account</div>
+                      <div className={styles.detailValue}>{getWithdrawalAccount(request)}</div>
+                    </div>
+                  </div>
+                  {request.status === 'pending' && (
+                    <div className={styles.cardActions}>
+                      <button
+                        type="button"
+                        className={`${styles.btn} ${styles.btnGreen}`}
+                        onClick={() => handleWithdrawApproval(request.transactionId, true)}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.btn} ${styles.btnReject}`}
+                        onClick={() => handleWithdrawApproval(request.transactionId, false)}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
             )}
           </div>
         )}
@@ -2145,7 +2491,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Recharge History Tab */}
-        {activeTab === 'planRequests' && (
+        {false && activeTab === 'planRequests' && (
           <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-gray-800">Recharge History</h3>
@@ -2296,178 +2642,6 @@ export default function AdminDashboard() {
                             )}
                             <div className="text-xs text-gray-500">
                               System: {transaction.transactionId}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            transaction.status === 'approved' 
-                              ? 'bg-green-100 text-green-800' 
-                              : transaction.status === 'rejected'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {transaction.status === 'approved' ? 'Approved' : 
-                             transaction.status === 'rejected' ? 'Rejected' : 'Pending'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-sm text-gray-600">
-                            {formatPakistanDate(transaction.createdAt)}
-                          </span>
-                          <div className="text-xs text-gray-500">
-                            {formatPakistanTime(transaction.createdAt)}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Withdraw History Tab */}
-        {activeTab === 'withdrawals' && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-gray-800">Withdraw History</h3>
-              <div className="flex items-center space-x-2">
-                {historyLoading && (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
-                )}
-                <span className="text-sm text-gray-600">
-                  Total: {getFilteredWithdrawHistory().length} transactions
-                </span>
-                <select
-                  value={withdrawFilter}
-                  onChange={(e) => setWithdrawFilter(e.target.value)}
-                  className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-                <button
-                  onClick={refreshWithdrawHistory}
-                  disabled={historyLoading}
-                  className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span>Refresh</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm text-red-600 font-medium">Total Withdrawals</p>
-                    <p className="text-lg font-bold text-red-800">{withdrawHistory.length}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm text-blue-600 font-medium">Approved</p>
-                    <p className="text-lg font-bold text-blue-800">
-                      {withdrawHistory.filter(t => t.status === 'approved').length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm text-yellow-600 font-medium">Pending</p>
-                    <p className="text-lg font-bold text-yellow-800">
-                      {withdrawHistory.filter(t => t.status === 'pending').length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm text-red-600 font-medium">Rejected</p>
-                    <p className="text-lg font-bold text-red-800">
-                      {withdrawHistory.filter(t => t.status === 'rejected').length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {getFilteredWithdrawHistory().length === 0 ? (
-              <div className="text-center py-8">
-                {historyLoading ? (
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                ) : (
-                  <p className="text-gray-500">No withdraw transactions found</p>
-                )}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">User</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Amount</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Method</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Account Details</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {getFilteredWithdrawHistory().map((transaction) => (
-                      <tr key={transaction._id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4">
-                          <div>
-                            <div className="font-medium text-gray-800">{transaction.userName || 'Unknown'}</div>
-                            <div className="text-sm text-gray-500">{transaction.userId}</div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="font-semibold text-red-600">Rs{transaction.amount}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-sm text-gray-600">{transaction.withdrawalMethod}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="space-y-1">
-                            <div className="text-sm text-gray-800">
-                              {transaction.withdrawalAccountName}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {transaction.withdrawalNumber || 'No account number'}
                             </div>
                           </div>
                         </td>
