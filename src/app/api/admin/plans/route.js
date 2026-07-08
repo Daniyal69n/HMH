@@ -28,7 +28,9 @@ export async function GET(request) {
           planName: plan.planName,
           amount: plan.amount,
           status: plan.status,
-          startDate: plan.startDate
+          startDate: plan.startDate,
+          paymentMethod: plan.paymentMethod,
+          screenshotData: plan.screenshotData || null
         });
       }
     }

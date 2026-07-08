@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   const [pendingWithdrawRequests, setPendingWithdrawRequests] = useState([])
   const [planRequests, setPlanRequests] = useState([])
   const [planRequestsLoading, setPlanRequestsLoading] = useState(false)
+  const [previewReceiptUrl, setPreviewReceiptUrl] = useState(null)
   const [users, setUsers] = useState([])
   const [userSearchQuery, setUserSearchQuery] = useState('')
   const [ads, setAds] = useState([])
@@ -2146,14 +2147,47 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div>
-                      <div className={styles.detailLabel}>Amount</div>
-                      <div className={`${styles.detailValue} ${styles.amount}`}>${req.amount}</div>
+                      <div className={styles.detailLabel}>Amount (PKR)</div>
+                      <div className={`${styles.detailValue} ${styles.amount}`}>PKR {Number(req.amount || 0).toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div className={styles.detailLabel}>Payment Method</div>
+                      <div className={styles.detailValue}>{req.paymentMethod || '-'}</div>
                     </div>
                     <div>
                       <div className={styles.detailLabel}>Requested on</div>
                       <div className={styles.detailValue}>{req.startDate ? new Date(req.startDate).toLocaleDateString() : '-'}</div>
                     </div>
                   </div>
+
+                  {/* Payment Receipt */}
+                  {req.screenshotData ? (
+                    <div style={{ margin: '14px 0', padding: '12px', background: 'rgba(255,255,255,0.04)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div style={{ fontSize: 11, color: '#9598a3', marginBottom: 8, fontWeight: 600, letterSpacing: '0.06em' }}>PAYMENT RECEIPT</div>
+                      <img
+                        src={req.screenshotData}
+                        alt="Payment receipt"
+                        onClick={() => setPreviewReceiptUrl(req.screenshotData)}
+                        style={{
+                          width: '100%',
+                          maxHeight: 180,
+                          objectFit: 'cover',
+                          borderRadius: 8,
+                          cursor: 'zoom-in',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          display: 'block'
+                        }}
+                      />
+                      <div style={{ textAlign: 'center', fontSize: 11, color: '#c9a04a', marginTop: 6, cursor: 'pointer' }} onClick={() => setPreviewReceiptUrl(req.screenshotData)}>
+                        🔍 Click to view full receipt
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ margin: '14px 0', padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed rgba(255,255,255,0.1)', fontSize: 12, color: '#666', textAlign: 'center' }}>
+                      No receipt uploaded
+                    </div>
+                  )}
+
                   <div className={styles.cardActions}>
                     <button type="button" className={`${styles.btn} ${styles.btnGreen}`} onClick={() => handlePlanAction(req.userId, req.planId, 'approve')}>Approve</button>
                     <button type="button" className={`${styles.btn} ${styles.btnReject}`} onClick={() => handlePlanAction(req.userId, req.planId, 'reject')}>Reject</button>
@@ -2812,6 +2846,60 @@ export default function AdminDashboard() {
             )}
           </div>
         )}
+      {previewReceiptUrl && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            justify: 'center',
+            zIndex: 100000,
+            padding: '20px'
+          }}
+          onClick={() => setPreviewReceiptUrl(null)}
+        >
+          <div
+            style={{
+              position: 'relative',
+              maxWidth: '90%',
+              maxHeight: '90%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setPreviewReceiptUrl(null)}
+              style={{
+                position: 'absolute',
+                top: -40,
+                right: 0,
+                background: 'none',
+                border: 'none',
+                color: '#fff',
+                fontSize: '28px',
+                cursor: 'pointer'
+              }}
+            >
+              ×
+            </button>
+            <img
+              src={previewReceiptUrl}
+              alt="Receipt Preview"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '80vh',
+                objectFit: 'contain',
+                borderRadius: '8px',
+                border: '2px solid rgba(255,255,255,0.2)'
+              }}
+            />
+          </div>
+        </div>
+      )}
     </AdminShell>
   )
 } 
