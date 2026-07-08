@@ -83,7 +83,12 @@ export default function Page() {
     levelA: { count: 0, members: [] }
   })
 
-  const [activePlanName, setActivePlanName] = useState('Free')
+  const [activePlanName, setActivePlanName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('hmh-active-plan') || 'Free'
+    }
+    return 'Free'
+  })
 
   // PKR conversion: $1 = PKR 300
   const PKR_RATE = 300
@@ -351,7 +356,9 @@ export default function Page() {
         if (res.ok) {
           const data = await res.json()
           const activePlan = [...(data.investmentPlans || [])].reverse().find(p => p.status === 'active')
-          setActivePlanName(activePlan ? activePlan.planName : 'Free')
+          const planName = activePlan ? activePlan.planName : 'Free'
+          setActivePlanName(planName)
+          localStorage.setItem('hmh-active-plan', planName)
         }
       } catch { }
     }
@@ -645,6 +652,7 @@ export default function Page() {
                 localStorage.removeItem('user')
                 localStorage.removeItem('hmh-profile')
                 localStorage.removeItem('hmh-active-page')
+                localStorage.removeItem('hmh-active-plan')
                 router.replace('/login')
               }}
             >
