@@ -105,6 +105,11 @@ export default function Page() {
     easypaisa: { number: '03705318754', accountName: 'Muhammad Haseeb' }
   })
 
+  // Spin reset countdown and cycle state
+  const [spinCountdown, setSpinCountdown] = useState('24h 00m 00s')
+  const [currentCycleInvites, setCurrentCycleInvites] = useState(0)
+  const [hasSpunThisCycle, setHasSpunThisCycle] = useState(false)
+
   const NAV = useMemo(
     () => [
       { id: 'dashboard', label: 'Dashboard', icon: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z' },
@@ -366,6 +371,43 @@ export default function Page() {
   }, [profile])
 
   useEffect(() => {
+    if (!profile || !profile.createdAt) return
+    const updateCountdown = () => {
+      const joinTime = new Date(profile.createdAt).getTime()
+      const now = Date.now()
+      const cycleMs = 24 * 60 * 60 * 1000 // 24 hours
+      const msSinceJoined = now - joinTime
+      const currentCycleIndex = Math.max(0, Math.floor(msSinceJoined / cycleMs))
+      const currentCycleStart = joinTime + (currentCycleIndex * cycleMs)
+      const currentCycleEnd = currentCycleStart + cycleMs
+      const msRemaining = Math.max(0, currentCycleEnd - now)
+
+      // Format remaining time as hh:mm:ss
+      const hours = Math.floor(msRemaining / (3600 * 1000))
+      const minutes = Math.floor((msRemaining % (3600 * 1000)) / (60 * 1000))
+      const seconds = Math.floor((msRemaining % (60 * 1000)) / 1000)
+      
+      const formatNum = (num) => String(num).padStart(2, '0')
+      setSpinCountdown(`${formatNum(hours)}h ${formatNum(minutes)}m ${formatNum(seconds)}s`)
+
+      // Check how many referrals joined in this cycle
+      const cycleInvites = (teamData.levelA?.members || []).filter(member => {
+        const joinDate = new Date(member.joinDate).getTime()
+        return joinDate >= currentCycleStart && joinDate < currentCycleEnd
+      }).length
+      setCurrentCycleInvites(cycleInvites)
+
+      // Check if user has already spun in this cycle
+      const lastSpunCycle = localStorage.getItem(`hmh-last-spin-cycle-${profile.phone}`)
+      setHasSpunThisCycle(lastSpunCycle === String(currentCycleIndex))
+    }
+
+    updateCountdown()
+    const timer = setInterval(updateCountdown, 1000)
+    return () => clearInterval(timer)
+  }, [profile, teamData])
+
+  useEffect(() => {
     const savedSpinAngle = localStorage.getItem('hmh-spin-angle')
     const savedSpinResult = localStorage.getItem('hmh-spin-result')
     if (savedSpinAngle) {
@@ -561,6 +603,15 @@ export default function Page() {
     spinAngleRef.current = finalAngle
     setSpinAngle(finalAngle)
     showToast(`🎉 You won ${prize.label}!`)
+
+    // Save last spun cycle to localStorage to lock it until reset
+    if (profile && profile.createdAt) {
+      const joinTime = new Date(profile.createdAt).getTime()
+      const cycleMs = 24 * 60 * 60 * 1000
+      const currentCycleIndex = Math.max(0, Math.floor((Date.now() - joinTime) / cycleMs))
+      localStorage.setItem(`hmh-last-spin-cycle-${profile.phone}`, String(currentCycleIndex))
+      setHasSpunThisCycle(true)
+    }
   }
 
   const resetSpin = () => {
@@ -1206,20 +1257,20 @@ export default function Page() {
             <div className="card spin-page-card">
               <div className="spin-progress-card">
                 <div className="spin-progress-copy">
-                  {teamData.totalMembers >= 3
-                    ? 'Goal achieved! Spin wheel unlocked.'
-                    : `Invite ${3 - teamData.totalMembers} more member${3 - teamData.totalMembers === 1 ? '' : 's'} within 24 hours`
+                  {currentCycleInvites >= 3
+                    ? (hasSpunThisCycle ? 'Already spun this cycle. Wait for the next reset.' : 'Goal achieved! Spin wheel unlocked.')
+                    : `Invite ${3 - currentCycleInvites} more member${3 - currentCycleInvites === 1 ? '' : 's'} within 24 hours`
                   }
                 </div>
                 <div className="spin-progress-bar">
                   <div
                     className="spin-progress-fill"
-                    style={{ width: `${Math.min(100, (teamData.totalMembers / 3) * 100)}%` }}
+                    style={{ width: `${Math.min(100, (currentCycleInvites / 3) * 100)}%` }}
                   />
                 </div>
                 <div className="spin-progress-meta">
-                  <span>{Math.min(3, teamData.totalMembers)}/3 invited</span>
-                  <span>Resets in 24h</span>
+                  <span>{Math.min(3, currentCycleInvites)}/3 invited</span>
+                  <span>Resets in {spinCountdown}</span>
                 </div>
               </div>
 
@@ -1247,16 +1298,15 @@ export default function Page() {
                 <button
                   className="btn btn-gold spin-lock-btn"
                   onClick={startSpin}
-                  disabled={teamData.totalMembers < 3 || spinRunning}
+                  disabled={currentCycleInvites < 3 || hasSpunThisCycle || spinRunning}
                   style={{
-                    opacity: teamData.totalMembers < 3 ? 0.65 : 1,
-                    cursor: teamData.totalMembers < 3 ? 'not-allowed' : 'pointer'
+                    opacity: (currentCycleInvites < 3 || hasSpunThisCycle) ? 0.65 : 1,
+                    cursor: (currentCycleInvites < 3 || hasSpunThisCycle) ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  {teamData.totalMembers < 3
+                  {currentCycleInvites < 3
                     ? '🔒 Locked (Invite 3 members)'
-                    : (spinRunning ? 'Spinning...' : 'Start spin')
-                  }
+                    : (hasSpunThisCycle ? '✅ Spun (Wait for Reset)' : (spinRunning ? 'Spinning...' : 'Start spin'))}
                 </button>
                 <button className="btn btn-outline spin-secondary-btn" onClick={stopSpin} disabled={!spinRunning}>
                   Stop spin
