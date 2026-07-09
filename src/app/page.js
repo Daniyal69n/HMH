@@ -1284,6 +1284,9 @@ export default function Page() {
                       <div className="mystery-medal">{b.medal}</div>
                       <div className="mystery-title">{b.title}</div>
                       <div className="mystery-sub">{b.desc}</div>
+                      <div style={{ color: 'var(--gold-bright)', fontWeight: 'bold', fontSize: '15px', marginBottom: '12px' }}>
+                        ${b.value}
+                      </div>
                       <div className="lock-pill">🔒 Locked · 15-day streak</div>
                     </div>
                   ))}
