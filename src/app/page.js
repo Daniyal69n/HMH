@@ -72,6 +72,7 @@ export default function Page() {
   const [wdMethod, setWdMethod] = useState('')
   const [wdName, setWdName] = useState('')
   const [wdAccount, setWdAccount] = useState('')
+  const [wdSubmitting, setWdSubmitting] = useState(false)
 
   const [profile, setProfile] = useState(() => loadStoredProfile())
   const [profileDraft, setProfileDraft] = useState(() => loadStoredProfile())
@@ -596,21 +597,95 @@ export default function Page() {
 
   const topbarTitle = NAV.find((n) => n.id === page)?.label ?? 'HMHPro'
 
-  const submitWithdrawal = () => {
+  // Load real withdrawal history from transactions API
+  useEffect(() => {
+    if (!profile || !profile.phone) return
+    const loadWithdrawHistory = async () => {
+      try {
+        const res = await fetch(`/api/transactions?userId=${encodeURIComponent(profile.phone)}&type=withdraw`)
+        if (res.ok) {
+          const data = await res.json()
+          const txns = Array.isArray(data) ? data : (data.transactions || [])
+          setWithdrawHistory(txns)
+        }
+      } catch (err) {
+        console.warn('Failed to load withdraw history:', err)
+      }
+    }
+    loadWithdrawHistory()
+  }, [profile.phone])
+
+  const submitWithdrawal = async () => {
     if (!wdAmount || !wdMethod || !wdName || !wdAccount) {
       showToast('Please fill in every field')
       return
     }
     const amtInPKR = currency === 'USD' ? Number(wdAmount) * PKR_RATE : Number(wdAmount)
-    setWithdrawHistory((prev) => [
-      { id: globalThis.crypto?.randomUUID?.() ?? String(Date.now()), amount: amtInPKR, method: wdMethod, status: 'Pending' },
-      ...prev
-    ])
-    setWdAmount('')
-    setWdMethod('')
-    setWdName('')
-    setWdAccount('')
-    showToast('Withdrawal request submitted')
+    if (isNaN(amtInPKR) || amtInPKR <= 0) {
+      showToast('Please enter a valid amount')
+      return
+    }
+    if (amtInPKR < 300) {
+      showToast('Minimum withdrawal amount is Rs 300')
+      return
+    }
+    const currentBalance = profile.balance || 0
+    if (amtInPKR > currentBalance) {
+      showToast(`Insufficient balance. Available: ${formatVal(currentBalance)}`)
+      return
+    }
+    const phone = profile.phone
+    if (!phone) {
+      showToast('Please log in to withdraw')
+      return
+    }
+    setWdSubmitting(true)
+    try {
+      const res = await fetch('/api/user/balance', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: phone,
+          operation: 'withdraw',
+          amount: amtInPKR,
+          withdrawalMethod: wdMethod,
+          withdrawalAccountName: wdName,
+          withdrawalNumber: wdAccount,
+          teamCommission: 0
+        })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        showToast(data.error || 'Withdrawal failed')
+        return
+      }
+      // Immediately deduct from local profile state so balance reflects instantly
+      setProfile(prev => {
+        const next = { ...prev, balance: data.newBalance ?? (currentBalance - amtInPKR) }
+        localStorage.setItem('hmh-profile', JSON.stringify(next))
+        return next
+      })
+      // Clear form
+      setWdAmount('')
+      setWdMethod('')
+      setWdName('')
+      setWdAccount('')
+      showToast('✅ Withdrawal request submitted. Pending admin approval.')
+      // Reload withdrawal history
+      try {
+        const txRes = await fetch(`/api/transactions?userId=${encodeURIComponent(phone)}&type=withdraw`)
+        if (txRes.ok) {
+          const txData = await txRes.json()
+          const txns = Array.isArray(txData) ? txData : (txData.transactions || [])
+          setWithdrawHistory(txns)
+        }
+      } catch { }
+    } catch (err) {
+      console.error(err)
+      showToast('Withdrawal request failed. Please try again.')
+    } finally {
+      setWdSubmitting(false)
+    }
   }
 
   const copyRefLink = async () => {
@@ -1112,54 +1187,122 @@ export default function Page() {
               <p>Move your earnings to your preferred payout method.</p>
             </div>
 
+            {/* Balance banner */}
             <div className="card balance-strip">
               <span style={{ color: 'var(--text-dim)', fontSize: 14 }}>Available balance</span>
               <span className="amt">{formatVal(profile.balance)}</span>
             </div>
 
+            {/* Withdrawal form */}
             <div className="card" style={{ marginBottom: 18 }}>
               <h3 style={{ margin: '0 0 4px' }}>New withdrawal</h3>
-              <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 12.5 }}>Max: {formatVal(profile.balance)}</p>
+              <p style={{ margin: '0 0 16px', color: 'var(--text-faint)', fontSize: 12.5 }}>
+                Min: {currency === 'USD' ? '$1' : 'Rs 300'} &nbsp;·&nbsp; Max: {formatVal(profile.balance)}
+              </p>
 
               <label>Amount ({currency === 'USD' ? '$' : 'PKR'})</label>
-              <input type="number" value={wdAmount} onChange={(e) => setWdAmount(e.target.value)} placeholder="Enter amount" />
+              <input
+                type="number"
+                value={wdAmount}
+                onChange={(e) => setWdAmount(e.target.value)}
+                placeholder={currency === 'USD' ? 'e.g. 5' : 'e.g. 1500'}
+                min="0"
+                disabled={wdSubmitting}
+              />
 
               <label>Payment method</label>
-              <select value={wdMethod} onChange={(e) => setWdMethod(e.target.value)}>
+              <select value={wdMethod} onChange={(e) => setWdMethod(e.target.value)} disabled={wdSubmitting}>
                 <option value="">Select payment method</option>
-                <option>Easy Paisa</option>
-                <option>Jazzcash</option>
-                <option>SadaPay</option>
-                <option>Bank transfer</option>
-                <option>Binance</option>
+                <option value="Easy Paisa">Easy Paisa</option>
+                <option value="Jazzcash">Jazzcash</option>
+                <option value="SadaPay">SadaPay</option>
+                <option value="Bank transfer">Bank transfer</option>
+                <option value="Binance">Binance</option>
               </select>
 
               <label>Account holder name</label>
-              <input value={wdName} onChange={(e) => setWdName(e.target.value)} placeholder="Account holder name" />
+              <input
+                value={wdName}
+                onChange={(e) => setWdName(e.target.value)}
+                placeholder="Account holder name"
+                disabled={wdSubmitting}
+              />
 
-              <label>Account number</label>
-              <input value={wdAccount} onChange={(e) => setWdAccount(e.target.value)} placeholder="Enter account number" />
+              <label>Account number / Wallet ID</label>
+              <input
+                value={wdAccount}
+                onChange={(e) => setWdAccount(e.target.value)}
+                placeholder="Enter account number or wallet ID"
+                disabled={wdSubmitting}
+              />
 
               <div style={{ marginTop: 18 }}>
-                <button className="btn btn-gold" onClick={submitWithdrawal}>
-                  Submit withdrawal
+                <button
+                  className="btn btn-gold"
+                  onClick={submitWithdrawal}
+                  disabled={wdSubmitting}
+                  style={{ opacity: wdSubmitting ? 0.7 : 1, cursor: wdSubmitting ? 'not-allowed' : 'pointer' }}
+                >
+                  {wdSubmitting ? '⏳ Submitting…' : 'Submit withdrawal'}
                 </button>
               </div>
+
+              <p style={{ marginTop: 12, fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.5 }}>
+                ⚠️ The requested amount will be deducted from your current balance immediately. Admin will review and approve your withdrawal request.
+              </p>
             </div>
 
+            {/* Withdrawal history */}
             <div className="card">
               <h3 style={{ margin: '0 0 14px' }}>Withdrawal history</h3>
               {withdrawHistory.length === 0 ? (
                 <div className="empty-state">No withdrawals yet. Once you request one, it'll show up here.</div>
               ) : (
-                withdrawHistory.map((h) => (
-                  <div key={h.id} className="history-row">
-                    <span>
-                      {formatVal(h.amount)} · {h.method}
-                    </span>
-                    <span className="history-status status-pending">{h.status}</span>
-                  </div>
-                ))
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {withdrawHistory.map((h, i) => {
+                    const statusColor = h.status === 'approved'
+                      ? '#22c55e'
+                      : h.status === 'rejected'
+                      ? '#ef4444'
+                      : '#f59e0b'
+                    const statusLabel = h.status === 'approved'
+                      ? '✅ Approved'
+                      : h.status === 'rejected'
+                      ? '❌ Rejected'
+                      : '⏳ Pending'
+                    return (
+                      <div key={h._id || h.transactionId || i} style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                          <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>
+                            {formatVal(h.amount)}
+                          </span>
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: statusColor, background: `${statusColor}18`, border: `1px solid ${statusColor}40`, padding: '2px 9px', borderRadius: 20 }}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--text-dim)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                          {(h.withdrawalMethod || h.method) && (
+                            <span>💳 {h.withdrawalMethod || h.method}</span>
+                          )}
+                          {h.withdrawalAccountName && (
+                            <span>👤 {h.withdrawalAccountName}</span>
+                          )}
+                          {h.withdrawalNumber && (
+                            <span>📞 {h.withdrawalNumber}</span>
+                          )}
+                          {(h.createdAt || h.date) && (
+                            <span>🕐 {new Date(h.createdAt || h.date).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                        {h.withdrawalFee > 0 && (
+                          <div style={{ marginTop: 6, fontSize: 11.5, color: 'var(--text-faint)' }}>
+                            Fee: {formatVal(h.withdrawalFee)} &nbsp;·&nbsp; Net payout: {formatVal(h.amountAfterFee)}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
               )}
             </div>
           </section>
