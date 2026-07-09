@@ -35,11 +35,10 @@ function loadStoredProfile() {
     const savedProfile = localStorage.getItem('hmh-profile')
     if (savedProfile) {
       const saved = JSON.parse(savedProfile)
-      if (saved.name) merged.name = saved.name
-      if (saved.email) merged.email = saved.email
-      if (saved.username) merged.username = saved.username
-      if (saved.city) merged.city = saved.city
-      if (saved.address) merged.address = saved.address
+      merged = {
+        ...merged,
+        ...saved
+      }
     }
   } catch { }
 
@@ -74,8 +73,8 @@ export default function Page() {
   const [wdName, setWdName] = useState('')
   const [wdAccount, setWdAccount] = useState('')
 
-  const [profile, setProfile] = useState(EMPTY_PROFILE)
-  const [profileDraft, setProfileDraft] = useState(EMPTY_PROFILE)
+  const [profile, setProfile] = useState(() => loadStoredProfile())
+  const [profileDraft, setProfileDraft] = useState(() => loadStoredProfile())
   const [profileSaved, setProfileSaved] = useState(false)
   const profileReady = useRef(false)
 
@@ -90,10 +89,20 @@ export default function Page() {
   const [spinResult, setSpinResult] = useState('Locked')
   const spinAngleRef = useRef(0)
 
-  const [teamData, setTeamData] = useState({
-    totalMembers: 0,
-    totalTeamEarnings: 0,
-    levelA: { count: 0, members: [] }
+  const [teamData, setTeamData] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('hmh-team-data')
+      if (stored) {
+        try {
+          return JSON.parse(stored)
+        } catch {}
+      }
+    }
+    return {
+      totalMembers: 0,
+      totalTeamEarnings: 0,
+      levelA: { count: 0, members: [] }
+    }
   })
 
   const [activePlanName, setActivePlanName] = useState(() => {
@@ -363,6 +372,7 @@ export default function Page() {
           if (response.ok) {
             const data = await response.json()
             setTeamData(data)
+            localStorage.setItem('hmh-team-data', JSON.stringify(data))
           }
         } catch (error) {
           console.warn('Error loading team data:', error)
@@ -381,10 +391,14 @@ export default function Page() {
         if (res.ok) {
           const data = await res.json()
           // Update profile state with live database values
-          setProfile(prev => ({
-            ...prev,
-            ...data
-          }))
+          setProfile(prev => {
+            const next = {
+              ...prev,
+              ...data
+            }
+            localStorage.setItem('hmh-profile', JSON.stringify(next))
+            return next
+          })
           const activePlan = [...(data.investmentPlans || [])].reverse().find(p => p.status === 'active')
           const planName = activePlan ? activePlan.planName : 'Free'
           setActivePlanName(planName)
