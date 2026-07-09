@@ -66,14 +66,8 @@ export async function PUT(request) {
       // Find the plan request to approve
       const planToApprove = user.investmentPlans.find(p => p._id.toString() === planId.toString());
       if (planToApprove) {
-        // Deactivate all other active plans
-        for (const p of user.investmentPlans) {
-          if (p.status === 'active') {
-            p.status = 'completed';
-          }
-        }
-        // Activate this plan
-        planToApprove.status = 'active';
+        const { activateUserPlan } = await import('@/lib/commission');
+        await activateUserPlan(user, planToApprove);
       }
     } else {
       // Reject

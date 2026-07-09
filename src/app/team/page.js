@@ -19,8 +19,12 @@ export default function TeamPage() {
     totalWithdraw: 0,
     teamMembers: [],
     levelA: [],
+    levelB: [],
+    levelC: [],
     totalEarnings: {
       levelA: 0,
+      levelB: 0,
+      levelC: 0,
       total: 0
     }
   })
@@ -74,15 +78,16 @@ export default function TeamPage() {
         setTeamData({
           teamSize: data.totalMembers,
           totalDeposit: data.totalTeamEarnings,
-          totalWithdraw: 0, // This would need to be calculated from transactions
-          teamMembers: [...data.levelA.members],
-          levelA: data.levelA.members,
+          totalWithdraw: 0,
+          teamMembers: [...(data.levelA?.members || [])],
+          levelA: data.levelA?.members || [],
+          levelB: data.levelB?.members || [],
+          levelC: data.levelC?.members || [],
           totalEarnings: {
-            levelA: data.levelA.members.reduce((sum, member) => {
-              const memberTotalActivity = member.balance + member.earnBalance
-              return sum + (memberTotalActivity * 0.16)
-            }, 0),
-            total: data.totalTeamEarnings
+            levelA: data.earnings?.levelA || 0,
+            levelB: data.earnings?.levelB || 0,
+            levelC: data.earnings?.levelC || 0,
+            total: data.earnings?.total || data.totalTeamEarnings || 0
           }
         })
       }
@@ -209,13 +214,13 @@ export default function TeamPage() {
             <h2 className="text-xl font-bold text-purple-900">Team Details</h2>
           </div>
           
-          {/* Level A - Direct Referrals (16% Commission) */}
+          {/* Level A - Direct Referrals (20% Commission) */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-purple-900 mb-3 flex items-center">
               <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center mr-2">
                 <span className="text-white text-xs font-bold">A</span>
               </div>
-              Level A - Direct Referrals (16% Commission)
+              Level A - Direct Referrals (20% Commission)
             </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -230,7 +235,47 @@ export default function TeamPage() {
             </div>
           </div>
 
+          {/* Level B - Indirect Referrals (5% Commission) */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-purple-900 mb-3 flex items-center">
+              <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center mr-2">
+                <span className="text-white text-xs font-bold">B</span>
+              </div>
+              Level B - Indirect Referrals (5% Commission)
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span className="text-sm text-gray-600">Members: {teamData.levelB.length}</span>
+                </div>
+                <span className="text-sm font-semibold text-green-600">Rs{teamData.totalEarnings.levelB.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
 
+          {/* Level C - Downline Referrals (5% Commission) */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-purple-900 mb-3 flex items-center">
+              <div className="w-6 h-6 bg-pink-600 rounded-full flex items-center justify-center mr-2">
+                <span className="text-white text-xs font-bold">C</span>
+              </div>
+              Level C - Downline Referrals (5% Commission - Last 2 Plans)
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-pink-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span className="text-sm text-gray-600">Members: {teamData.levelC.length}</span>
+                </div>
+                <span className="text-sm font-semibold text-green-600">Rs{teamData.totalEarnings.levelC.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
 
           {/* Total Earnings */}
           <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
@@ -280,17 +325,21 @@ export default function TeamPage() {
               </div>
               <div className="bg-white rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Level A Rate</span>
-                  <span className="text-sm font-bold text-purple-600">16%</span>
+                  <span className="text-sm font-medium text-gray-700">Level A Rate (Direct)</span>
+                  <span className="text-sm font-bold text-purple-600">20%</span>
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Level B Rate (Indirect)</span>
+                  <span className="text-sm font-bold text-indigo-600">5%</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Commission Type</span>
-                  <span className="text-sm font-bold text-purple-600">Direct Only</span>
+                  <span className="text-sm font-medium text-gray-700">Level C Rate (Downline)</span>
+                  <span className="text-sm font-bold text-pink-600">5%</span>
                 </div>
               </div>
             </div>
             <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-              <strong>💡 Note:</strong> Team commission is already included in your account balance. You can withdraw it anytime from your main balance!
+              <strong>💡 Note:</strong> Referrers must have an active plan to receive referral commissions. Level B requires any active plan ($5-$50). Level C requires an active Premium ($40) or Legend ($50) plan.
             </div>
           </div>
 

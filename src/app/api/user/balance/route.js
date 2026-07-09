@@ -265,39 +265,24 @@ export async function PUT(request) {
       }
 
       case 'calculate_team_income': {
-        // Calculate team income (3-tier referral system)
-        const teamMembers = await User.find({ referralCode: userId });
+        // Calculate team income (3-tier referral system based on active plan eligibility)
+        const { getUserActivePlanPrice } = await import('@/lib/commission');
+        const userPlanPrice = await getUserActivePlanPrice(user);
+        
         let totalTeamIncome = 0;
         let levelAIncome = 0;
         let levelBIncome = 0;
         let levelCIncome = 0;
         
-        // Level A: Direct referrals (16% commission)
-        for (const member of teamMembers) {
-          const memberTransactions = await Transaction.find({
-            userId: member.phone,
-            status: 'completed'
-          });
-          
-          const memberTotalActivity = memberTransactions.reduce((sum, tx) => {
-            if (tx.type === 'recharge' || tx.type === 'withdraw') {
-              return sum + tx.amount;
-            }
-            return sum;
-          }, 0);
-          
-          const commission = memberTotalActivity * 0.16;
-          levelAIncome += commission;
-          totalTeamIncome += commission;
-        }
+        // Level A members (direct referrals)
+        const levelAMembers = await User.find({ referredBy: user.phone });
+        const levelAPhones = levelAMembers.map(m => m.phone);
         
-        // Level B: Indirect referrals (2% commission)
-        for (const levelAMember of teamMembers) {
-          const levelBMembers = await User.find({ referralCode: levelAMember.phone });
-          
-          for (const levelBMember of levelBMembers) {
+        // Level A: Direct referrals (20% commission, if user has any active plan)
+        if (userPlanPrice > 0) {
+          for (const member of levelAMembers) {
             const memberTransactions = await Transaction.find({
-              userId: levelBMember.phone,
+              userId: member.phone,
               status: 'completed'
             });
             
@@ -308,40 +293,61 @@ export async function PUT(request) {
               return sum;
             }, 0);
             
-            const commission = memberTotalActivity * 0.02;
-            levelBIncome += commission;
-            totalTeamIncome += commission;
+            const commission = memberTotalActivity * 0.20;
+            levelAIncome += commission;
           }
         }
         
-        // Level C: Third level referrals (2% commission)
-        for (const levelAMember of teamMembers) {
-          const levelBMembers = await User.find({ referralCode: levelAMember.phone });
-          
-          for (const levelBMember of levelBMembers) {
-            const levelCMembers = await User.find({ referralCode: levelBMember.phone });
+        // Level B: Indirect referrals (5% commission, if user has any active plan)
+        const levelBMembers = levelAPhones.length > 0 
+          ? await User.find({ referredBy: { $in: levelAPhones } })
+          : [];
+        const levelBPhones = levelBMembers.map(m => m.phone);
+        
+        if (userPlanPrice > 0) {
+          for (const member of levelBMembers) {
+            const memberTransactions = await Transaction.find({
+              userId: member.phone,
+              status: 'completed'
+            });
             
-            for (const levelCMember of levelCMembers) {
-              const memberTransactions = await Transaction.find({
-                userId: levelCMember.phone,
-                status: 'completed'
-              });
-              
-              const memberTotalActivity = memberTransactions.reduce((sum, tx) => {
-                if (tx.type === 'recharge' || tx.type === 'withdraw') {
-                  return sum + tx.amount;
-                }
-                return sum;
-              }, 0);
-              
-              const commission = memberTotalActivity * 0.02;
-              levelCIncome += commission;
-              totalTeamIncome += commission;
-            }
+            const memberTotalActivity = memberTransactions.reduce((sum, tx) => {
+              if (tx.type === 'recharge' || tx.type === 'withdraw') {
+                return sum + tx.amount;
+              }
+              return sum;
+            }, 0);
+            
+            const commission = memberTotalActivity * 0.05;
+            levelBIncome += commission;
           }
         }
         
-        // Update user's referral commission and total commission earned
+        // Level C: Downline referrals (5% commission, if user has active plan >= $40)
+        const levelCMembers = levelBPhones.length > 0
+          ? await User.find({ referredBy: { $in: levelBPhones } })
+          : [];
+          
+        if (userPlanPrice >= 40) {
+          for (const member of levelCMembers) {
+            const memberTransactions = await Transaction.find({
+              userId: member.phone,
+              status: 'completed'
+            });
+            
+            const memberTotalActivity = memberTransactions.reduce((sum, tx) => {
+              if (tx.type === 'recharge' || tx.type === 'withdraw') {
+                return sum + tx.amount;
+              }
+              return sum;
+            }, 0);
+            
+            const commission = memberTotalActivity * 0.05;
+            levelCIncome += commission;
+          }
+        }
+        
+        totalTeamIncome = levelAIncome + levelBIncome + levelCIncome;  // Update user's referral commission and total commission earned
         const currentReferralCommission = typeof user.referralCommission === 'number' ? user.referralCommission : 0;
         const currentTotalCommissionEarned = typeof user.totalCommissionEarned === 'number' ? user.totalCommissionEarned : 0;
         

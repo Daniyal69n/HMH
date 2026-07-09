@@ -14,7 +14,7 @@ The team commission system has been enhanced to provide better visibility and fu
 The new team commission section includes:
 - **Total Commission Earned**: Shows lifetime commission earnings
 - **Available Commission**: Shows current commission available for withdrawal
-- **Commission Rates**: Displays the 3-tier commission structure (16% / 2% / 2%)
+- **Commission Rates**: Displays the 3-tier commission structure (20% / 5% / 5%)
 - **How it Works**: Educational information about the commission system
 - **Refresh Button**: Manual refresh of team commission calculations
 - **View Team Button**: Quick navigation to team page
@@ -37,14 +37,13 @@ The new team commission section includes:
 ## Commission Structure
 
 ### 3-Tier System
-1. **Level A (Direct Referrals)**: 16% commission on team member activity
-2. **Level B (Indirect Referrals)**: 2% commission on second-level team activity
-3. **Level C (Third Level)**: 2% commission on third-level team activity
+1. **Level A (Direct Referrals)**: **20%** commission on direct referral plan purchases. (Referrer must have any active plan).
+2. **Level B (Indirect Referrals)**: **5%** commission on second-level referral plan purchases. (Referrer must have any active plan: $5, $10, $20, $30, $40, $50).
+3. **Level C (Downline Referrals)**: **5%** commission on third-level referral plan purchases. (Referrer must have an active Premium ($40) or Legend ($50) plan).
 
 ### Calculation Method
-- Commission is calculated based on team members' completed transactions (recharge/withdraw)
-- Real-time calculation available through refresh button
-- Automatic addition to account balance for immediate withdrawal
+- Commission is calculated and distributed automatically when a downline member buys a plan (either directly from balance or when their plan request is approved by the admin).
+- Available commission is updated in real-time in the referrer's account balance.
 
 ## User Interface Features
 
