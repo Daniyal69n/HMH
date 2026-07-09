@@ -188,6 +188,7 @@ export default function AdminDashboard() {
   
   const [ecommerceBankSettings, setEcommerceBankSettings] = useState({ bankName: '', accountName: '', accountNumber: '' })
   const [bankSettingsSaving, setBankSettingsSaving] = useState(false)
+  const [receiptModalUrl, setReceiptModalUrl] = useState('')
 
   const fetchEcommerceData = async () => {
     try {
@@ -196,11 +197,11 @@ export default function AdminDashboard() {
       const pData = await pRes.json()
       setProducts(Array.isArray(pData) ? pData : [])
       
-      const oRes = await fetch('/api/admin/orders')
+      const oRes = await fetch(`/api/admin/orders?_t=${ts}`)
       const oData = await oRes.json()
       setOrders(Array.isArray(oData) ? oData : [])
 
-      const bRes = await fetch('/api/admin/ecommerce-settings')
+      const bRes = await fetch(`/api/admin/ecommerce-settings?_t=${ts}`)
       const bData = await bRes.json()
       if (bRes.ok && bData) setEcommerceBankSettings(bData)
     } catch (err) {
@@ -2777,6 +2778,19 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
+
+            {/* Receipt Modal for Ecommerce */}
+            {receiptModalUrl && (
+              <div className={styles.editModal} onClick={() => setReceiptModalUrl('')} style={{ zIndex: 10000 }}>
+                <div className={styles.editModalBox} style={{ maxWidth: '600px', textAlign: 'center', padding: '20px' }} onClick={e => e.stopPropagation()}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h3 style={{ margin: 0 }}>Payment Receipt</h3>
+                    <button onClick={() => setReceiptModalUrl('')} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--text)' }}>×</button>
+                  </div>
+                  <img src={receiptModalUrl} alt="Receipt" style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '8px' }} />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -2889,7 +2903,7 @@ export default function AdminDashboard() {
                           <div style={{ color: 'var(--gold)', marginTop: '4px' }}>Amount: {o.currency} {(o.amount || 0).toLocaleString()}</div>
                           {o.paymentMethod === 'online_transfer' && o.receiptImage && (
                             <div style={{ marginTop: '6px' }}>
-                              <a href={o.receiptImage} target="_blank" style={{ color: '#3b82f6', textDecoration: 'underline', fontSize: '12px' }}>View Receipt</a>
+                              <button onClick={() => setReceiptModalUrl(o.receiptImage)} style={{ background: 'none', border: 'none', color: '#3b82f6', textDecoration: 'underline', fontSize: '12px', cursor: 'pointer', padding: 0 }}>View Receipt</button>
                             </div>
                           )}
                         </div>
