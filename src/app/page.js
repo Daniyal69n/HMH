@@ -917,7 +917,7 @@ export default function Page() {
               </div>
               <div className="dots-row">
                 {streakDots.map((_, i) => (
-                  <div key={i} className={`streak-dot ${i < streakDays ? 'active' : ''}`} />
+                  <div key={i} className={`streak-dot ${i < streakDays ? 'filled' : ''}`} />
                 ))}
               </div>
               <div className="streak-note">
