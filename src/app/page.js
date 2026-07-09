@@ -288,6 +288,8 @@ export default function Page() {
 
   const [products, setProducts] = useState([])
   const [productsLoading, setProductsLoading] = useState(true)
+  const [mysteryBoxes, setMysteryBoxes] = useState([])
+  const [mysteryBoxesEnabled, setMysteryBoxesEnabled] = useState(true)
 
   useEffect(() => {
     const ts = Date.now()
@@ -323,6 +325,16 @@ export default function Page() {
       .then(res => res.json())
       .then(data => {
         if (data) setEcommerceBankDetails(data)
+      })
+      .catch(console.error)
+
+    fetch(`/api/admin/mystery-boxes?_t=${ts}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) {
+          setMysteryBoxes(data.boxes || [])
+          setMysteryBoxesEnabled(data.enabled !== false)
+        }
       })
       .catch(console.error)
   }, [])
@@ -1260,26 +1272,24 @@ export default function Page() {
               <div className="streak-note">Complete a 10-day streak to earn a $10 bonus reward.</div>
             </div>
 
-            <div className="card" style={{ marginBottom: 18 }}>
-              <h3 style={{ margin: '0 0 4px' }}>🎁 Mystery boxes</h3>
-              <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
-                Stay in the Top 3 of the leaderboard for 15 days to claim.
-              </p>
-              <div className="mystery-grid">
-                {[
-                  { medal: '🥇', title: 'Top 1 box', sub: 'Best mystery box' },
-                  { medal: '🥈', title: 'Top 2 box', sub: 'Great mystery box' },
-                  { medal: '🥉', title: 'Top 3 box', sub: 'Small mystery box' }
-                ].map((b) => (
-                  <div key={b.title} className="card mystery-card">
-                    <div className="mystery-medal">{b.medal}</div>
-                    <div className="mystery-title">{b.title}</div>
-                    <div className="mystery-sub">{b.sub}</div>
-                    <div className="lock-pill">🔒 Locked · 15-day streak</div>
-                  </div>
-                ))}
+            {mysteryBoxesEnabled && mysteryBoxes.length > 0 && (
+              <div className="card" style={{ marginBottom: 18 }}>
+                <h3 style={{ margin: '0 0 4px' }}>🎁 Mystery boxes</h3>
+                <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
+                  Stay in the Top 3 of the leaderboard for 15 days to claim.
+                </p>
+                <div className="mystery-grid">
+                  {mysteryBoxes.map((b) => (
+                    <div key={b.id || b.title} className="card mystery-card">
+                      <div className="mystery-medal">{b.medal}</div>
+                      <div className="mystery-title">{b.title}</div>
+                      <div className="mystery-sub">{b.desc}</div>
+                      <div className="lock-pill">🔒 Locked · 15-day streak</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="card">
               <h3 style={{ margin: '0 0 4px' }}>🏆 Top 10 leaderboard</h3>
