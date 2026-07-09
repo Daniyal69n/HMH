@@ -2789,22 +2789,22 @@ export default function AdminDashboard() {
                 products.length > 0 ? (
                   <div className={styles.productsGrid}>
                     {products.map(p => (
-                      <div key={p.id} className={styles.productCard}>
-                        <img className={styles.productImg} src={p.img} alt={p.name} />
+                      <div key={p._id || p.id} className={styles.productCard}>
+                        <img className={styles.productImg} src={p.image || p.img || ''} alt={p.name} />
                         <div className={styles.productBody}>
                           <div className={styles.productTop}>
                             <div className={styles.productName}>{p.name}</div>
                             <span
-                              className={`${styles.status} ${p.active ? styles.active : styles.suspended}`}
+                              className={`${styles.status} ${(p.isActive !== undefined ? p.isActive : p.active) ? styles.active : styles.suspended}`}
                               style={{ cursor: 'pointer' }}
-                              onClick={() => toggleProduct(p.id)}
+                              onClick={() => toggleProduct(p._id || p.id)}
                               title="Click to toggle status"
                             >
-                              {p.active ? 'Active' : 'Hidden'}
+                              {(p.isActive !== undefined ? p.isActive : p.active) ? 'Active' : 'Hidden'}
                             </span>
                           </div>
-                          <div className={styles.productDesc}>{p.desc}</div>
-                          <div className={styles.productPrice}>{p.currency} {p.price.toLocaleString()}</div>
+                          <div className={styles.productDesc}>{p.description || p.desc}</div>
+                          <div className={styles.productPrice}>{p.currency || 'Rs'} {p.price?.toLocaleString()}</div>
                           <div className={styles.productActions}>
                             <button className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`} onClick={() => openEditProduct(p)}>
                               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
