@@ -21,6 +21,9 @@ const jetBrainsMono = JetBrains_Mono({
 export const metadata = {
   title: "HMHPro",
   description: "HMHPro dashboard and member experience",
+  icons: {
+    icon: "/logo.jpg",
+  },
 };
 
 export default function RootLayout({ children }) {
