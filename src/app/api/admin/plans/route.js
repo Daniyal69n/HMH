@@ -27,6 +27,7 @@ export async function GET(request) {
           userEmail: user.email,
           planId: plan._id,
           planName: plan.planName,
+          userCurrentPlan: user.plan || 'Free',
           amount: plan.amount,
           status: plan.status,
           startDate: plan.startDate,

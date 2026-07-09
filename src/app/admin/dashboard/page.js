@@ -2276,7 +2276,13 @@ export default function AdminDashboard() {
                   </div>
                   <div className={styles.detailGrid}>
                     <div>
-                      <div className={styles.detailLabel}>Plan</div>
+                      <div className={styles.detailLabel}>Current Plan</div>
+                      <div className={styles.detailValue}>
+                        <span style={{ background: '#3b82f620', color: '#3b82f6', borderRadius: 6, padding: '2px 10px', fontWeight: 600 }}>{req.userCurrentPlan || 'Free'}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className={styles.detailLabel}>Requested Plan</div>
                       <div className={styles.detailValue}>
                         <span style={{ background: '#ede9fe', color: '#7c3aed', borderRadius: 6, padding: '2px 10px', fontWeight: 600 }}>{req.planName}</span>
                       </div>
