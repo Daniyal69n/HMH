@@ -53,7 +53,7 @@ export default function Page() {
   const [toast, setToast] = useState('')
   const toastTimer = useRef(null)
   const spinTimer = useRef(null)
-  
+
   const [currency, setCurrency] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('hmh-currency') || 'USD'
@@ -96,7 +96,7 @@ export default function Page() {
       if (stored) {
         try {
           return JSON.parse(stored)
-        } catch {}
+        } catch { }
       }
     }
     return {
@@ -318,7 +318,7 @@ export default function Page() {
       legend: 0,
       any: 0
     }
-    
+
     if (teamData.levelA?.members) {
       for (const m of teamData.levelA.members) {
         counts.any++
@@ -342,7 +342,7 @@ export default function Page() {
       let progressPercent = 0
       let rewardUSD = 0
       let membersRequired = 0
-      
+
       if (lv === 1) {
         rewardUSD = 2
         membersRequired = 5
@@ -374,20 +374,20 @@ export default function Page() {
           reqEach = 5
           rewardUSD = 25 + (lv - 6) * 5
         }
-        
+
         membersRequired = reqEach * 6
         reqText = `${reqEach} Basic · ${reqEach} Standard · ${reqEach} Diamond · ${reqEach} Pro · ${reqEach} Premium · ${reqEach} Legend`
-        
+
         const basicProgress = Math.min(reqEach, levelAPlanCounts.basic)
         const standardProgress = Math.min(reqEach, levelAPlanCounts.standard)
         const diamondProgress = Math.min(reqEach, levelAPlanCounts.diamond)
         const proProgress = Math.min(reqEach, levelAPlanCounts.pro)
         const premiumProgress = Math.min(reqEach, levelAPlanCounts.premium)
         const legendProgress = Math.min(reqEach, levelAPlanCounts.legend)
-        
+
         const totalProgress = basicProgress + standardProgress + diamondProgress + proProgress + premiumProgress + legendProgress
         progressPercent = Math.min(100, Math.round((totalProgress / membersRequired) * 100))
-        
+
         isCompleted = (
           levelAPlanCounts.basic >= reqEach &&
           levelAPlanCounts.standard >= reqEach &&
@@ -397,9 +397,9 @@ export default function Page() {
           levelAPlanCounts.legend >= reqEach
         )
       }
-      
+
       const isMilestone = lv % 10 === 0
-      
+
       return {
         level: lv,
         reqText,
@@ -514,7 +514,7 @@ export default function Page() {
       const hours = Math.floor(msRemaining / (3600 * 1000))
       const minutes = Math.floor((msRemaining % (3600 * 1000)) / (60 * 1000))
       const seconds = Math.floor((msRemaining % (60 * 1000)) / 1000)
-      
+
       const formatNum = (num) => String(num).padStart(2, '0')
       setSpinCountdown(`${formatNum(hours)}h ${formatNum(minutes)}m ${formatNum(seconds)}s`)
 
@@ -750,7 +750,7 @@ export default function Page() {
       if (res.ok) {
         setPlanModalOpen(false)
         showToast('Plan request submitted! Admin will activate your plan shortly.')
-        
+
         // Fetch fresh profile data to update pending plan state immediately
         try {
           const profileRes = await fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone || user.phone)}&_t=${Date.now()}`)
@@ -905,10 +905,10 @@ export default function Page() {
     if (!profile || !profile.createdAt || !teamData.levelA?.members || teamData.levelA.members.length === 0) {
       return 0
     }
-    
+
     const joinTime = new Date(profile.createdAt).getTime()
     const cycleMs = 24 * 60 * 60 * 1000
-    
+
     // Group referrals by their cycle index
     const activeCycles = new Set()
     for (const m of teamData.levelA.members) {
@@ -918,21 +918,21 @@ export default function Page() {
         activeCycles.add(cycleIdx)
       }
     }
-    
+
     const currentCycle = Math.floor((Date.now() - joinTime) / cycleMs)
-    
+
     // Determine start of consecutive check
     let checkCycle = currentCycle
     if (!activeCycles.has(checkCycle)) {
       checkCycle = currentCycle - 1
     }
-    
+
     let streak = 0
     while (checkCycle >= 0 && activeCycles.has(checkCycle)) {
       streak++
       checkCycle--
     }
-    
+
     return Math.min(10, streak)
   }, [profile, teamData.levelA?.members])
 
@@ -1008,7 +1008,7 @@ export default function Page() {
 
             <div className="topbar-title">{topbarTitle}</div>
 
-            <button 
+            <button
               className="currency-toggle"
               onClick={() => setCurrency(c => c === 'USD' ? 'PKR' : 'USD')}
               style={{
@@ -1262,13 +1262,13 @@ export default function Page() {
                     const statusColor = h.status === 'approved'
                       ? '#22c55e'
                       : h.status === 'rejected'
-                      ? '#ef4444'
-                      : '#f59e0b'
+                        ? '#ef4444'
+                        : '#f59e0b'
                     const statusLabel = h.status === 'approved'
                       ? '✅ Approved'
                       : h.status === 'rejected'
-                      ? '❌ Rejected'
-                      : '⏳ Pending'
+                        ? '❌ Rejected'
+                        : '⏳ Pending'
                     return (
                       <div key={h._id || h.transactionId || i} style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
@@ -1280,15 +1280,6 @@ export default function Page() {
                           </span>
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--text-dim)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                          {(h.withdrawalMethod || h.method) && (
-                            <span>💳 {h.withdrawalMethod || h.method}</span>
-                          )}
-                          {h.withdrawalAccountName && (
-                            <span>👤 {h.withdrawalAccountName}</span>
-                          )}
-                          {h.withdrawalNumber && (
-                            <span>📞 {h.withdrawalNumber}</span>
-                          )}
                           {(h.createdAt || h.date) && (
                             <span>🕐 {new Date(h.createdAt || h.date).toLocaleDateString()}</span>
                           )}
@@ -1675,7 +1666,7 @@ export default function Page() {
                         <span>Condition progress</span>
                         <span>{level.progressPercent}%</span>
                       </div>
-                      
+
                       <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                           <span className="reward-chip" style={{ fontSize: 12.5, fontWeight: 700, background: 'rgba(201,160,74,0.12)', color: 'var(--gold-bright)', border: '1px solid rgba(201,160,74,0.3)', padding: '4px 10px', borderRadius: 20 }}>
@@ -1687,7 +1678,7 @@ export default function Page() {
                             </span>
                           )}
                         </div>
-                        
+
                         {/* Claim button */}
                         {(() => {
                           const isClaimed = (profile.claimedLevels || []).includes(level.level);
