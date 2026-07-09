@@ -24,6 +24,7 @@ export async function GET(request) {
           userId: user._id,
           userName: user.name,
           userPhone: user.phone,
+          userEmail: user.email,
           planId: plan._id,
           planName: plan.planName,
           amount: plan.amount,

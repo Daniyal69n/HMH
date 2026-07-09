@@ -1773,7 +1773,7 @@ export default function AdminDashboard() {
                       <div className={styles.avatar}>{getUserInitials(user.name)}</div>
                       <div>
                         <div className={styles.userName}>{user.name || 'Unknown User'}</div>
-                        <div className={styles.userEmail}>{user.phone || 'No phone number'}</div>
+                        <div className={styles.userEmail}>{user.email || user.phone || 'No email provided'}</div>
                       </div>
                     </div>
                     <span className={`${styles.status} ${user.isBlocked ? styles.suspended : styles.active}`}>
@@ -2192,7 +2192,7 @@ export default function AdminDashboard() {
                       <div className={styles.avatar}>{getUserInitials(req.userName)}</div>
                       <div>
                         <div className={styles.userName}>{req.userName || 'Unknown User'}</div>
-                        <div className={styles.userEmail}>{req.userPhone}</div>
+                        <div className={styles.userEmail}>{req.userEmail || req.userPhone}</div>
                       </div>
                     </div>
                     <span className={`${styles.status} ${styles.pending}`}>pending</span>
@@ -2306,7 +2306,9 @@ export default function AdminDashboard() {
                       <div className={styles.avatar}>{getUserInitials(request.userName)}</div>
                       <div>
                         <div className={styles.userName}>{request.userName || 'Unknown User'}</div>
-                        <div className={styles.userEmail}>{request.userId}</div>
+                        <div className={styles.userEmail}>
+                          {users.find(u => u.phone === request.userId)?.email || request.userId}
+                        </div>
                       </div>
                     </div>
                     <span className={`${styles.status} ${styles[request.status] || styles.pending}`}>
@@ -2549,7 +2551,9 @@ export default function AdminDashboard() {
                         <td className="py-3 px-4">
                           <div>
                             <div className="font-medium text-gray-800">{transaction.userName || 'Unknown'}</div>
-                            <div className="text-sm text-gray-500">{transaction.userId}</div>
+                            <div className="text-sm text-gray-500">
+                              {users.find(u => u.phone === transaction.userId)?.email || transaction.userId}
+                            </div>
                           </div>
                         </td>
                         <td className="py-3 px-4">
