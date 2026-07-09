@@ -140,6 +140,12 @@ export default function Page() {
   const [currentCycleInvites, setCurrentCycleInvites] = useState(0)
   const [hasSpunThisCycle, setHasSpunThisCycle] = useState(false)
 
+  // Social task state
+  const [stPlatform, setStPlatform] = useState('')
+  const [stScreenshot, setStScreenshot] = useState(null)
+  const [stNotes, setStNotes] = useState('')
+  const [stSubmitting, setStSubmitting] = useState(false)
+
   const NAV = useMemo(
     () => [
       { id: 'dashboard', label: 'Dashboard', icon: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z' },
@@ -147,6 +153,7 @@ export default function Page() {
       { id: 'network', label: 'My network', icon: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM17 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 3-5 6-5s6 2 6 5M13 20c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4' },
       { id: 'plans', label: 'My plan', icon: 'M12 3v18M5 8l7-5 7 5' },
       { id: 'levels', label: 'Rewards & levels', icon: 'M8 21h8M12 17v4M6 3h12l-1 8a5 5 0 0 1-10 0z' },
+      { id: 'social-task', label: 'Social Task', icon: 'M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z' },
       { id: 'spin', label: 'Lucky spin', icon: 'M12 2v20M2 12h20' },
       { id: 'store', label: 'E-commerce', icon: 'M4 8h16l-1.5 11h-13zM8 8V6a4 4 0 0 1 8 0v2' },
       { id: 'membership', label: 'Membership card', icon: 'M3 6h18v12H3zM3 10h18' },
@@ -772,6 +779,47 @@ export default function Page() {
       showToast('Submission failed. Please try again.')
     } finally {
       setPlanSubmitting(false)
+    }
+  }
+
+  const submitSocialTask = async () => {
+    if (!stPlatform || !stScreenshot) {
+      showToast('Please select a platform and upload a screenshot')
+      return
+    }
+    setStSubmitting(true)
+    try {
+      const res = await fetch('/api/user/social-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: profile.phone })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        showToast(data.message || 'Task submitted successfully!')
+        setStPlatform('')
+        setStScreenshot(null)
+        setStNotes('')
+        
+        // Update balance and earning instantly
+        setProfile(prev => {
+          const next = {
+            ...prev,
+            balance: data.balance,
+            earnBalance: data.earnBalance,
+            totalCommissionEarned: data.totalCommissionEarned
+          }
+          localStorage.setItem('hmh-profile', JSON.stringify(next))
+          return next
+        })
+      } else {
+        showToast(data.message || 'Task submission failed')
+      }
+    } catch (err) {
+      console.error(err)
+      showToast('Error submitting task')
+    } finally {
+      setStSubmitting(false)
     }
   }
 
@@ -1582,6 +1630,65 @@ export default function Page() {
                   </div>
                 </div>
               ))}
+            </div>
+          </section>
+
+          {/* SOCIAL TASK */}
+          <section className={`page ${page === 'social-task' ? 'active' : ''}`}>
+            <div className="page-head">
+              <h1>Social Task</h1>
+              <p>Complete Social Media Tasks &amp; Earn Rewards!</p>
+            </div>
+            
+            <div className="card" style={{ marginBottom: 18 }}>
+              <h3 style={{ margin: '0 0 4px' }}>📋 Task Details</h3>
+              <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
+                Task Name: Upload a Promotional Video
+              </p>
+              <ul style={{ paddingLeft: 20, color: 'var(--text-dim)', fontSize: 13, marginBottom: 20 }}>
+                <li style={{ paddingBottom: 6 }}>✅ Upload the video on TikTok, Instagram, Facebook, or YouTube.</li>
+                <li style={{ paddingBottom: 6 }}>✅ Keep the post public.</li>
+                <li style={{ paddingBottom: 6 }}>✅ Take a screenshot of the uploaded post.</li>
+                <li style={{ paddingBottom: 6 }}>✅ Submit the form below.</li>
+              </ul>
+
+              <label>Select Platform</label>
+              <select value={stPlatform} onChange={(e) => setStPlatform(e.target.value)} disabled={stSubmitting}>
+                <option value="">Select Platform</option>
+                <option value="TikTok">TikTok</option>
+                <option value="Instagram">Instagram</option>
+                <option value="Facebook">Facebook</option>
+                <option value="YouTube">YouTube</option>
+              </select>
+
+              <label style={{ marginTop: 12 }}>Upload Screenshot</label>
+              <input type="file" accept="image/*" onChange={(e) => setStScreenshot(e.target.files[0])} disabled={stSubmitting} style={{
+                background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px', width: '100%', color: 'var(--text)'
+              }} />
+
+              <label style={{ marginTop: 12 }}>Additional Notes (Optional)</label>
+              <textarea value={stNotes} onChange={(e) => setStNotes(e.target.value)} disabled={stSubmitting} placeholder="Any notes..." style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text)', minHeight: 80, fontFamily: 'inherit' }} />
+
+              <div style={{ marginTop: 18 }}>
+                <button
+                  className="btn btn-gold"
+                  onClick={submitSocialTask}
+                  disabled={stSubmitting}
+                  style={{ opacity: stSubmitting ? 0.7 : 1, cursor: stSubmitting ? 'not-allowed' : 'pointer' }}
+                >
+                  {stSubmitting ? '⏳ Submitting…' : '🟢 Collect Reward'}
+                </button>
+              </div>
+            </div>
+
+            <div className="card">
+              <h3 style={{ margin: '0 0 10px', color: 'var(--red)' }}>📢 Important Rules</h3>
+              <ul style={{ paddingLeft: 20, color: 'var(--text-faint)', fontSize: 13 }}>
+                <li style={{ paddingBottom: 6 }}>Only original uploads are accepted.</li>
+                <li style={{ paddingBottom: 6 }}>Screenshot must be clear.</li>
+                <li style={{ paddingBottom: 6 }}>Post must remain public.</li>
+                <li style={{ paddingBottom: 6 }}>Fake submissions will be rejected.</li>
+              </ul>
             </div>
           </section>
 
