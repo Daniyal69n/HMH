@@ -1063,7 +1063,7 @@ export default function Page() {
                 <div className="stat-icon" style={{ background: 'rgba(91,127,214,.12)' }}>🔗</div>
                 <div>
                   <div className="stat-label">Indirect referrals</div>
-                  <div className="stat-value">0</div>
+                  <div className="stat-value">{teamData.levelB?.count || 0}</div>
                 </div>
               </div>
             </div>
