@@ -996,6 +996,31 @@ export default function AdminDashboard() {
     }
   }, [isAdminLoggedIn, isCheckingAuth, activeTab])
 
+  // Load withdraw history when withdrawals tab is activated
+  useEffect(() => {
+    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'withdrawals') {
+      const loadWithdrawHistory = async () => {
+        try {
+          setHistoryLoading(true)
+          const response = await fetch('/api/transactions?type=withdraw&status=all')
+          if (response.ok) {
+            const data = await response.json()
+            setWithdrawHistory(data)
+          } else {
+            console.warn('Failed to load withdraw history')
+            setWithdrawHistory([])
+          }
+        } catch (error) {
+          console.warn('Error loading withdraw history:', error)
+          setWithdrawHistory([])
+        } finally {
+          setHistoryLoading(false)
+        }
+      }
+      loadWithdrawHistory()
+    }
+  }, [isAdminLoggedIn, isCheckingAuth, activeTab])
+
   // Load plan requests when tab is activated
   useEffect(() => {
     if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'planRequests') {

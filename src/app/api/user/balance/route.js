@@ -93,6 +93,7 @@ export async function PUT(request) {
         // No fee: full amount is what admin will pay out
         const transaction = await Transaction.create({
           userId: userId,
+          userName: user.name || 'Unknown User',
           type: 'withdraw',
           amount: data.amount,
           withdrawalFee: 0,
