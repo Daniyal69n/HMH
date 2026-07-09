@@ -92,9 +92,10 @@ export async function POST(request) {
     // Credit reward to:
     // 1. My rewards (totalCommissionEarned)
     // 2. Total earnings (earnBalance)
-    // NOT in Current balance (balance)
+    // 3. Current balance (balance) - as requested by user
     user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
     user.earnBalance = (user.earnBalance || 0) + rewardPKR;
+    user.balance = (user.balance || 0) + rewardPKR;
     
     if (!user.claimedLevels) {
       user.claimedLevels = [];
@@ -110,9 +111,9 @@ export async function POST(request) {
       userPhone: user.phone,
       amount: rewardPKR,
       type: 'level_reward',
-      paymentMethod: 'system',
-      status: 'approved',
-      screenshot: '',
+      paymentMethod: 'bank', // match enum schema options where applicable or omit
+      status: 'completed',   // level rewards are immediately approved/completed
+      description: `Level ${level} Completion Reward`,
       createdAt: new Date()
     });
     
