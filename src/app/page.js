@@ -352,7 +352,7 @@ export default function Page() {
     }
   }, [profile])
 
-  // Fetch user's active plan from DB
+  // Fetch user's profile and active plan from DB
   useEffect(() => {
     if (!profile || !profile.phone) return
     const fetchActivePlan = async () => {
@@ -360,6 +360,11 @@ export default function Page() {
         const res = await fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone)}&_t=${Date.now()}`)
         if (res.ok) {
           const data = await res.json()
+          // Update profile state with live database values
+          setProfile(prev => ({
+            ...prev,
+            ...data
+          }))
           const activePlan = [...(data.investmentPlans || [])].reverse().find(p => p.status === 'active')
           const planName = activePlan ? activePlan.planName : 'Free'
           setActivePlanName(planName)
@@ -368,7 +373,7 @@ export default function Page() {
       } catch { }
     }
     fetchActivePlan()
-  }, [profile])
+  }, [profile.phone])
 
   useEffect(() => {
     if (!profile || !profile.createdAt) return
@@ -775,22 +780,22 @@ export default function Page() {
               <div className="card stat-card">
                 <div className="stat-icon" style={{ background: 'rgba(79,174,130,.12)' }}>💵</div>
                 <div>
-                  <div className="stat-label">Today's earning</div>
-                  <div className="stat-value">$0.00</div>
+                  <div className="stat-label">Current balance</div>
+                  <div className="stat-value">${((profile.balance || 0) / PKR_RATE).toFixed(2)}</div>
                 </div>
               </div>
               <div className="card stat-card">
                 <div className="stat-icon" style={{ background: 'rgba(91,127,214,.12)' }}>💼</div>
                 <div>
                   <div className="stat-label">Total earnings</div>
-                  <div className="stat-value">$0.00</div>
+                  <div className="stat-value">${(((profile.earnBalance || 0) + (profile.totalCommissionEarned || 0)) / PKR_RATE).toFixed(2)}</div>
                 </div>
               </div>
               <div className="card stat-card">
                 <div className="stat-icon" style={{ background: 'rgba(201,160,74,.12)' }}>🎁</div>
                 <div>
                   <div className="stat-label">My rewards</div>
-                  <div className="stat-value">$0.00</div>
+                  <div className="stat-value">${((profile.totalCommissionEarned || 0) / PKR_RATE).toFixed(2)}</div>
                 </div>
               </div>
               <div className="card stat-card">
@@ -804,7 +809,9 @@ export default function Page() {
                 <div className="stat-icon" style={{ background: 'rgba(196,87,74,.12)' }}>📤</div>
                 <div>
                   <div className="stat-label">Total withdrawals</div>
-                  <div className="stat-value">$0.00</div>
+                  <div className="stat-value">${(((profile.withdrawHistory || [])
+                    .filter(w => w.status === 'approved' || w.status === 'completed')
+                    .reduce((sum, w) => sum + w.amount, 0)) / PKR_RATE).toFixed(2)}</div>
                 </div>
               </div>
             </div>
