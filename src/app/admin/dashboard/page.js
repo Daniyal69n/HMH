@@ -10,7 +10,12 @@ import styles from '@/components/admin/admin.module.css'
 export default function AdminDashboard() {
   const router = useRouter()
   const { showSuccess, showError, showWarning, showInfo } = useNotification()
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('admin_active_tab') || 'dashboard'
+    }
+    return 'dashboard'
+  })
   const [plans, setPlans] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [editingPlan, setEditingPlan] = useState(null)
@@ -412,6 +417,12 @@ export default function AdminDashboard() {
       setIsCheckingAuth(false)
     }
   }, [router])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('admin_active_tab', activeTab)
+    }
+  }, [activeTab])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
