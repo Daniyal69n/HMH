@@ -2783,12 +2783,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
