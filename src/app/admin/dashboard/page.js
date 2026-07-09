@@ -98,62 +98,61 @@ export default function AdminDashboard() {
     showSuccess('Earnings settings saved!')
   }
 
-  // â”€â”€ Mystery Boxes state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const MB_STORAGE_KEY = 'admin_mystery_boxes'
-  const MB_ENABLE_KEY = 'admin_mystery_boxes_enabled'
-
-  function seedBoxes() {
-    return [
-      { id: 'box_1', rank: 1, medal: 'ðŸ¥‡', title: 'Top 1 Mystery Box', desc: '$100 Cash Prize + Gold Badge',   value: 100 },
-      { id: 'box_2', rank: 2, medal: 'ðŸ¥ˆ', title: 'Top 2 Mystery Box', desc: '$50 Cash Prize + Silver Badge',  value: 50  },
-      { id: 'box_3', rank: 3, medal: 'ðŸ¥‰', title: 'Top 3 Mystery Box', desc: '$25 Cash Prize + Bronze Badge', value: 25  },
-    ]
-  }
-  function loadBoxes() {
-    if (typeof window === 'undefined') return seedBoxes()
-    const raw = localStorage.getItem(MB_STORAGE_KEY)
-    if (raw) return JSON.parse(raw)
-    const seeded = seedBoxes()
-    localStorage.setItem(MB_STORAGE_KEY, JSON.stringify(seeded))
-    return seeded
-  }
-  function loadBoxesEnabled() {
-    if (typeof window === 'undefined') return true
-    return localStorage.getItem(MB_ENABLE_KEY) !== 'false'
-  }
-
-  const [mysteryBoxes, setMysteryBoxes] = useState(seedBoxes)
+  // ─── Mystery Boxes state ───────────────────────────────────────────────
+  const [mysteryBoxes, setMysteryBoxes] = useState([])
   const [mysteryBoxesEnabled, setMysteryBoxesEnabled] = useState(true)
-  const [editingBox, setEditingBox] = useState(null)   // { id, value } while modal is open
-  const [editBoxValue, setEditBoxValue] = useState('')
+  const [editingBox, setEditingBox] = useState(null)
 
   useEffect(() => {
-    setMysteryBoxes(loadBoxes())
-    setMysteryBoxesEnabled(loadBoxesEnabled())
+    fetch('/api/admin/mystery-boxes')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) {
+          setMysteryBoxes(data.boxes || [])
+          setMysteryBoxesEnabled(data.enabled !== false)
+        }
+      })
+      .catch(console.error)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function saveMysteryBoxes() {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(MB_STORAGE_KEY, JSON.stringify(mysteryBoxes))
-      localStorage.setItem(MB_ENABLE_KEY, String(mysteryBoxesEnabled))
-    }
-    showSuccess('Mystery Boxes saved!')
+    fetch('/api/admin/mystery-boxes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: mysteryBoxesEnabled, boxes: mysteryBoxes })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        showSuccess('Mystery Boxes saved!')
+      } else {
+        showError('Failed to save mystery boxes.')
+      }
+    })
+    .catch(console.error)
   }
 
   function openEditBox(box) {
     setEditingBox(box)
-    setEditBoxValue(String(box.value))
+  }
+
+  function openAddBox() {
+    setEditingBox({ id: 'new', rank: mysteryBoxes.length + 1, medal: '🎁', title: `Top ${mysteryBoxes.length + 1} Mystery Box`, desc: '$0 Cash Prize', value: 0 })
   }
 
   function confirmEditBox() {
-    const num = parseFloat(editBoxValue)
+    const num = parseFloat(editingBox.value)
     if (isNaN(num) || num < 0) return
-    setMysteryBoxes(prev => prev.map(b =>
-      b.id === editingBox.id
-        ? { ...b, value: num, desc: '$' + num + ' Cash Prize + ' + b.desc.split('+')[1]?.trim() }
-        : b
-    ))
+    if (editingBox.id === 'new') {
+      const newBox = {
+        ...editingBox,
+        id: 'box_' + Date.now(),
+      }
+      setMysteryBoxes(prev => [...prev, newBox])
+    } else {
+      setMysteryBoxes(prev => prev.map(b => b.id === editingBox.id ? editingBox : b))
+    }
     setEditingBox(null)
   }
 
