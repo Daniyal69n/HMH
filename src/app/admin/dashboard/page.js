@@ -2777,17 +2777,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
-            )}
-
-            {/* Receipt Modal for Ecommerce */}
-            {receiptModalUrl && (
-              <div className={styles.editModal} onClick={() => setReceiptModalUrl('')} style={{ zIndex: 10000 }}>
-                <div className={styles.editModalBox} style={{ maxWidth: '600px', textAlign: 'center', padding: '20px' }} onClick={e => e.stopPropagation()}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h3 style={{ margin: 0 }}>Payment Receipt</h3>
-                    <button onClick={() => setReceiptModalUrl('')} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--text)' }}>×</button>
-                  </div>
-                  <img src={receiptModalUrl} alt="Receipt" style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '8px' }} />
                 </div>
               </div>
             )}
@@ -3107,6 +3096,19 @@ export default function AdminDashboard() {
                 border: '2px solid rgba(255,255,255,0.2)'
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Receipt Modal for Ecommerce */}
+      {receiptModalUrl && (
+        <div className={styles.editModal} onClick={() => setReceiptModalUrl('')} style={{ zIndex: 10000 }}>
+          <div className={styles.editModalBox} style={{ maxWidth: '600px', textAlign: 'center', padding: '20px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0 }}>Payment Receipt</h3>
+              <button onClick={() => setReceiptModalUrl('')} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--text)' }}>×</button>
+            </div>
+            <img src={receiptModalUrl} alt="Receipt" style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '8px' }} />
           </div>
         </div>
       )}
