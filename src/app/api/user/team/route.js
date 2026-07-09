@@ -70,33 +70,45 @@ export async function GET(request) {
       },
       levelA: {
         count: levelAMembers.length,
-        members: levelAMembers.map(member => ({
-          name: member.name,
-          phone: member.phone,
-          balance: member.balance,
-          earnBalance: member.earnBalance,
-          joinDate: member.createdAt
-        }))
+        members: levelAMembers.map(member => {
+          const activePlan = (member.investmentPlans || []).reverse().find(p => p.status === 'active');
+          return {
+            name: member.name,
+            phone: member.phone,
+            balance: member.balance,
+            earnBalance: member.earnBalance,
+            joinDate: member.createdAt,
+            plan: activePlan ? activePlan.planName : 'Free'
+          };
+        })
       },
       levelB: {
         count: levelBMembers.length,
-        members: levelBMembers.map(member => ({
-          name: member.name,
-          phone: member.phone,
-          balance: member.balance,
-          earnBalance: member.earnBalance,
-          joinDate: member.createdAt
-        }))
+        members: levelBMembers.map(member => {
+          const activePlan = (member.investmentPlans || []).reverse().find(p => p.status === 'active');
+          return {
+            name: member.name,
+            phone: member.phone,
+            balance: member.balance,
+            earnBalance: member.earnBalance,
+            joinDate: member.createdAt,
+            plan: activePlan ? activePlan.planName : 'Free'
+          };
+        })
       },
       levelC: {
         count: levelCMembers.length,
-        members: levelCMembers.map(member => ({
-          name: member.name,
-          phone: member.phone,
-          balance: member.balance,
-          earnBalance: member.earnBalance,
-          joinDate: member.createdAt
-        }))
+        members: levelCMembers.map(member => {
+          const activePlan = (member.investmentPlans || []).reverse().find(p => p.status === 'active');
+          return {
+            name: member.name,
+            phone: member.phone,
+            balance: member.balance,
+            earnBalance: member.earnBalance,
+            joinDate: member.createdAt,
+            plan: activePlan ? activePlan.planName : 'Free'
+          };
+        })
       }
     }, {
       headers: {

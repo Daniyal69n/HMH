@@ -1014,8 +1014,8 @@ export default function Page() {
             </div>
 
             <div className="card" style={{ marginBottom: 18 }}>
-              <h3 style={{ margin: '0 0 14px' }}>👤 Direct referrals ({teamData.levelA.count})</h3>
-              {teamData.levelA.members.length > 0 ? (
+              <h3 style={{ margin: '0 0 14px' }}>👤 Direct referrals ({teamData.levelA?.count || 0})</h3>
+              {teamData.levelA?.members?.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {teamData.levelA.members.map((member, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)' }}>
@@ -1023,8 +1023,11 @@ export default function Page() {
                         <div style={{ fontWeight: 600, color: 'var(--text)' }}>{member.name}</div>
                         <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{member.phone}</div>
                       </div>
-                      <div style={{ fontSize: 13, color: 'var(--text-dim)', alignSelf: 'center' }}>
-                        Joined: {new Date(member.joinDate).toLocaleDateString()}
+                      <div style={{ fontSize: 13, color: 'var(--text-dim)', alignSelf: 'center', textAlign: 'right' }}>
+                        <div>Joined: {new Date(member.joinDate).toLocaleDateString()}</div>
+                        <div style={{ fontSize: 12, color: 'var(--gold-bright)', marginTop: 4, fontWeight: 600 }}>
+                          Plan: {member.plan || 'Free'}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1034,9 +1037,52 @@ export default function Page() {
               )}
             </div>
 
+            <div className="card" style={{ marginBottom: 18 }}>
+              <h3 style={{ margin: '0 0 14px' }}>🔗 Indirect referrals ({teamData.levelB?.count || 0})</h3>
+              {teamData.levelB?.members?.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {teamData.levelB.members.map((member, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--text)' }}>{member.name}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{member.phone}</div>
+                      </div>
+                      <div style={{ fontSize: 13, color: 'var(--text-dim)', alignSelf: 'center', textAlign: 'right' }}>
+                        <div>Joined: {new Date(member.joinDate).toLocaleDateString()}</div>
+                        <div style={{ fontSize: 12, color: 'var(--gold-bright)', marginTop: 4, fontWeight: 600 }}>
+                          Plan: {member.plan || 'Free'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">No indirect referrals yet — these appear once your direct referrals invite others.</div>
+              )}
+            </div>
+
             <div className="card">
-              <h3 style={{ margin: '0 0 14px' }}>🔗 Indirect referrals (0)</h3>
-              <div className="empty-state">No indirect referrals yet — these appear once your direct referrals invite others.</div>
+              <h3 style={{ margin: '0 0 14px' }}>👥 Downline referrals ({teamData.levelC?.count || 0})</h3>
+              {teamData.levelC?.members?.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {teamData.levelC.members.map((member, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--text)' }}>{member.name}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{member.phone}</div>
+                      </div>
+                      <div style={{ fontSize: 13, color: 'var(--text-dim)', alignSelf: 'center', textAlign: 'right' }}>
+                        <div>Joined: {new Date(member.joinDate).toLocaleDateString()}</div>
+                        <div style={{ fontSize: 12, color: 'var(--gold-bright)', marginTop: 4, fontWeight: 600 }}>
+                          Plan: {member.plan || 'Free'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">No downline referrals yet — these appear once your indirect referrals invite others.</div>
+              )}
             </div>
           </section>
 
