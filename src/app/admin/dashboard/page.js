@@ -2751,33 +2751,38 @@ export default function AdminDashboard() {
               </div>
             ))}
 
+            <button className={`${styles.btn} ${styles.btnOutline}`} onClick={openAddBox} style={{ margin: '0 auto', display: 'block', marginTop: '20px' }}>
+              + Add Mystery Box
+            </button>
+
             {/* Inline edit modal */}
             {editingBox && (
               <div className={styles.editModal}>
                 <div className={styles.editModalBox}>
-                  <div className={styles.editModalTitle}>Edit â€” {editingBox.title}</div>
+                  <div className={styles.editModalTitle}>{editingBox.id === 'new' ? 'Add Mystery Box' : 'Edit — ' + editingBox.title}</div>
                   <div className={styles.field}>
-                    <label>New cash prize amount ($)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={editBoxValue}
-                      onChange={e => setEditBoxValue(e.target.value)}
-                      autoFocus
-                    />
+                    <label>Title</label>
+                    <input type="text" value={editingBox.title} onChange={e => setEditingBox({...editingBox, title: e.target.value})} />
+                  </div>
+                  <div className={styles.field}>
+                    <label>Description</label>
+                    <input type="text" value={editingBox.desc} onChange={e => setEditingBox({...editingBox, desc: e.target.value})} />
+                  </div>
+                  <div className={styles.field}>
+                    <label>Medal Emoji</label>
+                    <input type="text" value={editingBox.medal} onChange={e => setEditingBox({...editingBox, medal: e.target.value})} />
+                  </div>
+                  <div className={styles.field}>
+                    <label>Cash Prize Value ($)</label>
+                    <input type="number" min="0" step="1" value={editingBox.value} onChange={e => setEditingBox({...editingBox, value: e.target.value})} />
                   </div>
                   <div className={styles.editModalActions}>
-                    <button
-                      className={`${styles.btn} ${styles.btnGold}`}
-                      onClick={confirmEditBox}
-                    >
-                      Confirm
-                    </button>
-                    <button
-                      className={`${styles.btn} ${styles.btnOutline}`}
-                      onClick={() => setEditingBox(null)}
-                    >
+                    <button className={`${styles.btn} ${styles.btnGold}`} onClick={confirmEditBox}>Confirm</button>
+                    <button className={`${styles.btn} ${styles.btnOutline}`} onClick={() => setEditingBox(null)}>Cancel</button>
+                  </div>
+                </div>
+              </div>
+            )}
                       Cancel
                     </button>
                   </div>
