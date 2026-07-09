@@ -63,41 +63,15 @@ export async function PUT(request) {
       }
 
       case 'withdraw': {
-        // Debug logging
-        console.log('Withdrawal request received:', {
-          userId,
-          amount: data.amount,
-          teamCommission: data.teamCommission,
-          userBalance: user.balance,
-          data: data
-        });
-        
-        // Check if user has sufficient balance (including team commission)
+        // Use only the live DB balance — no fee, no commission math
         const currentBalance = typeof user.balance === 'number' ? user.balance : 0;
-        const teamCommission = data.teamCommission || 0; // Get from frontend
-        const totalAvailableBalance = currentBalance + teamCommission;
         
-        console.log('Balance calculation:', {
-          currentBalance,
-          teamCommission,
-          totalAvailableBalance,
-          requestedAmount: data.amount,
-          isSufficient: totalAvailableBalance >= data.amount
-        });
-        
-        if (totalAvailableBalance < data.amount) {
-          console.log('Insufficient balance error');
+        if (currentBalance < data.amount) {
           return NextResponse.json(
-            { 
-              error: `Insufficient balance for withdrawal. Available: Rs${totalAvailableBalance.toFixed(2)} (Balance: Rs${currentBalance.toFixed(2)} + Team Commission: Rs${teamCommission.toFixed(2)})` 
-            },
+            { error: `Insufficient balance. Your current balance is Rs ${currentBalance.toFixed(2)} but you requested Rs ${Number(data.amount).toFixed(2)}.` },
             { status: 400 }
           );
         }
-        
-        // Calculate withdrawal fee (25%)
-        const withdrawalFee = data.amount * 0.25;
-        const amountAfterFee = data.amount - withdrawalFee;
         
         // Validate required fields
         if (!data.withdrawalMethod || !data.withdrawalAccountName) {
@@ -107,67 +81,36 @@ export async function PUT(request) {
           );
         }
         
-        // Deduct balance immediately when user submits withdrawal request
-        // But ensure balance doesn't go below 0
-        const maxDeductibleFromBalance = Math.min(currentBalance, data.amount);
-        const newBalance = currentBalance - maxDeductibleFromBalance;
-        
-        // Reset team commission to 0 if withdrawal includes it
-        const currentReferralCommission = typeof user.referralCommission === 'number' ? user.referralCommission : 0;
-        let newReferralCommission = currentReferralCommission;
-        
-        if (data.amount >= currentReferralCommission && currentReferralCommission > 0) {
-          newReferralCommission = 0;
-          console.log('Resetting team commission on withdrawal request:', {
-            withdrawalAmount: data.amount,
-            previousReferralCommission: currentReferralCommission,
-            newReferralCommission: 0
-          });
-        }
-        
-        console.log('Balance deduction calculation:', {
-          currentBalance,
-          requestedAmount: data.amount,
-          maxDeductibleFromBalance,
-          newBalance,
-          previousReferralCommission: currentReferralCommission,
-          newReferralCommission: newReferralCommission
-        });
+        // Deduct exact amount from balance immediately
+        const newBalance = currentBalance - data.amount;
         
         await User.findOneAndUpdate(
           { phone: userId },
-          { 
-            balance: newBalance,
-            referralCommission: newReferralCommission
-          }
+          { balance: newBalance }
         );
         
-        // Create withdrawal transaction (pending - requires admin approval)
+        // Create withdrawal transaction (pending — requires admin approval)
+        // No fee: full amount is what admin will pay out
         const transaction = await Transaction.create({
           userId: userId,
           type: 'withdraw',
-          amount: data.amount, // Original amount requested
-          withdrawalFee: withdrawalFee, // 25% fee
-          amountAfterFee: amountAfterFee, // Amount after fee deduction
+          amount: data.amount,
+          withdrawalFee: 0,
+          amountAfterFee: data.amount,
           status: 'pending',
-          description: `Withdrawal request via ${data.withdrawalMethod} (Fee: Rs${withdrawalFee.toFixed(2)})`,
+          description: `Withdrawal request via ${data.withdrawalMethod}`,
           withdrawalMethod: data.withdrawalMethod,
           withdrawalAccountName: data.withdrawalAccountName,
           withdrawalNumber: data.withdrawalNumber,
           transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
         });
         
-        console.log('Withdrawal transaction created:', transaction);
-        
-        // Return success response
+        // Return success response with new balance
         return NextResponse.json({
           message: 'Withdrawal request submitted successfully',
           transactionId: transaction.transactionId,
           amount: data.amount,
-          withdrawalFee: withdrawalFee,
-          amountAfterFee: amountAfterFee,
-          newBalance: newBalance,
-          newReferralCommission: newReferralCommission
+          newBalance: newBalance
         });
       }
 

@@ -36,8 +36,7 @@ const transactionSchema = new mongoose.Schema({
   },
   // For withdraw transactions
   withdrawalMethod: {
-    type: String,
-    enum: ['easypaisa', 'jazzcash', 'bank', 'EasyPaisa', 'JazzCash', 'Bank']
+    type: String
   },
   withdrawalAccountName: {
     type: String
