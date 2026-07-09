@@ -287,6 +287,7 @@ export default function Page() {
   )
 
   const [products, setProducts] = useState([])
+  const [productsLoading, setProductsLoading] = useState(true)
 
   useEffect(() => {
     const ts = Date.now()
@@ -296,8 +297,27 @@ export default function Page() {
         if (Array.isArray(data)) {
           setProducts(data)
         }
+        setProductsLoading(false)
       })
-      .catch(console.error)
+      .catch(err => {
+        console.error(err)
+        setProductsLoading(false)
+      })
+
+    if (profile?.phone) {
+      fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone)}&_t=${ts}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && !data.error) {
+            setProfile(prev => {
+              const next = { ...prev, ...data }
+              localStorage.setItem('hmh-profile', JSON.stringify(next))
+              return next
+            })
+          }
+        })
+        .catch(console.error)
+    }
 
     fetch(`/api/admin/ecommerce-settings?_t=${ts}`)
       .then(res => res.json())
@@ -1655,17 +1675,24 @@ export default function Page() {
           </section>
 
 
-          {/* STORE */}
+          {/* STORE (E-commerce) */}
           <section className={`page ${page === 'store' ? 'active' : ''}`}>
             <div className="page-head">
               <h1>E-commerce</h1>
-              <p>Browse and purchase products with your HMHPro balance or card.</p>
+              <p>Browse and purchase products with your HMHPro balance or direct transfer.</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 16 }}>
-              {products.map((p) => (
-                <div key={p._id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                  <div style={{ height: 150, background: 'linear-gradient(135deg,#2a2116,#171b25)', display: 'flex', alignItems: 'center', justifyItems: 'center', position: 'relative' }}>
+            {productsLoading ? (
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-dim)' }}>
+                <div style={{ display: 'inline-block', width: '40px', height: '40px', border: '3px solid rgba(201,160,74,0.3)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '16px' }}></div>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                <div>Loading products...</div>
+              </div>
+            ) : products.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 20 }}>
+                {products.map(p => (
+                  <div key={p._id || p.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                    <div style={{ height: 150, background: 'linear-gradient(135deg,#2a2116,#171b25)', display: 'flex', alignItems: 'center', justifyItems: 'center', position: 'relative' }}>
                     {p.image ? (
                       <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
@@ -1689,7 +1716,10 @@ export default function Page() {
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            ) : (
+              <div className="empty-state">No products available at the moment. Please check back later.</div>
+            )}
           </section>
 
           {/* SOCIAL TASK */}
