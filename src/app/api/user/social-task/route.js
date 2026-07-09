@@ -44,10 +44,9 @@ export async function POST(request) {
     const PKR_RATE = 300;
     const rewardPKR = rewardUSD * PKR_RATE;
     
-    // Credit reward
+    // Credit reward only to my rewards (totalCommissionEarned)
+    // The dashboard automatically calculates Total Earnings as earnBalance + totalCommissionEarned
     user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
-    user.earnBalance = (user.earnBalance || 0) + rewardPKR;
-    user.balance = (user.balance || 0) + rewardPKR;
     
     // Create corresponding transaction log
     const txnId = `TXN-SOCIAL-${Date.now()}`;
