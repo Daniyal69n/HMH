@@ -2867,7 +2867,7 @@ export default function AdminDashboard() {
                     <p>No products yet. Click "Add Product" to create one.</p>
                   </div>
                 )
-              ) : (
+              ) : ecommerceTab === 'orders' ? (
                 orders.length > 0 ? (
                   orders.map(o => (
                     <div key={o._id || o.id} className={styles.rowCard} style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
