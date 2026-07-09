@@ -693,6 +693,41 @@ export default function Page() {
 
   const streakDots = useMemo(() => Array.from({ length: 10 }), [])
 
+  const streakDays = useMemo(() => {
+    if (!profile || !profile.createdAt || !teamData.levelA?.members || teamData.levelA.members.length === 0) {
+      return 0
+    }
+    
+    const joinTime = new Date(profile.createdAt).getTime()
+    const cycleMs = 24 * 60 * 60 * 1000
+    
+    // Group referrals by their cycle index
+    const activeCycles = new Set()
+    for (const m of teamData.levelA.members) {
+      const mTime = new Date(m.joinDate).getTime()
+      const cycleIdx = Math.floor((mTime - joinTime) / cycleMs)
+      if (cycleIdx >= 0) {
+        activeCycles.add(cycleIdx)
+      }
+    }
+    
+    const currentCycle = Math.floor((Date.now() - joinTime) / cycleMs)
+    
+    // Determine start of consecutive check
+    let checkCycle = currentCycle
+    if (!activeCycles.has(checkCycle)) {
+      checkCycle = currentCycle - 1
+    }
+    
+    let streak = 0
+    while (checkCycle >= 0 && activeCycles.has(checkCycle)) {
+      streak++
+      checkCycle--
+    }
+    
+    return Math.min(10, streak)
+  }, [profile, teamData.levelA?.members])
+
   return (
     <div className="meridian">
       <div className="app">
@@ -878,16 +913,16 @@ export default function Page() {
             <div className="card streak-card">
               <div className="streak-top">
                 <h3>🔥 Referral streak</h3>
-                <span className="streak-pill">Day {teamData.totalMembers} / 10</span>
+                <span className="streak-pill">Day {streakDays} / 10</span>
               </div>
               <div className="dots-row">
                 {streakDots.map((_, i) => (
-                  <div key={i} className={`streak-dot ${i < teamData.totalMembers ? 'active' : ''}`} />
+                  <div key={i} className={`streak-dot ${i < streakDays ? 'active' : ''}`} />
                 ))}
               </div>
               <div className="streak-note">
-                {teamData.totalMembers > 0
-                  ? `Your streak is active! You have referred ${teamData.totalMembers} approved member(s).`
+                {streakDays > 0
+                  ? `Your streak is active! You have a ${streakDays}-day referral streak.`
                   : 'Start your streak — invite 1 member today.'
                 }
               </div>
