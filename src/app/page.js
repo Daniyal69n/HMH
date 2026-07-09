@@ -282,15 +282,18 @@ export default function Page() {
     []
   )
 
-  const products = useMemo(
-    () => [
-      { icon: '👟', name: 'Cherry loafers', desc: 'Premium edition loafers', price: 'Rs 3,000' },
-      { icon: '🎧', name: 'Wireless earbuds', desc: 'Noise-isolating, 20h battery', price: 'Rs 4,500' },
-      { icon: '⌚', name: 'Classic watch', desc: 'Stainless steel, water resistant', price: 'Rs 6,200' },
-      { icon: '🎒', name: 'Travel backpack', desc: 'Weatherproof, 30L capacity', price: 'Rs 3,800' }
-    ],
-    []
-  )
+  const [products, setProducts] = useState([])
+
+  useEffect(() => {
+    fetch('/api/user/products')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setProducts(data)
+        }
+      })
+      .catch(console.error)
+  }, [])
 
   const spinPrizes = useMemo(
     () => [
@@ -823,14 +826,34 @@ export default function Page() {
     }
   }
 
-  const confirmOrder = () => {
+  const confirmOrder = async () => {
     if (!coPhone || !coAddress) {
       showToast('Please add your phone and address')
       return
     }
-    setCheckoutOpen(false)
-    setCheckoutProduct(null)
-    showToast('Order placed — this is a preview, no payment was charged')
+
+    try {
+      const res = await fetch('/api/user/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: profile.phone,
+          productId: checkoutProduct._id,
+          deliveryAddress: coAddress,
+          phoneNumber: coPhone
+        })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        showToast(data.message || 'Order placed successfully!')
+        setCheckoutOpen(false)
+        setCheckoutProduct(null)
+      } else {
+        showToast(data.message || 'Error placing order')
+      }
+    } catch (err) {
+      showToast('Network error')
+    }
   }
 
   const startSpin = () => {
@@ -1609,19 +1632,23 @@ export default function Page() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 16 }}>
               {products.map((p) => (
-                <div key={p.name} className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                  <div style={{ height: 150, background: 'linear-gradient(135deg,#2a2116,#171b25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38 }}>
-                    {p.icon}
+                <div key={p._id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                  <div style={{ height: 150, background: 'linear-gradient(135deg,#2a2116,#171b25)', display: 'flex', alignItems: 'center', justifyItems: 'center', position: 'relative' }}>
+                    {p.image ? (
+                      <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ fontSize: 38 }}>🛒</div>
+                    )}
                   </div>
                   <div style={{ padding: 16 }}>
                     <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 3 }}>{p.name}</div>
-                    <div style={{ color: 'var(--text-faint)', fontSize: 12, marginBottom: 12 }}>{p.desc}</div>
+                    <div style={{ color: 'var(--text-faint)', fontSize: 12, marginBottom: 12 }}>{p.description || p.desc}</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace', fontWeight: 700, color: 'var(--gold-bright)' }}>
-                        {p.price}
+                        {p.currency || 'Rs'} {p.price.toLocaleString()}
                       </span>
                       <button
-                        style={{ background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 12.5 }}
+                        style={{ background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}
                         onClick={() => openCheckout(p)}
                       >
                         Buy now
@@ -2062,11 +2089,15 @@ export default function Page() {
           </div>
 
           <div className="modal-product">
-            <div className="modal-product-img">{checkoutProduct?.icon ?? '🛒'}</div>
+            <div className="modal-product-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              {checkoutProduct?.image ? (
+                <img src={checkoutProduct.image} alt={checkoutProduct.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : '🛒'}
+            </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 13.5 }}>{checkoutProduct?.name ?? 'Product'}</div>
               <div style={{ color: 'var(--gold-bright)', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace', fontSize: 13 }}>
-                {checkoutProduct?.price ?? '$0'}
+                {checkoutProduct?.currency || 'Rs'} {checkoutProduct?.price ? checkoutProduct.price.toLocaleString() : '0'}
               </div>
             </div>
           </div>

@@ -181,41 +181,56 @@ export default function AdminDashboard() {
     ]
   }
 
-  function loadEcommerceData(key, seedFn) {
-    if (typeof window === 'undefined') return seedFn()
-    const raw = localStorage.getItem(key)
-    if (raw) return JSON.parse(raw)
-    const seeded = seedFn()
-    localStorage.setItem(key, JSON.stringify(seeded))
-    return seeded
+  const [products, setProducts] = useState([])
+  const [orders, setOrders] = useState([])
+  const [ecommerceTab, setEcommerceTab] = useState('products')
+  const [productForm, setProductForm] = useState(null)
+
+  const fetchEcommerceData = async () => {
+    try {
+      const pRes = await fetch('/api/admin/products')
+      const pData = await pRes.json()
+      setProducts(Array.isArray(pData) ? pData : [])
+      
+      const oRes = await fetch('/api/admin/orders')
+      const oData = await oRes.json()
+      setOrders(Array.isArray(oData) ? oData : [])
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  const [products, setProducts] = useState(seedProducts)
-  const [orders, setOrders] = useState(seedOrders)
-  const [ecommerceTab, setEcommerceTab] = useState('products') // 'products' or 'orders'
-  const [productForm, setProductForm] = useState(null) // null or { id, name, desc, price, img, mode: 'add' | 'edit' }
-
   useEffect(() => {
-    setProducts(loadEcommerceData(PRODUCTS_KEY, seedProducts))
-    setOrders(loadEcommerceData(ORDERS_KEY, seedOrders))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (isAdminLoggedIn) {
+      fetchEcommerceData()
+    }
+  }, [isAdminLoggedIn])
 
-  function toggleProduct(id) {
-    const updated = products.map(p => p.id === id ? { ...p, active: !p.active } : p)
-    setProducts(updated)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(updated))
+  async function toggleProduct(id) {
+    const prod = products.find(p => p._id === id || p.id === id)
+    if (!prod) return
+    const actualId = prod._id || prod.id
+    try {
+      const res = await fetch('/api/admin/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: actualId, isActive: !prod.isActive })
+      })
+      if (res.ok) {
+        fetchEcommerceData()
+      }
+    } catch (err) {
+      console.error(err)
     }
   }
 
   function openEditProduct(p) {
     setProductForm({
-      id: p.id,
+      id: p._id || p.id,
       name: p.name,
-      desc: p.desc,
+      desc: p.description || p.desc,
       price: p.price,
-      img: p.img,
+      img: p.image || p.img,
       mode: 'edit'
     })
   }
@@ -242,54 +257,88 @@ export default function AdminDashboard() {
     }
   }
 
-  function saveProductForm() {
+  async function saveProductForm() {
     if (!productForm) return
     if (!productForm.name.trim()) {
       showError('Product name is required')
       return
     }
 
-    let updated
-    if (productForm.mode === 'add') {
-      const newProd = {
-        id: 'p_' + Date.now(),
-        name: productForm.name,
-        desc: productForm.desc,
-        price: parseFloat(productForm.price) || 0,
-        currency: 'Rs',
-        active: true,
-        img: productForm.img
+    try {
+      if (productForm.mode === 'add') {
+        const res = await fetch('/api/admin/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: productForm.name,
+            description: productForm.desc,
+            price: parseFloat(productForm.price) || 0,
+            currency: 'Rs',
+            isActive: true,
+            image: productForm.img
+          })
+        })
+        if (res.ok) {
+          showSuccess('Product added successfully!')
+          fetchEcommerceData()
+        } else {
+          showError('Failed to add product')
+        }
+      } else {
+        const res = await fetch('/api/admin/products', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: productForm.id,
+            name: productForm.name,
+            description: productForm.desc,
+            price: parseFloat(productForm.price) || 0,
+            image: productForm.img
+          })
+        })
+        if (res.ok) {
+          showSuccess('Product updated successfully!')
+          fetchEcommerceData()
+        } else {
+          showError('Failed to update product')
+        }
       }
-      updated = [...products, newProd]
-      showSuccess('Product added successfully!')
-    } else {
-      updated = products.map(p =>
-        p.id === productForm.id
-          ? {
-              ...p,
-              name: productForm.name,
-              desc: productForm.desc,
-              price: parseFloat(productForm.price) || 0,
-              img: productForm.img
-            }
-          : p
-      )
-      showSuccess('Product updated successfully!')
-    }
-
-    setProducts(updated)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(updated))
+    } catch (err) {
+      console.error(err)
+      showError('An error occurred')
     }
     setProductForm(null)
   }
 
-  function deleteProduct(id) {
+  async function deleteProduct(id) {
     if (!window.confirm('Delete this product?')) return
-    const updated = products.filter(p => p.id !== id)
-    setProducts(updated)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(updated))
+    const actualId = products.find(p => p.id === id || p._id === id)?._id || id
+    try {
+      const res = await fetch(`/api/admin/products?id=${actualId}`, { method: 'DELETE' })
+      if (res.ok) {
+        fetchEcommerceData()
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async function handleOrderAction(orderId, status) {
+    try {
+      const res = await fetch('/api/admin/orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, status })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        showSuccess(data.message || `Order ${status}`)
+        fetchEcommerceData()
+      } else {
+        showError(data.message || 'Error updating order')
+      }
+    } catch (err) {
+      showError('Network error')
     }
   }
 
@@ -2788,7 +2837,7 @@ export default function AdminDashboard() {
               ) : (
                 orders.length > 0 ? (
                   orders.map(o => (
-                    <div key={o.id} className={styles.rowCard}>
+                    <div key={o._id || o.id} className={styles.rowCard} style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
                       <div className={styles.rowIcon}>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <circle cx="9" cy="21" r="1"/>
@@ -2796,12 +2845,24 @@ export default function AdminDashboard() {
                           <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
                         </svg>
                       </div>
-                      <div>
-                        <div className={styles.rowTitle}>{o.product}</div>
-                        <div className={styles.rowSub}>{o.customer} Â· {o.currency} {o.amount.toLocaleString()}</div>
+                      <div style={{ flex: 1, minWidth: '200px' }}>
+                        <div className={styles.rowTitle}>{o.productName || o.product}</div>
+                        <div className={styles.rowSub} style={{ lineHeight: '1.4' }}>
+                          <div><strong>User:</strong> {o.userName || o.customer} ({o.userEmail || o.userId})</div>
+                          <div><strong>Plan:</strong> {o.userPlan || 'N/A'}</div>
+                          <div><strong>Address:</strong> {o.deliveryAddress || 'N/A'}</div>
+                          <div><strong>Phone:</strong> {o.phoneNumber || 'N/A'}</div>
+                          <div style={{ color: 'var(--gold)', marginTop: '4px' }}>Amount: {o.currency} {(o.amount || 0).toLocaleString()}</div>
+                        </div>
                       </div>
-                      <div className={styles.rowActions}>
+                      <div className={styles.rowActions} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <span className={`${styles.status} ${styles[o.status] || ''}`}>{o.status}</span>
+                        {o.status === 'pending' && (
+                          <>
+                            <button className={`${styles.btn} ${styles.btnGreen}`} style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => handleOrderAction(o._id, 'approved')}>Approve</button>
+                            <button className={`${styles.btn} ${styles.btnReject}`} style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => handleOrderAction(o._id, 'rejected')}>Reject</button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))
