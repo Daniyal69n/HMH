@@ -7,11 +7,13 @@ export async function POST(request) {
   try {
     await connectDB();
     const body = await request.json();
-    const { phone, productId, deliveryAddress, phoneNumber } = body;
+    const { phone, productId, deliveryAddress, phoneNumber, paymentMethod, receiptImage } = body;
 
     if (!phone || !productId || !deliveryAddress || !phoneNumber) {
       return Response.json({ message: 'Missing required fields' }, { status: 400 });
     }
+
+    const orderPaymentMethod = paymentMethod === 'online_transfer' ? 'online_transfer' : 'balance';
 
     const user = await User.findOne({ phone });
     if (!user) {
@@ -23,9 +25,11 @@ export async function POST(request) {
       return Response.json({ message: 'Product not found or inactive' }, { status: 404 });
     }
 
-    // Check balance but do NOT deduct yet (per user request)
-    if ((user.balance || 0) < product.price) {
-      return Response.json({ message: 'Insufficient balance to place this order' }, { status: 400 });
+    // Check balance if payment method is 'balance'
+    if (orderPaymentMethod === 'balance') {
+      if ((user.balance || 0) < product.price) {
+        return Response.json({ message: 'Insufficient balance to place this order' }, { status: 400 });
+      }
     }
 
     // Determine active plan
@@ -42,7 +46,9 @@ export async function POST(request) {
       amount: product.price,
       currency: product.currency,
       deliveryAddress,
-      phoneNumber
+      phoneNumber,
+      paymentMethod: orderPaymentMethod,
+      receiptImage: receiptImage || ''
     });
 
     return Response.json({ message: 'Order placed successfully. Awaiting admin approval.', order }, { status: 201 });

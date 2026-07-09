@@ -33,32 +33,34 @@ export async function PUT(request) {
     }
 
     if (status === 'approved') {
-      // Find the user and deduct balance
+      // Find the user and deduct balance only if paid via balance
       const user = await User.findOne({ phone: order.userId });
       if (!user) {
         return Response.json({ message: 'User not found' }, { status: 404 });
       }
 
-      if ((user.balance || 0) < order.amount) {
-        return Response.json({ message: 'User has insufficient balance to approve this order.' }, { status: 400 });
+      if (order.paymentMethod !== 'online_transfer') {
+        if ((user.balance || 0) < order.amount) {
+          return Response.json({ message: 'User has insufficient balance to approve this order.' }, { status: 400 });
+        }
+
+        user.balance -= order.amount;
+        await user.save();
+
+        // Create a transaction log
+        const txnId = `TXN-ORDER-${Date.now()}`;
+        await Transaction.create({
+          transactionId: txnId,
+          userId: user.phone,
+          userName: user.name,
+          userPhone: user.phone,
+          amount: order.amount,
+          type: 'ecommerce_purchase',
+          status: 'approved',
+          description: `Purchased: ${order.productName}`,
+          createdAt: new Date()
+        });
       }
-
-      user.balance -= order.amount;
-      await user.save();
-
-      // Create a transaction log
-      const txnId = `TXN-ORDER-${Date.now()}`;
-      await Transaction.create({
-        transactionId: txnId,
-        userId: user.phone,
-        userName: user.name,
-        userPhone: user.phone,
-        amount: order.amount,
-        type: 'ecommerce_purchase', // specifically log this type
-        status: 'approved',
-        description: `Purchased: ${order.productName}`,
-        createdAt: new Date()
-      });
     }
 
     order.status = status;

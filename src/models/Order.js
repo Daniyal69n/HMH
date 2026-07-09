@@ -46,6 +46,15 @@ const orderSchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending'
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['balance', 'online_transfer'],
+    default: 'balance'
+  },
+  receiptImage: {
+    type: String,
+    default: ''
   }
 }, {
   timestamps: true

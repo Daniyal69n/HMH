@@ -84,6 +84,10 @@ export default function Page() {
   const [coName, setCoName] = useState('')
   const [coPhone, setCoPhone] = useState('')
   const [coAddress, setCoAddress] = useState('')
+  const [coPaymentMethod, setCoPaymentMethod] = useState('balance')
+  const [coReceiptFile, setCoReceiptFile] = useState(null)
+  const [ecommerceBankDetails, setEcommerceBankDetails] = useState({ bankName: '', accountName: '', accountNumber: '' })
+  const [checkoutSubmitting, setCheckoutSubmitting] = useState(false)
 
   const [spinAngle, setSpinAngle] = useState(0)
   const [spinRunning, setSpinRunning] = useState(false)
@@ -291,6 +295,13 @@ export default function Page() {
         if (Array.isArray(data)) {
           setProducts(data)
         }
+      })
+      .catch(console.error)
+
+    fetch('/api/admin/ecommerce-settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data) setEcommerceBankDetails(data)
       })
       .catch(console.error)
   }, [])
@@ -832,7 +843,22 @@ export default function Page() {
       return
     }
 
+    if (coPaymentMethod === 'online_transfer' && !coReceiptFile) {
+      showToast('Please upload a screenshot of your payment receipt')
+      return
+    }
+
+    setCheckoutSubmitting(true)
     try {
+      let receiptBase64 = ''
+      if (coReceiptFile) {
+        receiptBase64 = await new Promise((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve(reader.result)
+          reader.readAsDataURL(coReceiptFile)
+        })
+      }
+
       const res = await fetch('/api/user/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -840,7 +866,9 @@ export default function Page() {
           phone: profile.phone,
           productId: checkoutProduct._id,
           deliveryAddress: coAddress,
-          phoneNumber: coPhone
+          phoneNumber: coPhone,
+          paymentMethod: coPaymentMethod,
+          receiptImage: receiptBase64
         })
       })
       const data = await res.json()
@@ -848,12 +876,15 @@ export default function Page() {
         showToast(data.message || 'Order placed successfully!')
         setCheckoutOpen(false)
         setCheckoutProduct(null)
+        setCoPaymentMethod('balance')
+        setCoReceiptFile(null)
       } else {
         showToast(data.message || 'Error placing order')
       }
     } catch (err) {
       showToast('Network error')
     }
+    setCheckoutSubmitting(false)
   }
 
   const startSpin = () => {
@@ -2109,12 +2140,36 @@ export default function Page() {
           <label>Delivery address</label>
           <textarea value={coAddress} onChange={(e) => setCoAddress(e.target.value)} placeholder="Full delivery address (house, street, area, city)" />
 
+          <label style={{ marginTop: 12 }}>Payment Method</label>
+          <div style={{ display: 'flex', gap: 12, marginTop: 4, marginBottom: 12 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0, fontSize: 13 }}>
+              <input type="radio" name="paymentMethod" value="balance" checked={coPaymentMethod === 'balance'} onChange={() => setCoPaymentMethod('balance')} />
+              HMHPro Earn (Balance)
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0, fontSize: 13 }}>
+              <input type="radio" name="paymentMethod" value="online_transfer" checked={coPaymentMethod === 'online_transfer'} onChange={() => setCoPaymentMethod('online_transfer')} />
+              Direct Online Transfer
+            </label>
+          </div>
+
+          {coPaymentMethod === 'online_transfer' && (
+            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+              <div style={{ fontSize: 13, marginBottom: 8 }}>
+                <strong>Bank:</strong> {ecommerceBankDetails.bankName || 'N/A'}<br/>
+                <strong>Title:</strong> {ecommerceBankDetails.accountName || 'N/A'}<br/>
+                <strong>Account / IBAN:</strong> {ecommerceBankDetails.accountNumber || 'N/A'}
+              </div>
+              <label style={{ marginTop: 0, fontSize: 12 }}>Upload Receipt Screenshot</label>
+              <input type="file" accept="image/*" onChange={(e) => setCoReceiptFile(e.target.files[0])} style={{ padding: '8px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', width: '100%', color: 'var(--text)' }} />
+            </div>
+          )}
+
           <div className="row-2" style={{ marginTop: 18 }}>
-            <button className="btn btn-outline" onClick={() => setCheckoutOpen(false)}>
+            <button className="btn btn-outline" onClick={() => setCheckoutOpen(false)} disabled={checkoutSubmitting}>
               Cancel
             </button>
-            <button className="btn btn-gold" onClick={confirmOrder}>
-              Continue to payment
+            <button className="btn btn-gold" onClick={confirmOrder} disabled={checkoutSubmitting} style={{ opacity: checkoutSubmitting ? 0.7 : 1 }}>
+              {checkoutSubmitting ? 'Processing...' : 'Place Order'}
             </button>
           </div>
         </div>

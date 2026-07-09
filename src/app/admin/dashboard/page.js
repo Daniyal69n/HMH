@@ -185,6 +185,9 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([])
   const [ecommerceTab, setEcommerceTab] = useState('products')
   const [productForm, setProductForm] = useState(null)
+  
+  const [ecommerceBankSettings, setEcommerceBankSettings] = useState({ bankName: '', accountName: '', accountNumber: '' })
+  const [bankSettingsSaving, setBankSettingsSaving] = useState(false)
 
   const fetchEcommerceData = async () => {
     try {
@@ -195,9 +198,32 @@ export default function AdminDashboard() {
       const oRes = await fetch('/api/admin/orders')
       const oData = await oRes.json()
       setOrders(Array.isArray(oData) ? oData : [])
+
+      const bRes = await fetch('/api/admin/ecommerce-settings')
+      const bData = await bRes.json()
+      if (bRes.ok && bData) setEcommerceBankSettings(bData)
     } catch (err) {
       console.error(err)
     }
+  }
+
+  const saveEcommerceBankSettings = async () => {
+    setBankSettingsSaving(true)
+    try {
+      const res = await fetch('/api/admin/ecommerce-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ecommerceBankSettings)
+      })
+      if (res.ok) {
+        showSuccess('Bank settings saved successfully')
+      } else {
+        showError('Failed to save bank settings')
+      }
+    } catch (err) {
+      showError('Network error')
+    }
+    setBankSettingsSaving(false)
   }
 
   useEffect(() => {
@@ -2782,6 +2808,12 @@ export default function AdminDashboard() {
               >
                 Orders ({orders.length})
               </button>
+              <button
+                className={`${styles.tab} ${ecommerceTab === 'settings' ? styles.tabActive : ''}`}
+                onClick={() => setEcommerceTab('settings')}
+              >
+                Bank Settings
+              </button>
             </div>
 
             <div>
@@ -2852,7 +2884,13 @@ export default function AdminDashboard() {
                           <div><strong>Plan:</strong> {o.userPlan || 'N/A'}</div>
                           <div><strong>Address:</strong> {o.deliveryAddress || 'N/A'}</div>
                           <div><strong>Phone:</strong> {o.phoneNumber || 'N/A'}</div>
+                          <div><strong>Payment Method:</strong> {o.paymentMethod === 'online_transfer' ? 'Online Transfer' : 'Balance'}</div>
                           <div style={{ color: 'var(--gold)', marginTop: '4px' }}>Amount: {o.currency} {(o.amount || 0).toLocaleString()}</div>
+                          {o.paymentMethod === 'online_transfer' && o.receiptImage && (
+                            <div style={{ marginTop: '6px' }}>
+                              <a href={o.receiptImage} target="_blank" style={{ color: '#3b82f6', textDecoration: 'underline', fontSize: '12px' }}>View Receipt</a>
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className={styles.rowActions} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -2876,7 +2914,41 @@ export default function AdminDashboard() {
                     <p>No orders yet.</p>
                   </div>
                 )
-              )}
+              ) : ecommerceTab === 'settings' ? (
+                <div className={styles.panel} style={{ maxWidth: '500px', padding: '24px' }}>
+                  <h3 style={{ margin: '0 0 16px 0' }}>Online Transfer Settings</h3>
+                  <div className={styles.field}>
+                    <label>Bank Name</label>
+                    <input
+                      type="text"
+                      value={ecommerceBankSettings.bankName}
+                      onChange={e => setEcommerceBankSettings({ ...ecommerceBankSettings, bankName: e.target.value })}
+                      placeholder="e.g. SadaPay or Meezan Bank"
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label>Account Name / Title</label>
+                    <input
+                      type="text"
+                      value={ecommerceBankSettings.accountName}
+                      onChange={e => setEcommerceBankSettings({ ...ecommerceBankSettings, accountName: e.target.value })}
+                      placeholder="e.g. HMH Admin"
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label>Account Number</label>
+                    <input
+                      type="text"
+                      value={ecommerceBankSettings.accountNumber}
+                      onChange={e => setEcommerceBankSettings({ ...ecommerceBankSettings, accountNumber: e.target.value })}
+                      placeholder="Account or IBAN"
+                    />
+                  </div>
+                  <button className={`${styles.btn} ${styles.btnGold}`} onClick={saveEcommerceBankSettings} disabled={bankSettingsSaving} style={{ marginTop: '10px' }}>
+                    {bankSettingsSaving ? 'Saving...' : 'Save Settings'}
+                  </button>
+                </div>
+              ) : null}
             </div>
 
             {/* Custom Product Modal (Add/Edit) */}
