@@ -574,6 +574,20 @@ export default function Page() {
       if (res.ok) {
         setPlanModalOpen(false)
         showToast('Plan request submitted! Admin will activate your plan shortly.')
+        
+        // Fetch fresh profile data to update pending plan state immediately
+        try {
+          const profileRes = await fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone || user.phone)}&_t=${Date.now()}`)
+          if (profileRes.ok) {
+            const profileData = await profileRes.json()
+            setProfile(prev => ({
+              ...prev,
+              ...profileData
+            }))
+          }
+        } catch (profileErr) {
+          console.warn('Error reloading profile after plan request:', profileErr)
+        }
       } else {
         const err = await res.json().catch(() => ({}))
         showToast(err.message || 'Submission failed. Please try again.')
@@ -1114,6 +1128,9 @@ export default function Page() {
               {plans.map((p) => {
                 const isActive = activePlanName !== 'Free' && activePlanName.toLowerCase() === p.name.toLowerCase()
                 const hasAnyPlan = activePlanName !== 'Free'
+                const isPending = (profile.investmentPlans || []).some(
+                  planReq => planReq.planName.toLowerCase() === p.name.toLowerCase() && planReq.status === 'pending'
+                )
                 return (
                   <div
                     key={p.name}
@@ -1202,6 +1219,21 @@ export default function Page() {
                         }}
                       >
                         ✅ Active Plan
+                      </button>
+                    ) : isPending ? (
+                      <button
+                        className="btn"
+                        disabled
+                        style={{
+                          width: '100%',
+                          background: 'rgba(201,160,74,0.15)',
+                          border: '1px solid rgba(201,160,74,0.4)',
+                          color: 'var(--gold-bright)',
+                          cursor: 'default',
+                          fontWeight: 700
+                        }}
+                      >
+                        ⏳ Pending Approval
                       </button>
                     ) : (
                       <button
