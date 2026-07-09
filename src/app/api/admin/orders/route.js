@@ -3,6 +3,8 @@ import Order from '@/models/Order';
 import User from '@/models/User';
 import Transaction from '@/models/Transaction';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     await connectDB();

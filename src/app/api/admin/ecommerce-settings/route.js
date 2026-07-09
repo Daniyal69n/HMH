@@ -1,6 +1,8 @@
 import { connectDB } from '@/lib/mongodb';
 import SystemSettings from '@/models/SystemSettings';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     await connectDB();

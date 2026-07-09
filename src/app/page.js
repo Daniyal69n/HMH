@@ -289,7 +289,8 @@ export default function Page() {
   const [products, setProducts] = useState([])
 
   useEffect(() => {
-    fetch('/api/user/products')
+    const ts = Date.now()
+    fetch(`/api/user/products?_t=${ts}`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -298,7 +299,7 @@ export default function Page() {
       })
       .catch(console.error)
 
-    fetch('/api/admin/ecommerce-settings')
+    fetch(`/api/admin/ecommerce-settings?_t=${ts}`)
       .then(res => res.json())
       .then(data => {
         if (data) setEcommerceBankDetails(data)

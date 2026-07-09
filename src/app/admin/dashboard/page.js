@@ -191,7 +191,8 @@ export default function AdminDashboard() {
 
   const fetchEcommerceData = async () => {
     try {
-      const pRes = await fetch('/api/admin/products')
+      const ts = Date.now()
+      const pRes = await fetch(`/api/admin/products?_t=${ts}`)
       const pData = await pRes.json()
       setProducts(Array.isArray(pData) ? pData : [])
       
