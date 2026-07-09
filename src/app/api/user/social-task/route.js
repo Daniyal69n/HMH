@@ -58,7 +58,6 @@ export async function POST(request) {
       userPhone: user.phone,
       amount: rewardPKR,
       type: 'social_task_reward',
-      paymentMethod: 'system',
       status: 'completed',
       description: `Social Task Completion Reward ($${rewardUSD})`,
       createdAt: new Date()
