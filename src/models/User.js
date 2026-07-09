@@ -83,6 +83,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  claimedLevels: {
+    type: [Number],
+    default: []
+  },
   investmentPlans: {
     type: [{
       planId: String,

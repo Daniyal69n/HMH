@@ -307,35 +307,123 @@ export default function Page() {
     [spinPrizes]
   )
 
-  const levels = useMemo(
-    () =>
-      Array.from({ length: 50 }, (_, index) => {
-        const level = index + 1
-        const isMilestone = level % 10 === 0
-        const membersRequired = level === 1 ? 2 : level < 10 ? level + 1 : level
+  const levelAPlanCounts = useMemo(() => {
+    const counts = {
+      basic: 0,
+      standard: 0,
+      diamond: 0,
+      pro: 0,
+      premium: 0,
+      legend: 0,
+      any: 0
+    }
+    
+    if (teamData.levelA?.members) {
+      for (const m of teamData.levelA.members) {
+        counts.any++
+        const plan = (m.plan || '').toLowerCase().trim()
+        if (plan === 'basic') counts.basic++
+        else if (plan === 'standard') counts.standard++
+        else if (plan === 'diamond') counts.diamond++
+        else if (plan === 'pro') counts.pro++
+        else if (plan === 'premium') counts.premium++
+        else if (plan === 'legend') counts.legend++
+      }
+    }
+    return counts
+  }, [teamData.levelA?.members])
 
-        return {
-          level,
-          isMilestone,
-          membersRequired,
-          rewardLabel: isMilestone ? `$${level * 10} + prize pack` : null,
-          salaryLabel: isMilestone ? `$${level * 10} monthly salary` : null
+  const levels = useMemo(() => {
+    return Array.from({ length: 50 }, (_, index) => {
+      const lv = index + 1
+      let reqText = ''
+      let isCompleted = false
+      let progressPercent = 0
+      let rewardUSD = 0
+      let membersRequired = 0
+      
+      if (lv === 1) {
+        rewardUSD = 2
+        membersRequired = 5
+        reqText = '5 members of any plan'
+        const count = levelAPlanCounts.any
+        progressPercent = Math.min(100, Math.round((count / 5) * 100))
+        isCompleted = count >= 5
+      } else if (lv === 2) {
+        rewardUSD = 5
+        membersRequired = 10
+        reqText = '10 members of any plan'
+        const count = levelAPlanCounts.any
+        progressPercent = Math.min(100, Math.round((count / 10) * 100))
+        isCompleted = count >= 10
+      } else {
+        // Levels 3 to 50
+        let reqEach = 0
+        if (lv === 3) {
+          rewardUSD = 10
+          reqEach = 2
+        } else if (lv === 4) {
+          rewardUSD = 15
+          reqEach = 3
+        } else if (lv === 5) {
+          rewardUSD = 20
+          reqEach = 4
+        } else {
+          // Level 6 to 50
+          reqEach = 5
+          rewardUSD = 25 + (lv - 6) * 5
         }
-      }),
-    []
-  )
+        
+        membersRequired = reqEach * 6
+        reqText = `${reqEach} Basic · ${reqEach} Standard · ${reqEach} Diamond · ${reqEach} Pro · ${reqEach} Premium · ${reqEach} Legend`
+        
+        const basicProgress = Math.min(reqEach, levelAPlanCounts.basic)
+        const standardProgress = Math.min(reqEach, levelAPlanCounts.standard)
+        const diamondProgress = Math.min(reqEach, levelAPlanCounts.diamond)
+        const proProgress = Math.min(reqEach, levelAPlanCounts.pro)
+        const premiumProgress = Math.min(reqEach, levelAPlanCounts.premium)
+        const legendProgress = Math.min(reqEach, levelAPlanCounts.legend)
+        
+        const totalProgress = basicProgress + standardProgress + diamondProgress + proProgress + premiumProgress + legendProgress
+        progressPercent = Math.min(100, Math.round((totalProgress / membersRequired) * 100))
+        
+        isCompleted = (
+          levelAPlanCounts.basic >= reqEach &&
+          levelAPlanCounts.standard >= reqEach &&
+          levelAPlanCounts.diamond >= reqEach &&
+          levelAPlanCounts.pro >= reqEach &&
+          levelAPlanCounts.premium >= reqEach &&
+          levelAPlanCounts.legend >= reqEach
+        )
+      }
+      
+      const isMilestone = lv % 10 === 0
+      
+      return {
+        level: lv,
+        reqText,
+        rewardUSD,
+        progressPercent,
+        isCompleted,
+        membersRequired,
+        isMilestone,
+        rewardLabel: isMilestone ? `$${lv * 10} + prize pack` : null,
+        salaryLabel: isMilestone ? `$${lv * 10} monthly salary` : null
+      }
+    })
+  }, [levelAPlanCounts])
 
   const currentLevel = useMemo(() => {
     let lvl = 0
     for (let i = 0; i < levels.length; i++) {
-      if (teamData.totalMembers >= levels[i].membersRequired) {
+      if (levels[i].isCompleted) {
         lvl = levels[i].level
       } else {
         break
       }
     }
     return lvl
-  }, [teamData.totalMembers, levels])
+  }, [levels])
 
   const levelBadgeClass = (level) => {
     const palette = ['level-blue', 'level-green', 'level-red', 'level-amber', 'level-gold']
@@ -676,6 +764,38 @@ export default function Page() {
     spinAngleRef.current = 0
     setSpinResult('Locked')
     showToast('Spin reset')
+  }
+
+  const claimLevelReward = async (level) => {
+    if (!profile || !profile.phone) return
+    try {
+      const res = await fetch('/api/user/claim-level', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: profile.phone, level })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        showToast(data.message)
+        // Refresh local React profile state with updated values
+        setProfile(prev => {
+          const next = {
+            ...prev,
+            balance: data.balance,
+            earnBalance: data.earnBalance,
+            totalCommissionEarned: data.totalCommissionEarned,
+            claimedLevels: data.claimedLevels
+          }
+          localStorage.setItem('hmh-profile', JSON.stringify(next))
+          return next
+        })
+      } else {
+        showToast(data.message || 'Claim failed')
+      }
+    } catch (err) {
+      console.error(err)
+      showToast('Error claiming reward')
+    }
   }
 
   const saveProfile = () => {
@@ -1402,23 +1522,63 @@ export default function Page() {
                     </div>
                     <div className="level-body">
                       {level.isMilestone ? <div className="milestone-tag">⭐ Milestone level</div> : null}
-                      <div className="level-req">5 Basic · 2 Standard · 2 Diamond · 2 Pro · 2 Premium · 2 Legend · {level.membersRequired} members required</div>
+                      <div className="level-req">{level.reqText}</div>
                       <div className="level-bar">
                         <div
                           className="level-bar-fill"
-                          style={{ width: `${Math.min(100, (teamData.totalMembers / level.membersRequired) * 100)}%` }}
+                          style={{ width: `${level.progressPercent}%` }}
                         />
                       </div>
                       <div className="level-progress">
-                        <span>{Math.min(level.membersRequired, teamData.totalMembers)}/{level.membersRequired} members</span>
-                        <span>{Math.min(100, Math.round((teamData.totalMembers / level.membersRequired) * 100))}%</span>
+                        <span>Condition progress</span>
+                        <span>{level.progressPercent}%</span>
                       </div>
-                      {level.isMilestone ? (
-                        <div className="level-rewards">
-                          <span className="reward-chip">🎁 {level.rewardLabel}</span>
-                          <span className="reward-chip">💰 {level.salaryLabel}</span>
+                      
+                      <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <span className="reward-chip" style={{ fontSize: 12.5, fontWeight: 700, background: 'rgba(201,160,74,0.12)', color: 'var(--gold-bright)', border: '1px solid rgba(201,160,74,0.3)', padding: '4px 10px', borderRadius: 20 }}>
+                            💰 Reward: {currency === 'USD' ? `$${level.rewardUSD}` : `Rs ${(level.rewardUSD * PKR_RATE).toLocaleString()}`}
+                          </span>
+                          {level.isMilestone && (
+                            <span className="reward-chip" style={{ fontSize: 12.5, fontWeight: 700, background: 'rgba(34,197,94,0.12)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', padding: '4px 10px', borderRadius: 20 }}>
+                              🎁 {level.rewardLabel}
+                            </span>
+                          )}
                         </div>
-                      ) : null}
+                        
+                        {/* Claim button */}
+                        {(() => {
+                          const isClaimed = (profile.claimedLevels || []).includes(level.level);
+                          if (isClaimed) {
+                            return (
+                              <button
+                                disabled
+                                style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'not-allowed' }}
+                              >
+                                ✅ Claimed
+                              </button>
+                            );
+                          } else if (level.isCompleted) {
+                            return (
+                              <button
+                                style={{ background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer', boxShadow: '0 0 12px rgba(201,160,74,0.3)' }}
+                                onClick={() => claimLevelReward(level.level)}
+                              >
+                                🎁 Collect
+                              </button>
+                            );
+                          } else {
+                            return (
+                              <button
+                                disabled
+                                style={{ background: 'rgba(255,255,255,0.03)', color: 'var(--text-faint)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'not-allowed' }}
+                              >
+                                🔒 Locked
+                              </button>
+                            );
+                          }
+                        })()}
+                      </div>
                     </div>
                   </div>
                 ))}

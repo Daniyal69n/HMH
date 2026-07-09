@@ -70,7 +70,6 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
     r1.earnBalance = (r1.earnBalance || 0) + comm1;
     r1.balance = (r1.balance || 0) + comm1;
     r1.referralCommission = (r1.referralCommission || 0) + comm1;
-    r1.totalCommissionEarned = (r1.totalCommissionEarned || 0) + comm1;
     await r1.save();
 
     await Transaction.create({
@@ -107,7 +106,6 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
     r2.earnBalance = (r2.earnBalance || 0) + comm2;
     r2.balance = (r2.balance || 0) + comm2;
     r2.referralCommission = (r2.referralCommission || 0) + comm2;
-    r2.totalCommissionEarned = (r2.totalCommissionEarned || 0) + comm2;
     await r2.save();
 
     await Transaction.create({
@@ -144,7 +142,6 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
     r3.earnBalance = (r3.earnBalance || 0) + comm3;
     r3.balance = (r3.balance || 0) + comm3;
     r3.referralCommission = (r3.referralCommission || 0) + comm3;
-    r3.totalCommissionEarned = (r3.totalCommissionEarned || 0) + comm3;
     await r3.save();
 
     await Transaction.create({

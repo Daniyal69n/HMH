@@ -349,11 +349,9 @@ export async function PUT(request) {
         
         totalTeamIncome = levelAIncome + levelBIncome + levelCIncome;  // Update user's referral commission and total commission earned
         const currentReferralCommission = typeof user.referralCommission === 'number' ? user.referralCommission : 0;
-        const currentTotalCommissionEarned = typeof user.totalCommissionEarned === 'number' ? user.totalCommissionEarned : 0;
         
         // Add new team income to referral commission
         const newReferralCommission = currentReferralCommission + totalTeamIncome;
-        const newTotalCommissionEarned = currentTotalCommissionEarned + totalTeamIncome;
         
         // Also add to earn balance and account balance for immediate use
         const currentEarnBalance = typeof user.earnBalance === 'number' ? user.earnBalance : 0;
@@ -366,7 +364,6 @@ export async function PUT(request) {
           { phone: userId },
           { 
             referralCommission: newReferralCommission,
-            totalCommissionEarned: newTotalCommissionEarned,
             earnBalance: newEarnBalance,
             balance: newBalance
           }
@@ -391,7 +388,7 @@ export async function PUT(request) {
           levelBIncome: levelBIncome,
           levelCIncome: levelCIncome,
           newReferralCommission: newReferralCommission,
-          newTotalCommissionEarned: newTotalCommissionEarned,
+          newTotalCommissionEarned: user.totalCommissionEarned || 0,
           newEarnBalance: newEarnBalance,
           newBalance: newBalance
         });
