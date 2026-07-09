@@ -1,7 +1,7 @@
-import User from '@/models/User';
-import Transaction from '@/models/Transaction';
-import UserInvestment from '@/models/UserInvestment';
-import InvestmentPlan from '@/models/InvestmentPlan';
+import User from '../models/User.js';
+import Transaction from '../models/Transaction.js';
+import UserInvestment from '../models/UserInvestment.js';
+import InvestmentPlan from '../models/InvestmentPlan.js';
 
 const membershipPlans = {
   'basic': { priceUSD: 5, dailyIncome: 'Rs7.5', validity: '200 days' },
@@ -81,7 +81,8 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
       status: 'approved',
       description: `Direct referral commission (20%) from ${buyer.name} (${buyer.phone}) for purchasing ${planName}`,
       referredUser: buyer.phone,
-      referralLevel: 'A'
+      referralLevel: 'A',
+      transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
     });
     console.log(`[Commission] Level 1 (Direct) commission of ${comm1} PKR awarded to ${r1.name} (${r1.phone})`);
   } else {
@@ -117,7 +118,8 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
       status: 'approved',
       description: `Indirect referral commission (5%) from ${buyer.name} (${buyer.phone}) via ${r1.name}`,
       referredUser: buyer.phone,
-      referralLevel: 'B'
+      referralLevel: 'B',
+      transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
     });
     console.log(`[Commission] Level 2 (Indirect) commission of ${comm2} PKR awarded to ${r2.name} (${r2.phone}) (Active plan: $${r2PlanPrice})`);
   } else {
@@ -153,7 +155,8 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
       status: 'approved',
       description: `Downline commission (5%) from ${buyer.name} (${buyer.phone}) via ${r2.name}`,
       referredUser: buyer.phone,
-      referralLevel: 'C'
+      referralLevel: 'C',
+      transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
     });
     console.log(`[Commission] Level 3 (Downline) commission of ${comm3} PKR awarded to ${r3.name} (${r3.phone}) (Active plan: $${r3PlanPrice})`);
   } else {
