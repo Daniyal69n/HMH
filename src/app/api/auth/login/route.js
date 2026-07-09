@@ -6,25 +6,25 @@ export async function POST(request) {
   try {
     await connectDB();
     
-    const { phone, password } = await request.json();
+    const { email, password } = await request.json();
 
     // Validate required fields
-    if (!phone || !password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: 'Phone number and password are required' },
+        { error: 'Email and password are required' },
         { status: 400 }
       );
     }
 
-    console.log('Login attempt for phone:', phone);
+    console.log('Login attempt for email:', email);
 
-    // Find user by phone number
-    const user = await User.findOne({ phone });
+    // Find user by email
+    const user = await User.findOne({ email });
 
     if (!user) {
-      console.log('No user found with phone:', phone);
+      console.log('No user found with email:', email);
       return NextResponse.json(
-        { error: 'No account found with this phone number. Please register first.' },
+        { error: 'No account found with this email. Please register first.' },
         { status: 404 }
       );
     }

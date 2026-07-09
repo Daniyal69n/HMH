@@ -8,7 +8,7 @@ function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const registered = searchParams.get('registered')
-  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,8 +17,8 @@ function LoginContent() {
     event.preventDefault()
     setError('')
 
-    if (!phone.trim() || !password.trim()) {
-      setError('Enter both your phone number and password.')
+    if (!email.trim() || !password.trim()) {
+      setError('Enter both your email and password.')
       return
     }
 
@@ -27,7 +27,7 @@ function LoginContent() {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, password })
+        body: JSON.stringify({ email, password })
       })
 
       const data = await response.json()
@@ -62,13 +62,13 @@ function LoginContent() {
 
           <div className="card" style={{ borderRadius: '16px' }}>
             <form onSubmit={handleSubmit}>
-              <label htmlFor="phone">Phone number</label>
+              <label htmlFor="email">Email address</label>
               <input
-                id="phone"
-                type="tel"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                placeholder="+92 300 1234567"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Enter your email"
               />
 
               <label htmlFor="password">Password</label>

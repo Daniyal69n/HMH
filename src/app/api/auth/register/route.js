@@ -10,17 +10,25 @@ export async function POST(request) {
     const { name, email, phone, password, referralCode } = await request.json();
 
     // Validate required fields
-    if (!name || !phone || !password) {
+    if (!name || !email || !phone || !password) {
       return NextResponse.json(
-        { error: 'Name, phone number, and password are required' },
+        { error: 'Name, email, phone number, and password are required' },
         { status: 400 }
       );
     }
 
-    // Check if user already exists (by phone number only)
-    const existingUser = await User.findOne({ phone });
+    // Check if user already exists (by phone number or email)
+    const existingUser = await User.findOne({ 
+      $or: [{ phone }, { email }] 
+    });
 
     if (existingUser) {
+      if (existingUser.email === email) {
+        return NextResponse.json(
+          { error: 'User with this email already exists' },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
         { error: 'User with this phone number already exists' },
         { status: 400 }
@@ -45,7 +53,7 @@ export async function POST(request) {
 
     const user = new User({
       name,
-      email: email || null,
+      email,
       phone,
       password,
       referralCode: referralCode || null,

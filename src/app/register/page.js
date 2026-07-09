@@ -40,8 +40,8 @@ export default function RegisterPage() {
     event.preventDefault()
     setError('')
 
-    if (!formData.name.trim() || !formData.phone.trim() || !formData.password.trim()) {
-      setError('Fill in your name, phone number, and password.')
+    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.password.trim()) {
+      setError('Fill in your name, email, phone number, and password.')
       return
     }
 
