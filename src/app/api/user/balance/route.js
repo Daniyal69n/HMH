@@ -65,10 +65,18 @@ export async function PUT(request) {
       case 'withdraw': {
         // Use only the live DB balance — no fee, no commission math
         const currentBalance = typeof user.balance === 'number' ? user.balance : 0;
+        const requestedAmount = Number(data.amount) || 0;
         
-        if (currentBalance < data.amount) {
+        if (requestedAmount < 300) {
           return NextResponse.json(
-            { error: `Insufficient balance. Your current balance is Rs ${currentBalance.toFixed(2)} but you requested Rs ${Number(data.amount).toFixed(2)}.` },
+            { error: `Minimum withdrawal amount is Rs 300 ($1).` },
+            { status: 400 }
+          );
+        }
+        
+        if (currentBalance < requestedAmount) {
+          return NextResponse.json(
+            { error: `Insufficient balance. Your current balance is Rs ${currentBalance.toFixed(2)} but you requested Rs ${requestedAmount.toFixed(2)}.` },
             { status: 400 }
           );
         }

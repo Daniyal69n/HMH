@@ -629,6 +629,11 @@ export default function Page() {
       showToast('Minimum withdrawal amount is Rs 300')
       return
     }
+    const currentBalance = profile.balance || 0
+    if (amtInPKR > currentBalance) {
+      showToast(`Insufficient balance. Your current balance is ${formatVal(currentBalance)}.`)
+      return
+    }
     const phone = profile.phone
     if (!phone) {
       showToast('Please log in to withdraw')
