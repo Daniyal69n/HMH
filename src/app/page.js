@@ -54,6 +54,19 @@ export default function Page() {
   const [toast, setToast] = useState('')
   const toastTimer = useRef(null)
   const spinTimer = useRef(null)
+  
+  const [currency, setCurrency] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('hmh-currency') || 'USD'
+    }
+    return 'USD'
+  })
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hmh-currency', currency)
+    }
+  }, [currency])
 
   const [withdrawHistory, setWithdrawHistory] = useState([])
   const [wdAmount, setWdAmount] = useState('')
@@ -92,6 +105,13 @@ export default function Page() {
 
   // PKR conversion: $1 = PKR 300
   const PKR_RATE = 300
+
+  const formatVal = (pkrAmount) => {
+    if (currency === 'USD') {
+      return `$${((pkrAmount || 0) / PKR_RATE).toFixed(2)}`
+    }
+    return `Rs ${(pkrAmount || 0).toLocaleString()}`
+  }
 
   // Plan purchase modal state
   const [planModalOpen, setPlanModalOpen] = useState(false)
@@ -479,8 +499,9 @@ export default function Page() {
       showToast('Please fill in every field')
       return
     }
+    const amtInPKR = currency === 'USD' ? Number(wdAmount) * PKR_RATE : Number(wdAmount)
     setWithdrawHistory((prev) => [
-      { id: globalThis.crypto?.randomUUID?.() ?? String(Date.now()), amount: Number(wdAmount), method: wdMethod, status: 'Pending' },
+      { id: globalThis.crypto?.randomUUID?.() ?? String(Date.now()), amount: amtInPKR, method: wdMethod, status: 'Pending' },
       ...prev
     ])
     setWdAmount('')
@@ -730,6 +751,30 @@ export default function Page() {
 
             <div className="topbar-title">{topbarTitle}</div>
 
+            <button 
+              className="currency-toggle"
+              onClick={() => setCurrency(c => c === 'USD' ? 'PKR' : 'USD')}
+              style={{
+                marginRight: '12px',
+                background: 'linear-gradient(135deg, rgba(201, 160, 74, 0.15) 0%, rgba(201, 160, 74, 0.05) 100%)',
+                border: '1px solid rgba(201, 160, 74, 0.3)',
+                color: 'var(--gold-bright)',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                fontSize: '12.5px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                fontFamily: 'inherit'
+              }}
+            >
+              <span>{currency === 'USD' ? '💵 USD' : '🇵🇰 PKR'}</span>
+            </button>
+
             <div className="bell-wrap">
               <button className="bell" onClick={() => setBellOpen((v) => !v)} aria-label="Notifications">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
@@ -781,37 +826,37 @@ export default function Page() {
                 <div className="stat-icon" style={{ background: 'rgba(79,174,130,.12)' }}>💵</div>
                 <div>
                   <div className="stat-label">Current balance</div>
-                  <div className="stat-value">${((profile.balance || 0) / PKR_RATE).toFixed(2)}</div>
+                  <div className="stat-value">{formatVal(profile.balance)}</div>
                 </div>
               </div>
               <div className="card stat-card">
                 <div className="stat-icon" style={{ background: 'rgba(91,127,214,.12)' }}>💼</div>
                 <div>
                   <div className="stat-label">Total earnings</div>
-                  <div className="stat-value">${(((profile.earnBalance || 0) + (profile.totalCommissionEarned || 0)) / PKR_RATE).toFixed(2)}</div>
+                  <div className="stat-value">{formatVal((profile.earnBalance || 0) + (profile.totalCommissionEarned || 0))}</div>
                 </div>
               </div>
               <div className="card stat-card">
                 <div className="stat-icon" style={{ background: 'rgba(201,160,74,.12)' }}>🎁</div>
                 <div>
                   <div className="stat-label">My rewards</div>
-                  <div className="stat-value">${((profile.totalCommissionEarned || 0) / PKR_RATE).toFixed(2)}</div>
+                  <div className="stat-value">{formatVal(profile.totalCommissionEarned)}</div>
                 </div>
               </div>
               <div className="card stat-card">
                 <div className="stat-icon" style={{ background: 'rgba(201,160,74,.12)' }}>📈</div>
                 <div>
                   <div className="stat-label">My salary</div>
-                  <div className="stat-value">$0.00</div>
+                  <div className="stat-value">{currency === 'USD' ? '$0.00' : 'Rs 0'}</div>
                 </div>
               </div>
               <div className="card stat-card">
                 <div className="stat-icon" style={{ background: 'rgba(196,87,74,.12)' }}>📤</div>
                 <div>
                   <div className="stat-label">Total withdrawals</div>
-                  <div className="stat-value">${(((profile.withdrawHistory || [])
+                  <div className="stat-value">{formatVal((profile.withdrawHistory || [])
                     .filter(w => w.status === 'approved' || w.status === 'completed')
-                    .reduce((sum, w) => sum + w.amount, 0)) / PKR_RATE).toFixed(2)}</div>
+                    .reduce((sum, w) => sum + w.amount, 0))}</div>
                 </div>
               </div>
             </div>
@@ -870,7 +915,7 @@ export default function Page() {
                       <div className="leader-name">{u.name}</div>
                       <div className="leader-level">Level {u.level}</div>
                     </div>
-                    <div className="leader-amt">${u.amt.toFixed(2)}</div>
+                    <div className="leader-amt">{currency === 'USD' ? `$${u.amt.toFixed(2)}` : `Rs ${(u.amt * PKR_RATE).toLocaleString()}`}</div>
                   </div>
                 ))}
               </div>
@@ -886,14 +931,14 @@ export default function Page() {
 
             <div className="card balance-strip">
               <span style={{ color: 'var(--text-dim)', fontSize: 14 }}>Available balance</span>
-              <span className="amt">$0.00</span>
+              <span className="amt">{formatVal(profile.balance)}</span>
             </div>
 
             <div className="card" style={{ marginBottom: 18 }}>
               <h3 style={{ margin: '0 0 4px' }}>New withdrawal</h3>
-              <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 12.5 }}>Max: $0.00</p>
+              <p style={{ margin: 0, color: 'var(--text-faint)', fontSize: 12.5 }}>Max: {formatVal(profile.balance)}</p>
 
-              <label>Amount ($)</label>
+              <label>Amount ({currency === 'USD' ? '$' : 'PKR'})</label>
               <input type="number" value={wdAmount} onChange={(e) => setWdAmount(e.target.value)} placeholder="Enter amount" />
 
               <label>Payment method</label>
@@ -927,7 +972,7 @@ export default function Page() {
                 withdrawHistory.map((h) => (
                   <div key={h.id} className="history-row">
                     <span>
-                      ${Number(h.amount).toFixed(2)} · {h.method}
+                      {formatVal(h.amount)} · {h.method}
                     </span>
                     <span className="history-status status-pending">{h.status}</span>
                   </div>
@@ -1086,7 +1131,7 @@ export default function Page() {
                         margin: '8px 0 2px'
                       }}
                     >
-                      ${p.price} <span style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 500 }}>one-time</span>
+                      {currency === 'USD' ? `$${p.price}` : `Rs ${(p.price * PKR_RATE).toLocaleString()}`} <span style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 500 }}>one-time</span>
                     </div>
                     <div style={{ fontSize: 13, color: 'var(--text-dim)', margin: '4px 0 10px' }}>{p.desc}</div>
                     <ul style={{ textAlign: 'left', fontSize: 12.8, color: 'var(--text-dim)', margin: '14px 0', padding: 0, listStyle: 'none' }}>
