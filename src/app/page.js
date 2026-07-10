@@ -1066,7 +1066,18 @@ export default function Page() {
     }
   }
 
-  const saveProfile = () => {
+  const handleProfilePicUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setProfileDraft(prev => ({ ...prev, profilePicture: reader.result }))
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const saveProfile = async () => {
     const nextProfile = { ...profileDraft }
     setProfile(nextProfile)
     setProfileDraft(nextProfile)
@@ -1081,7 +1092,26 @@ export default function Page() {
         const user = JSON.parse(userData)
         localStorage.setItem('user', JSON.stringify({ ...user, name: nextProfile.name, email: nextProfile.email }))
       }
-    } catch { }
+      
+      // Persist to database
+      await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: nextProfile.phone,
+          updates: {
+            name: nextProfile.name,
+            email: nextProfile.email,
+            username: nextProfile.username,
+            city: nextProfile.city,
+            address: nextProfile.address,
+            profilePicture: nextProfile.profilePicture
+          }
+        })
+      })
+    } catch (e) {
+      console.error('Error saving profile:', e)
+    }
   }
 
   useEffect(() => {
@@ -1258,7 +1288,11 @@ export default function Page() {
           {/* DASHBOARD */}
           <section className={`page ${page === 'dashboard' ? 'active' : ''}`}>
             <div className="card profile-card">
-              <div className="avatar-ring">{avatarInitial}</div>
+               {profile.profilePicture ? (
+                 <img src={profile.profilePicture} alt="Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border-color)', marginRight: '16px' }} />
+               ) : (
+                 <div className="avatar-ring">{avatarInitial}</div>
+               )}
               <div className="profile-meta">
                 <div className="eyebrow">Welcome to HMHPro</div>
                 <h2>{profile.name || 'Member'}</h2>
@@ -2181,8 +2215,29 @@ export default function Page() {
 
             <div className="profile-shell">
               <div className="card profile-edit-card">
-                <div className="profile-avatar-wrap">
-                  <div className="avatar-ring profile-avatar-large">{avatarInitial}</div>
+                <div className="profile-avatar-wrap" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                  {profileDraft.profilePicture ? (
+                    <img 
+                      src={profileDraft.profilePicture} 
+                      alt="Profile Avatar" 
+                      style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold)' }} 
+                    />
+                  ) : (
+                    <div className="avatar-ring profile-avatar-large">{avatarInitial}</div>
+                  )}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    id="profile-pic-upload" 
+                    style={{ display: 'none' }} 
+                    onChange={handleProfilePicUpload}
+                  />
+                  <label 
+                    htmlFor="profile-pic-upload" 
+                    style={{ fontSize: '12px', color: 'var(--gold)', cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    Change Picture
+                  </label>
                 </div>
 
                 <label>Full name</label>

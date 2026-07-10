@@ -27,9 +27,23 @@ export async function GET(request) {
     
     const transactions = await Transaction.find(query)
       .sort({ createdAt: -1 })
-      .limit(100);
+      .limit(100)
+      .lean();
+
+    // Enrich transactions with userProfilePicture
+    const userIds = [...new Set(transactions.map(t => t.userId))];
+    const users = await User.find({ phone: { $in: userIds } }).select('phone profilePicture').lean();
+    const userPicMap = {};
+    users.forEach(u => {
+      userPicMap[u.phone] = u.profilePicture || '';
+    });
+
+    const enrichedTransactions = transactions.map(t => ({
+      ...t,
+      userProfilePicture: userPicMap[t.userId] || ''
+    }));
     
-    return Response.json(transactions, {
+    return Response.json(enrichedTransactions, {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',

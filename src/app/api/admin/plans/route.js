@@ -25,6 +25,7 @@ export async function GET(request) {
           userName: user.name,
           userPhone: user.phone,
           userEmail: user.email,
+          userProfilePicture: user.profilePicture || '',
           planId: plan._id,
           planName: plan.planName,
           userCurrentPlan: user.plan || 'Free',

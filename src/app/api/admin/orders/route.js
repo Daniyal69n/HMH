@@ -8,8 +8,22 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     await connectDB();
-    const orders = await Order.find().sort({ createdAt: -1 });
-    return Response.json(orders);
+    const orders = await Order.find().sort({ createdAt: -1 }).lean();
+    
+    // Fetch users for these orders to append profilePicture
+    const userPhones = [...new Set(orders.map(o => o.userId))];
+    const users = await User.find({ phone: { $in: userPhones } }).select('phone profilePicture').lean();
+    const userPicMap = {};
+    users.forEach(u => {
+      userPicMap[u.phone] = u.profilePicture || '';
+    });
+    
+    const enrichedOrders = orders.map(o => ({
+      ...o,
+      userProfilePicture: userPicMap[o.userId] || ''
+    }));
+
+    return Response.json(enrichedOrders);
   } catch (error) {
     return Response.json({ message: 'Error fetching orders', error: error.message }, { status: 500 });
   }

@@ -13,6 +13,10 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     default: null
   },
+  profilePicture: {
+    type: String,
+    default: ''
+  },
   phone: {
     type: String,
     required: [true, 'Phone number is required'],

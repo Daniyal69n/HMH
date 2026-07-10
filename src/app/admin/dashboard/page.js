@@ -1862,7 +1862,16 @@ export default function AdminDashboard() {
                 <div className={styles.card} key={getUserKey(user)}>
                   <div className={styles.cardTop}>
                     <div className={styles.userBlock}>
-                      <div className={styles.avatar}>{getUserInitials(user.name)}</div>
+                      {user.profilePicture ? (
+                        <img 
+                          src={user.profilePicture} 
+                          alt="avatar" 
+                          className={styles.avatar} 
+                          style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
+                        />
+                      ) : (
+                        <div className={styles.avatar}>{getUserInitials(user.name)}</div>
+                      )}
                       <div>
                         <div className={styles.userName}>{user.name || 'Unknown User'}</div>
                         <div className={styles.userEmail}>{user.email || user.phone || 'No email provided'}</div>
@@ -2281,7 +2290,16 @@ export default function AdminDashboard() {
                 <div className={styles.card} key={req.planId || i}>
                   <div className={styles.cardTop}>
                     <div className={styles.userBlock}>
-                      <div className={styles.avatar}>{getUserInitials(req.userName)}</div>
+                      {req.userProfilePicture ? (
+                        <img 
+                          src={req.userProfilePicture} 
+                          alt="avatar" 
+                          className={styles.avatar} 
+                          style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
+                        />
+                      ) : (
+                        <div className={styles.avatar}>{getUserInitials(req.userName)}</div>
+                      )}
                       <div>
                         <div className={styles.userName}>{req.userName || 'Unknown User'}</div>
                         <div className={styles.userEmail}>{req.userEmail || req.userPhone}</div>
@@ -2401,7 +2419,16 @@ export default function AdminDashboard() {
                 <div className={styles.card} key={request.transactionId || request._id}>
                   <div className={styles.cardTop}>
                     <div className={styles.userBlock}>
-                      <div className={styles.avatar}>{getUserInitials(request.userName)}</div>
+                      {request.userProfilePicture || users.find(u => u.phone === request.userId)?.profilePicture ? (
+                        <img 
+                          src={request.userProfilePicture || users.find(u => u.phone === request.userId)?.profilePicture} 
+                          alt="avatar" 
+                          className={styles.avatar} 
+                          style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
+                        />
+                      ) : (
+                        <div className={styles.avatar}>{getUserInitials(request.userName)}</div>
+                      )}
                       <div>
                         <div className={styles.userName}>{request.userName || 'Unknown User'}</div>
                         <div className={styles.userEmail}>
@@ -2892,13 +2919,22 @@ export default function AdminDashboard() {
                 orders.length > 0 ? (
                   orders.map(o => (
                     <div key={o._id || o.id} className={styles.rowCard} style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-                      <div className={styles.rowIcon}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="9" cy="21" r="1"/>
-                          <circle cx="20" cy="21" r="1"/>
-                          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                        </svg>
-                      </div>
+                      {o.userProfilePicture ? (
+                        <img 
+                          src={o.userProfilePicture} 
+                          alt="avatar" 
+                          className={styles.rowIcon} 
+                          style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
+                        />
+                      ) : (
+                        <div className={styles.rowIcon}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="9" cy="21" r="1"/>
+                            <circle cx="20" cy="21" r="1"/>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                          </svg>
+                        </div>
+                      )}
                       <div style={{ flex: 1, minWidth: '200px' }}>
                         <div className={styles.rowTitle}>{o.productName || o.product}</div>
                         <div className={styles.rowSub} style={{ lineHeight: '1.4' }}>
