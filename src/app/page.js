@@ -362,33 +362,42 @@ export default function Page() {
     [spinPrizes]
   )
 
-  const levelAPlanCounts = useMemo(() => {
-    const counts = {
-      basic: 0,
-      standard: 0,
-      diamond: 0,
-      pro: 0,
-      premium: 0,
-      legend: 0,
-      any: 0
+  const levels = useMemo(() => {
+    let pools = {
+      basic: [], standard: [], diamond: [], pro: [], premium: [], legend: [], other: []
     }
-
     if (teamData.levelA?.members) {
       for (const m of teamData.levelA.members) {
-        counts.any++
         const plan = (m.plan || '').toLowerCase().trim()
-        if (plan === 'basic') counts.basic++
-        else if (plan === 'standard') counts.standard++
-        else if (plan === 'diamond') counts.diamond++
-        else if (plan === 'pro') counts.pro++
-        else if (plan === 'premium') counts.premium++
-        else if (plan === 'legend') counts.legend++
+        if (pools[plan]) {
+          pools[plan].push(m)
+        } else {
+          pools.other.push(m)
+        }
       }
     }
-    return counts
-  }, [teamData.levelA?.members])
 
-  const levels = useMemo(() => {
+    const consumeAny = (count) => {
+      let consumed = 0
+      const order = ['other', 'basic', 'standard', 'diamond', 'pro', 'premium', 'legend']
+      for (const p of order) {
+        while (pools[p].length > 0 && consumed < count) {
+          pools[p].pop()
+          consumed++
+        }
+      }
+      return consumed
+    }
+
+    const consumeSpecific = (plan, count) => {
+      let consumed = 0
+      while (pools[plan] && pools[plan].length > 0 && consumed < count) {
+        pools[plan].pop()
+        consumed++
+      }
+      return consumed
+    }
+
     return Array.from({ length: 50 }, (_, index) => {
       const lv = index + 1
       let reqText = ''
@@ -401,14 +410,14 @@ export default function Page() {
         rewardUSD = 2
         membersRequired = 5
         reqText = '5 members of any plan'
-        const count = levelAPlanCounts.any
+        const count = consumeAny(5)
         progressPercent = Math.min(100, Math.round((count / 5) * 100))
         isCompleted = count >= 5
       } else if (lv === 2) {
         rewardUSD = 5
         membersRequired = 10
         reqText = '10 members of any plan'
-        const count = levelAPlanCounts.any
+        const count = consumeAny(10)
         progressPercent = Math.min(100, Math.round((count / 10) * 100))
         isCompleted = count >= 10
       } else {
@@ -432,23 +441,23 @@ export default function Page() {
         membersRequired = reqEach * 6
         reqText = `${reqEach} Basic · ${reqEach} Standard · ${reqEach} Diamond · ${reqEach} Pro · ${reqEach} Premium · ${reqEach} Legend`
 
-        const basicProgress = Math.min(reqEach, levelAPlanCounts.basic)
-        const standardProgress = Math.min(reqEach, levelAPlanCounts.standard)
-        const diamondProgress = Math.min(reqEach, levelAPlanCounts.diamond)
-        const proProgress = Math.min(reqEach, levelAPlanCounts.pro)
-        const premiumProgress = Math.min(reqEach, levelAPlanCounts.premium)
-        const legendProgress = Math.min(reqEach, levelAPlanCounts.legend)
+        const basicProgress = consumeSpecific('basic', reqEach)
+        const standardProgress = consumeSpecific('standard', reqEach)
+        const diamondProgress = consumeSpecific('diamond', reqEach)
+        const proProgress = consumeSpecific('pro', reqEach)
+        const premiumProgress = consumeSpecific('premium', reqEach)
+        const legendProgress = consumeSpecific('legend', reqEach)
 
         const totalProgress = basicProgress + standardProgress + diamondProgress + proProgress + premiumProgress + legendProgress
         progressPercent = Math.min(100, Math.round((totalProgress / membersRequired) * 100))
 
         isCompleted = (
-          levelAPlanCounts.basic >= reqEach &&
-          levelAPlanCounts.standard >= reqEach &&
-          levelAPlanCounts.diamond >= reqEach &&
-          levelAPlanCounts.pro >= reqEach &&
-          levelAPlanCounts.premium >= reqEach &&
-          levelAPlanCounts.legend >= reqEach
+          basicProgress >= reqEach &&
+          standardProgress >= reqEach &&
+          diamondProgress >= reqEach &&
+          proProgress >= reqEach &&
+          premiumProgress >= reqEach &&
+          legendProgress >= reqEach
         )
       }
 
@@ -462,11 +471,11 @@ export default function Page() {
         isCompleted,
         membersRequired,
         isMilestone,
-        rewardLabel: isMilestone ? `$${lv * 10} + prize pack` : null,
+        rewardLabel: isMilestone ? `$${lv * 10} + Salary` : null,
         salaryLabel: isMilestone ? `$${lv * 10} monthly salary` : null
       }
     })
-  }, [levelAPlanCounts])
+  }, [teamData.levelA?.members])
 
   const currentLevel = useMemo(() => {
     let lvl = 0
