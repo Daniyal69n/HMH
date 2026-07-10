@@ -20,6 +20,9 @@ export async function GET(request) {
     for (const user of users) {
       const matchingPlans = user.investmentPlans.filter(p => p.status === status);
       for (const plan of matchingPlans) {
+        const activePlan = [...(user.investmentPlans || [])].reverse().find(p => p.status === 'active');
+        const currentPlanName = activePlan ? activePlan.planName : 'Free';
+
         planRequests.push({
           userId: user._id,
           userName: user.name,
@@ -28,7 +31,7 @@ export async function GET(request) {
           userProfilePicture: user.profilePicture || '',
           planId: plan._id,
           planName: plan.planName,
-          userCurrentPlan: user.plan || 'Free',
+          userCurrentPlan: currentPlanName,
           amount: plan.amount,
           status: plan.status,
           startDate: plan.startDate,
