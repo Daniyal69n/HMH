@@ -1092,7 +1092,7 @@ export default function Page() {
         const user = JSON.parse(userData)
         localStorage.setItem('user', JSON.stringify({ ...user, name: nextProfile.name, email: nextProfile.email }))
       }
-      
+
       // Persist to database
       await fetch('/api/user/profile', {
         method: 'PUT',
@@ -1288,11 +1288,11 @@ export default function Page() {
           {/* DASHBOARD */}
           <section className={`page ${page === 'dashboard' ? 'active' : ''}`}>
             <div className="card profile-card">
-               {profile.profilePicture ? (
-                 <img src={profile.profilePicture} alt="Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border-color)', marginRight: '16px' }} />
-               ) : (
-                 <div className="avatar-ring">{avatarInitial}</div>
-               )}
+              {profile.profilePicture ? (
+                <img src={profile.profilePicture} alt="Avatar" style={{ width: '66px', height: '66px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold-dim)', flex: 'none' }} />
+              ) : (
+                <div className="avatar-ring">{avatarInitial}</div>
+              )}
               <div className="profile-meta">
                 <div className="eyebrow">Welcome to HMHPro</div>
                 <h2>{profile.name || 'Member'}</h2>
@@ -1816,7 +1816,7 @@ export default function Page() {
                             style={{ background: 'var(--panel-3)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}
                             onClick={() => openGallery(p)}
                           >
-                            View Pictures
+                            View Products
                           </button>
                           <button
                             style={{ background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}
@@ -2248,23 +2248,23 @@ export default function Page() {
               <div className="card profile-edit-card">
                 <div className="profile-avatar-wrap" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
                   {profileDraft.profilePicture ? (
-                    <img 
-                      src={profileDraft.profilePicture} 
-                      alt="Profile Avatar" 
-                      style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold)' }} 
+                    <img
+                      src={profileDraft.profilePicture}
+                      alt="Profile Avatar"
+                      style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold)' }}
                     />
                   ) : (
                     <div className="avatar-ring profile-avatar-large">{avatarInitial}</div>
                   )}
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    id="profile-pic-upload" 
-                    style={{ display: 'none' }} 
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="profile-pic-upload"
+                    style={{ display: 'none' }}
                     onChange={handleProfilePicUpload}
                   />
-                  <label 
-                    htmlFor="profile-pic-upload" 
+                  <label
+                    htmlFor="profile-pic-upload"
                     style={{ fontSize: '12px', color: 'var(--gold)', cursor: 'pointer', textDecoration: 'underline' }}
                   >
                     Change Picture
