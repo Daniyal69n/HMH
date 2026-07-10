@@ -22,6 +22,10 @@ const productSchema = new mongoose.Schema({
     type: String, // Store Base64 string or URL
     default: ''
   },
+  images: {
+    type: [String],
+    default: []
+  },
   isActive: {
     type: Boolean,
     default: true

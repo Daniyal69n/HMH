@@ -257,7 +257,7 @@ export default function AdminDashboard() {
       name: p.name,
       desc: p.description || p.desc,
       price: p.price,
-      img: p.image || p.img,
+      imgs: p.images && p.images.length > 0 ? p.images : (p.image || p.img ? [p.image || p.img] : []),
       mode: 'edit'
     })
   }
@@ -268,20 +268,34 @@ export default function AdminDashboard() {
       name: '',
       desc: '',
       price: 0,
-      img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=60',
+      imgs: [],
       mode: 'add'
     })
   }
 
   function handleProductImageUpload(e) {
-    const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setProductForm(prev => ({ ...prev, img: reader.result }))
-      }
-      reader.readAsDataURL(file)
+    const files = Array.from(e.target.files)
+    if (files.length > 0) {
+      files.forEach(file => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setProductForm(prev => {
+            if (!prev || !prev.imgs) return prev;
+            if (prev.imgs.length >= 5) return prev;
+            return { ...prev, imgs: [...prev.imgs, reader.result] }
+          })
+        }
+        reader.readAsDataURL(file)
+      })
     }
+  }
+
+  function removeProductImage(index) {
+    setProductForm(prev => {
+      const newImgs = [...prev.imgs];
+      newImgs.splice(index, 1);
+      return { ...prev, imgs: newImgs };
+    });
   }
 
   async function saveProductForm() {
@@ -302,7 +316,8 @@ export default function AdminDashboard() {
             price: parseFloat(productForm.price) || 0,
             currency: 'Rs',
             isActive: true,
-            image: productForm.img
+            image: (productForm.imgs && productForm.imgs[0]) ? productForm.imgs[0] : '',
+            images: productForm.imgs || []
           })
         })
         if (res.ok) {
@@ -320,7 +335,8 @@ export default function AdminDashboard() {
             name: productForm.name,
             description: productForm.desc,
             price: parseFloat(productForm.price) || 0,
-            image: productForm.img
+            image: (productForm.imgs && productForm.imgs[0]) ? productForm.imgs[0] : '',
+            images: productForm.imgs || []
           })
         })
         if (res.ok) {
@@ -2997,35 +3013,44 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className={styles.field}>
-                    <label>Product Picture</label>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
-                      <img
-                        src={productForm.img}
-                        alt="Preview"
-                        style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'contain', background: 'var(--panel-2)' }}
-                      />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleProductImageUpload}
-                        style={{ display: 'none' }}
-                        id="modal-image-upload"
-                      />
-                      <label
-                        htmlFor="modal-image-upload"
-                        className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`}
-                        style={{ cursor: 'pointer', margin: 0 }}
-                      >
-                        Upload Image
-                      </label>
+                    <label>Product Pictures (Up to 5)</label>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
+                      {(productForm.imgs || []).map((imgUrl, i) => (
+                        <div key={i} style={{ position: 'relative' }}>
+                          <img
+                            src={imgUrl}
+                            alt="Preview"
+                            style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'contain', background: 'var(--panel-2)' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeProductImage(i)}
+                            style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 20, height: 20, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, padding: 0 }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      {(productForm.imgs || []).length < 5 && (
+                        <>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleProductImageUpload}
+                            style={{ display: 'none' }}
+                            id="modal-image-upload"
+                          />
+                          <label
+                            htmlFor="modal-image-upload"
+                            className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`}
+                            style={{ cursor: 'pointer', margin: 0, height: '60px', display: 'flex', alignItems: 'center' }}
+                          >
+                            + Upload
+                          </label>
+                        </>
+                      )}
                     </div>
-                    <input
-                      type="text"
-                      value={productForm.img}
-                      onChange={e => setProductForm({ ...productForm, img: e.target.value })}
-                      placeholder="Or enter image URL"
-                      style={{ marginTop: '8px' }}
-                    />
                   </div>
 
                   <div className={styles.editModalActions}>

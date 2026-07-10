@@ -80,6 +80,9 @@ export default function Page() {
   const profileReady = useRef(false)
 
   const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [galleryOpen, setGalleryOpen] = useState(false)
+  const [galleryImages, setGalleryImages] = useState([])
+  const [galleryIndex, setGalleryIndex] = useState(0)
   const [checkoutProduct, setCheckoutProduct] = useState(null)
   const [coName, setCoName] = useState('')
   const [coPhone, setCoPhone] = useState('')
@@ -779,8 +782,37 @@ export default function Page() {
   }
 
   const openCheckout = (p) => {
-    setCheckoutProduct(p)
+    setCheckoutItem(p)
     setCheckoutOpen(true)
+  }
+
+  const openGallery = (p) => {
+    let imgs = []
+    if (p.images && p.images.length > 0) imgs = p.images
+    else if (p.image) imgs = [p.image]
+
+    if (imgs.length > 0) {
+      setGalleryImages(imgs)
+      setGalleryIndex(0)
+      setGalleryOpen(true)
+    } else {
+      showToast('No images available for this product.')
+    }
+  }
+
+  const handleShareImage = async () => {
+    const currentImg = galleryImages[galleryIndex]
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Product Image',
+          text: 'Check out this product image!',
+          url: currentImg,
+        })
+      } catch(e) {}
+    } else {
+      showToast('Share not supported on this browser.')
+    }
   }
 
   const openPlanModal = async (plan) => {
@@ -1730,7 +1762,9 @@ export default function Page() {
                 {products.map(p => (
                   <div key={p._id || p.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
                     <div style={{ height: 150, background: 'linear-gradient(135deg,#2a2116,#171b25)', display: 'flex', alignItems: 'center', justifyItems: 'center', position: 'relative' }}>
-                    {p.image ? (
+                    {p.images && p.images.length > 0 ? (
+                      <img src={p.images[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : p.image ? (
                       <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <div style={{ fontSize: 38 }}>🛒</div>
@@ -1743,12 +1777,20 @@ export default function Page() {
                       <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace', fontWeight: 700, color: 'var(--gold-bright)' }}>
                         {p.currency || 'Rs'} {p.price.toLocaleString()}
                       </span>
-                      <button
-                        style={{ background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}
-                        onClick={() => openCheckout(p)}
-                      >
-                        Buy now
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          style={{ background: 'var(--panel-3)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}
+                          onClick={() => openGallery(p)}
+                        >
+                          View Pictures
+                        </button>
+                        <button
+                          style={{ background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}
+                          onClick={() => openCheckout(p)}
+                        >
+                          Buy now
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2179,6 +2221,58 @@ export default function Page() {
       </div>
 
       {/* Checkout modal */}
+      <div className={`modal-bg ${galleryOpen ? 'show' : ''}`} onClick={() => setGalleryOpen(false)}>
+        <div className={`modal-container ${galleryOpen ? 'show' : ''}`} onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', width: '90%', padding: '20px', borderRadius: '12px' }}>
+          <button className="modal-close" onClick={() => setGalleryOpen(false)} aria-label="Close">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+          </button>
+          <div className="modal-header">
+            <h2>Product Pictures</h2>
+            <p>Image {galleryIndex + 1} of {galleryImages.length}</p>
+          </div>
+          
+          <div style={{ position: 'relative', width: '100%', height: '300px', background: 'var(--panel-2)', borderRadius: '8px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {galleryImages.length > 0 && (
+              <img src={galleryImages[galleryIndex]} alt="Gallery" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+            )}
+            
+            {galleryImages.length > 1 && (
+              <>
+                <button
+                  onClick={() => setGalleryIndex(i => (i === 0 ? galleryImages.length - 1 : i - 1))}
+                  style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  ❮
+                </button>
+                <button
+                  onClick={() => setGalleryIndex(i => (i === galleryImages.length - 1 ? 0 : i + 1))}
+                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  ❯
+                </button>
+              </>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+            <a
+              href={galleryImages[galleryIndex]}
+              download="product-image"
+              target="_blank"
+              style={{ flex: 1, background: 'var(--panel-3)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: 14, cursor: 'pointer', textAlign: 'center', textDecoration: 'none' }}
+            >
+              Save Image
+            </a>
+            <button
+              style={{ flex: 1, background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
+              onClick={handleShareImage}
+            >
+              Share Image
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className={`modal-bg ${checkoutOpen ? 'show' : ''}`} onClick={() => setCheckoutOpen(false)}>
         <div className="modal" onClick={(e) => e.stopPropagation()}>
           <div className="modal-head">

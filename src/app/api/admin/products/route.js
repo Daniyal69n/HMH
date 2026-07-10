@@ -17,7 +17,7 @@ export async function POST(request) {
   try {
     await connectDB();
     const body = await request.json();
-    const { name, description, price, currency, image, isActive } = body;
+    const { name, description, price, currency, image, images, isActive } = body;
 
     if (!name || !price) {
       return Response.json({ message: 'Name and price are required' }, { status: 400 });
@@ -29,6 +29,7 @@ export async function POST(request) {
       price,
       currency: currency || 'Rs',
       image: image || '',
+      images: images || (image ? [image] : []),
       isActive: isActive !== undefined ? isActive : true
     });
 
