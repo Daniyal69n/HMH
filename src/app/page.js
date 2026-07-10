@@ -1946,13 +1946,44 @@ export default function Page() {
                     { icon: '💍', title: 'Ring', level: 40 },
                     { icon: '🚗', title: 'Car', level: 50 },
                     { icon: '✈️', title: 'Tour', level: 50 }
-                  ].map((reward) => (
-                    <div key={reward.title} className="reward-tile">
-                      <div className="reward-icon">{reward.icon}</div>
-                      <div className="reward-name">{reward.title}</div>
-                      <div className="reward-level">Lv.{reward.level}</div>
-                    </div>
-                  ))}
+                  ].map((reward) => {
+                    const levelData = levels.find(l => l.level === reward.level)
+                    const isCompleted = levelData ? levelData.isCompleted : false
+                    const isClaimed = (profile.claimedLevels || []).includes(reward.level)
+                    return (
+                      <div key={reward.title} className="reward-tile" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '165px', padding: '16px 8px' }}>
+                        <div>
+                          <div className="reward-icon">{reward.icon}</div>
+                          <div className="reward-name">{reward.title}</div>
+                          <div className="reward-level">Lv.{reward.level}</div>
+                        </div>
+                        <div style={{ width: '100%', marginTop: 'auto' }}>
+                          {isClaimed ? (
+                            <button
+                              disabled
+                              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '6px 0', fontSize: '11px', fontWeight: 700, cursor: 'not-allowed' }}
+                            >
+                              ✅ Claimed
+                            </button>
+                          ) : isCompleted ? (
+                            <button
+                              style={{ width: '100%', background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: '8px', padding: '6px 0', fontSize: '11px', fontWeight: 800, cursor: 'pointer', boxShadow: '0 0 10px rgba(201,160,74,0.3)' }}
+                              onClick={() => claimLevelReward(reward.level)}
+                            >
+                              🎁 Collect
+                            </button>
+                          ) : (
+                            <button
+                              disabled
+                              style={{ width: '100%', background: 'rgba(255,255,255,0.03)', color: 'var(--text-faint)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '6px 0', fontSize: '11px', fontWeight: 600, cursor: 'not-allowed' }}
+                            >
+                              🔒 Locked
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
 
