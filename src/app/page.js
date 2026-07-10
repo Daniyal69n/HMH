@@ -782,7 +782,7 @@ export default function Page() {
   }
 
   const openCheckout = (p) => {
-    setCheckoutItem(p)
+    setCheckoutProduct(p)
     setCheckoutOpen(true)
   }
 
