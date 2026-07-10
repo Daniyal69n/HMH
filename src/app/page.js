@@ -1357,7 +1357,7 @@ export default function Page() {
                 <div className="stat-icon" style={{ background: 'rgba(196,87,74,.12)' }}>📤</div>
                 <div>
                   <div className="stat-label">Total withdrawals</div>
-                  <div className="stat-value">{formatVal((profile.withdrawHistory || [])
+                  <div className="stat-value">{formatVal((withdrawHistory || [])
                     .filter(w => w.status !== 'rejected' && w.status !== 'cancelled')
                     .reduce((sum, w) => sum + w.amount, 0))}</div>
                 </div>
