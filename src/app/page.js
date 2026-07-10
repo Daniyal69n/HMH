@@ -1837,6 +1837,7 @@ export default function Page() {
                 <div className="levels-reward-wall">
                   {[
                     { icon: '🎧', title: 'AirPods', level: 4 },
+                    { icon: '🗺️', title: 'National Tour', level: 10 },
                     { icon: '💻', title: 'Laptop', level: 20 },
                     { icon: '📱', title: 'iPhone', level: 30 },
                     { icon: '💍', title: 'Ring', level: 40 },
