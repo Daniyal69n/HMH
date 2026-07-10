@@ -403,6 +403,7 @@ export default function Page() {
       let reqText = ''
       let isCompleted = false
       let progressPercent = 0
+      let progressText = ''
       let rewardUSD = 0
       let membersRequired = 0
 
@@ -413,6 +414,7 @@ export default function Page() {
         const count = consumeAny(5)
         progressPercent = Math.min(100, Math.round((count / 5) * 100))
         isCompleted = count >= 5
+        progressText = `${count} / ${membersRequired}`
       } else if (lv === 2) {
         rewardUSD = 5
         membersRequired = 10
@@ -420,6 +422,7 @@ export default function Page() {
         const count = consumeAny(10)
         progressPercent = Math.min(100, Math.round((count / 10) * 100))
         isCompleted = count >= 10
+        progressText = `${count} / ${membersRequired}`
       } else {
         // Levels 3 to 50
         let reqEach = 0
@@ -450,6 +453,7 @@ export default function Page() {
 
         const totalProgress = basicProgress + standardProgress + diamondProgress + proProgress + premiumProgress + legendProgress
         progressPercent = Math.min(100, Math.round((totalProgress / membersRequired) * 100))
+        progressText = `${totalProgress} / ${membersRequired}`
 
         isCompleted = (
           basicProgress >= reqEach &&
@@ -468,6 +472,7 @@ export default function Page() {
         reqText,
         rewardUSD,
         progressPercent,
+        progressText,
         isCompleted,
         membersRequired,
         isMilestone,
@@ -478,16 +483,29 @@ export default function Page() {
   }, [teamData.levelA?.members])
 
   const currentLevel = useMemo(() => {
-    let lvl = 0
+    let lvl = 1
     for (let i = 0; i < levels.length; i++) {
       if (levels[i].isCompleted) {
-        lvl = levels[i].level
+        lvl = levels[i].level + 1
       } else {
         break
       }
     }
-    return lvl
+    return Math.min(lvl, 50)
   }, [levels])
+
+  useEffect(() => {
+    if (profile?.phone && currentLevel > (profile.level || 0)) {
+      fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: profile.phone,
+          updates: { level: currentLevel }
+        })
+      }).catch(console.error)
+    }
+  }, [profile?.phone, profile?.level, currentLevel])
 
   const levelBadgeClass = (level) => {
     const palette = ['level-blue', 'level-green', 'level-red', 'level-amber', 'level-gold']
@@ -1879,7 +1897,7 @@ export default function Page() {
                         />
                       </div>
                       <div className="level-progress">
-                        <span>Condition progress</span>
+                        <span>Condition progress ({level.progressText})</span>
                         <span>{level.progressPercent}%</span>
                       </div>
 

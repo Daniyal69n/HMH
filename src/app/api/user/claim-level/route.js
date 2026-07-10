@@ -25,60 +25,84 @@ export async function POST(request) {
     // Fetch direct referrals (Level A) to verify conditions
     const referrals = await User.find({ referredBy: phone });
     
-    const planCounts = {
-      basic: 0,
-      standard: 0,
-      diamond: 0,
-      pro: 0,
-      premium: 0,
-      legend: 0,
-      any: 0
+    let pools = {
+      basic: [], standard: [], diamond: [], pro: [], premium: [], legend: [], other: []
     };
     
     for (const m of referrals) {
-      planCounts.any++;
       const activePlan = (m.investmentPlans || []).reverse().find(p => p.status === 'active');
       const planName = activePlan ? activePlan.planName.toLowerCase().trim() : 'free';
-      if (planName === 'basic') planCounts.basic++;
-      else if (planName === 'standard') planCounts.standard++;
-      else if (planName === 'diamond') planCounts.diamond++;
-      else if (planName === 'pro') planCounts.pro++;
-      else if (planName === 'premium') planCounts.premium++;
-      else if (planName === 'legend') planCounts.legend++;
+      if (pools[planName]) pools[planName].push(m);
+      else pools.other.push(m);
+    }
+    
+    const consumeAny = (count) => {
+      let consumed = 0;
+      const order = ['other', 'basic', 'standard', 'diamond', 'pro', 'premium', 'legend'];
+      for (const p of order) {
+        while (pools[p].length > 0 && consumed < count) {
+          pools[p].pop();
+          consumed++;
+        }
+      }
+      return consumed;
+    }
+
+    const consumeSpecific = (plan, count) => {
+      let consumed = 0;
+      while (pools[plan] && pools[plan].length > 0 && consumed < count) {
+        pools[plan].pop();
+        consumed++;
+      }
+      return consumed;
     }
     
     let isEligible = false;
     let rewardUSD = 0;
     
-    if (level === 1) {
-      isEligible = planCounts.any >= 5;
-      rewardUSD = 2;
-    } else if (level === 2) {
-      isEligible = planCounts.any >= 10;
-      rewardUSD = 5;
-    } else {
-      let reqEach = 0;
-      if (level === 3) {
-        reqEach = 2;
-        rewardUSD = 10;
-      } else if (level === 4) {
-        reqEach = 3;
-        rewardUSD = 15;
-      } else if (level === 5) {
-        reqEach = 4;
-        rewardUSD = 20;
+    for (let lv = 1; lv <= level; lv++) {
+      if (lv === 1) {
+        rewardUSD = 2;
+        const count = consumeAny(5);
+        if (lv === level) isEligible = count >= 5;
+      } else if (lv === 2) {
+        rewardUSD = 5;
+        const count = consumeAny(10);
+        if (lv === level) isEligible = count >= 10;
       } else {
-        reqEach = 5;
-        rewardUSD = 25 + (level - 6) * 5;
+        let reqEach = 0;
+        if (lv === 3) {
+          reqEach = 2;
+          rewardUSD = 10;
+        } else if (lv === 4) {
+          reqEach = 3;
+          rewardUSD = 15;
+        } else if (lv === 5) {
+          reqEach = 4;
+          rewardUSD = 20;
+        } else {
+          reqEach = 5;
+          rewardUSD = 25 + (lv - 6) * 5;
+        }
+        
+        const basicProgress = consumeSpecific('basic', reqEach);
+        const standardProgress = consumeSpecific('standard', reqEach);
+        const diamondProgress = consumeSpecific('diamond', reqEach);
+        const proProgress = consumeSpecific('pro', reqEach);
+        const premiumProgress = consumeSpecific('premium', reqEach);
+        const legendProgress = consumeSpecific('legend', reqEach);
+
+        if (lv === level) {
+          isEligible = (
+            basicProgress >= reqEach &&
+            standardProgress >= reqEach &&
+            diamondProgress >= reqEach &&
+            proProgress >= reqEach &&
+            premiumProgress >= reqEach &&
+            legendProgress >= reqEach
+          );
+        }
       }
-      isEligible = (
-        planCounts.basic >= reqEach &&
-        planCounts.standard >= reqEach &&
-        planCounts.diamond >= reqEach &&
-        planCounts.pro >= reqEach &&
-        planCounts.premium >= reqEach &&
-        planCounts.legend >= reqEach
-      );
     }
     
     if (!isEligible) {
