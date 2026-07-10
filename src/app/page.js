@@ -154,26 +154,20 @@ export default function Page() {
   const [stSubmitting, setStSubmitting] = useState(false)
 
   const NAV = useMemo(
-    () => {
-      const items = [
-        { id: 'dashboard', label: 'Dashboard', icon: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z' },
-        { id: 'withdraw', label: 'Withdraw funds', icon: 'M3 7h18v10H3zM3 10h18' },
-        { id: 'network', label: 'My network', icon: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM17 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 3-5 6-5s6 2 6 5M13 20c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4' },
-        { id: 'plans', label: 'My plan', icon: 'M12 3v18M5 8l7-5 7 5' },
-        { id: 'levels', label: 'Rewards & levels', icon: 'M8 21h8M12 17v4M6 3h12l-1 8a5 5 0 0 1-10 0z' },
-        { id: 'social-task', label: 'Social Task', icon: 'M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z' },
-        { id: 'spin', label: 'Lucky spin', icon: 'M12 2v20M2 12h20' },
-        { id: 'store', label: 'E-commerce', icon: 'M4 8h16l-1.5 11h-13zM8 8V6a4 4 0 0 1 8 0v2' },
-        { id: 'membership', label: 'Membership card', icon: 'M3 6h18v12H3zM3 10h18' },
-        { id: 'profile', label: 'Profile settings', icon: 'M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5' },
-        { id: 'admin', label: 'Admin panel', icon: 'M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z' }
-      ]
-      if (activePlanName === 'Free') {
-        return items.filter(item => item.id === 'dashboard' || item.id === 'plans' || item.id === 'admin')
-      }
-      return items
-    },
-    [activePlanName]
+    () => [
+      { id: 'dashboard', label: 'Dashboard', icon: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z' },
+      { id: 'withdraw', label: 'Withdraw funds', icon: 'M3 7h18v10H3zM3 10h18' },
+      { id: 'network', label: 'My network', icon: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM17 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 3-5 6-5s6 2 6 5M13 20c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4' },
+      { id: 'plans', label: 'My plan', icon: 'M12 3v18M5 8l7-5 7 5' },
+      { id: 'levels', label: 'Rewards & levels', icon: 'M8 21h8M12 17v4M6 3h12l-1 8a5 5 0 0 1-10 0z' },
+      { id: 'social-task', label: 'Social Task', icon: 'M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z' },
+      { id: 'spin', label: 'Lucky spin', icon: 'M12 2v20M2 12h20' },
+      { id: 'store', label: 'E-commerce', icon: 'M4 8h16l-1.5 11h-13zM8 8V6a4 4 0 0 1 8 0v2' },
+      { id: 'membership', label: 'Membership card', icon: 'M3 6h18v12H3zM3 10h18' },
+      { id: 'profile', label: 'Profile settings', icon: 'M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5' },
+      { id: 'admin', label: 'Admin panel', icon: 'M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z' }
+    ],
+    []
   )
 
   const leaders = useMemo(
@@ -1212,22 +1206,33 @@ export default function Page() {
           </div>
 
           <nav className="nav">
-            {NAV.map((item) => (
-              <a
-                key={item.id}
-                href="#"
-                className={`nav-item ${page === item.id ? 'active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  goTo(item.id)
-                }}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d={item.icon} />
-                </svg>
-                <span>{item.label}</span>
-              </a>
-            ))}
+            {NAV.map((item) => {
+              const isLocked = activePlanName === 'Free' && item.id !== 'dashboard' && item.id !== 'plans' && item.id !== 'admin'
+              return (
+                <a
+                  key={item.id}
+                  href="#"
+                  className={`nav-item ${page === item.id ? 'active' : ''}`}
+                  style={isLocked ? { opacity: 0.45, cursor: 'not-allowed' } : undefined}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (isLocked) {
+                      showToast('Please upgrade your plan to access this page.')
+                    } else {
+                      goTo(item.id)
+                    }
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={item.icon} />
+                  </svg>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {item.label}
+                    {isLocked && <span style={{ fontSize: '11px', filter: 'grayscale(100%)' }}>🔒</span>}
+                  </span>
+                </a>
+              )
+            })}
 
             <div className="nav-divider" />
 
