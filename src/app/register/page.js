@@ -40,8 +40,8 @@ export default function RegisterPage() {
     event.preventDefault()
     setError('')
 
-    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.password.trim()) {
-      setError('Fill in your name, email, phone number, and password.')
+    if (!formData.name.trim() || !formData.email.trim() || !formData.password.trim()) {
+      setError('Fill in your name, email, and password.')
       return
     }
 
@@ -49,6 +49,9 @@ export default function RegisterPage() {
       setError('Passwords do not match.')
       return
     }
+
+    // Auto-generate unique phone number as required by schema
+    const randomPhone = '03' + Math.floor(100000000 + Math.random() * 900000000).toString().substring(0, 9);
 
     setLoading(true)
     try {
@@ -58,7 +61,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
-          phone: formData.phone,
+          phone: randomPhone,
           password: formData.password,
           referralCode: formData.referralCode
         })
@@ -112,17 +115,6 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Enter your email address"
-              />
-
-
-              <label htmlFor="phone">Phone number</label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Enter your phone number"
               />
 
               <div className="row-2">
