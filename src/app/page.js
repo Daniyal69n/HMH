@@ -809,7 +809,7 @@ export default function Page() {
           text: 'Check out this product image!',
           url: currentImg,
         })
-      } catch(e) {}
+      } catch (e) { }
     } else {
       showToast('Share not supported on this browser.')
     }
@@ -906,7 +906,7 @@ export default function Page() {
         setStPlatform('')
         setStScreenshot(null)
         setStNotes('')
-        
+
         // Update balance and earning instantly
         setProfile(prev => {
           const next = {
@@ -1762,39 +1762,39 @@ export default function Page() {
                 {products.map(p => (
                   <div key={p._id || p.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
                     <div style={{ height: 150, background: 'linear-gradient(135deg,#2a2116,#171b25)', display: 'flex', alignItems: 'center', justifyItems: 'center', position: 'relative' }}>
-                    {p.images && p.images.length > 0 ? (
-                      <img src={p.images[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : p.image ? (
-                      <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <div style={{ fontSize: 38 }}>🛒</div>
-                    )}
-                  </div>
-                  <div style={{ padding: 16 }}>
-                    <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 3 }}>{p.name}</div>
-                    <div style={{ color: 'var(--text-faint)', fontSize: 12, marginBottom: 12 }}>{p.description || p.desc}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace', fontWeight: 700, color: 'var(--gold-bright)' }}>
-                        {p.currency || 'Rs'} {p.price.toLocaleString()}
-                      </span>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                          style={{ background: 'var(--panel-3)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}
-                          onClick={() => openGallery(p)}
-                        >
-                          View Pictures
-                        </button>
-                        <button
-                          style={{ background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}
-                          onClick={() => openCheckout(p)}
-                        >
-                          Buy now
-                        </button>
+                      {p.images && p.images.length > 0 ? (
+                        <img src={p.images[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : p.image ? (
+                        <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ fontSize: 38 }}>🛒</div>
+                      )}
+                    </div>
+                    <div style={{ padding: 16 }}>
+                      <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 3 }}>{p.name}</div>
+                      <div style={{ color: 'var(--text-faint)', fontSize: 12, marginBottom: 12 }}>{p.description || p.desc}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace', fontWeight: 700, color: 'var(--gold-bright)' }}>
+                          {p.currency || 'Rs'} {p.price.toLocaleString()}
+                        </span>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            style={{ background: 'var(--panel-3)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}
+                            onClick={() => openGallery(p)}
+                          >
+                            View Pictures
+                          </button>
+                          <button
+                            style={{ background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}
+                            onClick={() => openCheckout(p)}
+                          >
+                            Buy now
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
               </div>
             ) : (
               <div className="empty-state">No products available at the moment. Please check back later.</div>
@@ -1807,7 +1807,7 @@ export default function Page() {
               <h1>Social Task</h1>
               <p>Complete Social Media Tasks &amp; Earn Rewards!</p>
             </div>
-            
+
             <div className="card" style={{ marginBottom: 18 }}>
               <h3 style={{ margin: '0 0 4px' }}>📋 Task Details</h3>
               <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
@@ -2230,12 +2230,12 @@ export default function Page() {
             <h2>Product Pictures</h2>
             <p>Image {galleryIndex + 1} of {galleryImages.length}</p>
           </div>
-          
+
           <div style={{ position: 'relative', width: '100%', height: '300px', background: 'var(--panel-2)', borderRadius: '8px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {galleryImages.length > 0 && (
               <img src={galleryImages[galleryIndex]} alt="Gallery" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
             )}
-            
+
             {galleryImages.length > 1 && (
               <>
                 <button
@@ -2263,12 +2263,6 @@ export default function Page() {
             >
               Save Image
             </a>
-            <button
-              style={{ flex: 1, background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
-              onClick={handleShareImage}
-            >
-              Share Image
-            </button>
           </div>
         </div>
       </div>
@@ -2318,8 +2312,8 @@ export default function Page() {
           {coPaymentMethod === 'online_transfer' && (
             <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
               <div style={{ fontSize: 13, marginBottom: 8 }}>
-                <strong>Bank:</strong> {ecommerceBankDetails.bankName || 'N/A'}<br/>
-                <strong>Title:</strong> {ecommerceBankDetails.accountName || 'N/A'}<br/>
+                <strong>Bank:</strong> {ecommerceBankDetails.bankName || 'N/A'}<br />
+                <strong>Title:</strong> {ecommerceBankDetails.accountName || 'N/A'}<br />
                 <strong>Account / IBAN:</strong> {ecommerceBankDetails.accountNumber || 'N/A'}
               </div>
               <label style={{ marginTop: 0, fontSize: 12 }}>Upload Receipt Screenshot</label>
