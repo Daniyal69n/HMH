@@ -1340,7 +1340,7 @@ export default function Page() {
                 <div>
                   <div className="stat-label">Total withdrawals</div>
                   <div className="stat-value">{formatVal((profile.withdrawHistory || [])
-                    .filter(w => w.status === 'approved' || w.status === 'completed')
+                    .filter(w => w.status !== 'rejected' && w.status !== 'cancelled')
                     .reduce((sum, w) => sum + w.amount, 0))}</div>
                 </div>
               </div>
