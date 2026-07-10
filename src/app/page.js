@@ -816,6 +816,11 @@ export default function Page() {
   }
 
   const openPlanModal = async (plan) => {
+    const hasAnyPending = (profile.investmentPlans || []).some(planReq => planReq.status === 'pending')
+    if (hasAnyPending) {
+      showToast('You already have a plan upgrade request pending approval.')
+      return
+    }
     setSelectedPlanData(plan)
     setPlanPaymentMethod('jazzcash')
     setPlanScreenshot(null)
@@ -1672,6 +1677,9 @@ export default function Page() {
                 const isPending = (profile.investmentPlans || []).some(
                   planReq => planReq.planName.toLowerCase() === p.name.toLowerCase() && planReq.status === 'pending'
                 )
+                const hasAnyPending = (profile.investmentPlans || []).some(
+                  planReq => planReq.status === 'pending'
+                )
                 return (
                   <div
                     key={p.name}
@@ -1685,7 +1693,7 @@ export default function Page() {
                       boxShadow: isActive
                         ? '0 0 0 2px rgba(34,197,94,0.2) inset, 0 0 24px rgba(34,197,94,0.08)'
                         : p.featured ? '0 0 0 1px rgba(201,160,74,.15) inset' : undefined,
-                      opacity: hasAnyPlan && !isActive ? 0.75 : 1
+                      opacity: (hasAnyPlan && !isActive) || (hasAnyPending && !isPending && !isActive) ? 0.75 : 1
                     }}
                   >
                     {/* Active badge */}
@@ -1780,6 +1788,12 @@ export default function Page() {
                       <button
                         className={`btn ${p.featured ? 'btn-gold' : 'btn-ghost'}`}
                         onClick={() => openPlanModal(p)}
+                        disabled={hasAnyPending}
+                        style={{
+                          width: '100%',
+                          opacity: hasAnyPending ? 0.5 : 1,
+                          cursor: hasAnyPending ? 'not-allowed' : 'pointer'
+                        }}
                       >
                         {hasAnyPlan ? 'Upgrade Plan' : p.buttonLabel}
                       </button>
