@@ -1248,7 +1248,14 @@ export default function Page() {
               </svg>
             </button>
 
-            <div className="topbar-title">{topbarTitle}</div>
+            <div className="topbar-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <img
+                src="/logo.jpg"
+                alt="HMHPro Logo"
+                style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--gold)' }}
+              />
+              <span style={{ color: 'var(--gold-bright)', fontWeight: 600, fontSize: '17px' }}>Welcome to HMHProEarn</span>
+            </div>
 
             <button
               className="currency-toggle"
