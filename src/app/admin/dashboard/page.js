@@ -44,6 +44,25 @@ export default function AdminDashboard() {
     jazzcash: { number: '', accountName: '' }
   })
   
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  })
+
+  const showConfirm = (message, onConfirm, title = 'Are you sure?') => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm()
+        setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      }
+    })
+  }
+
   // Coupon management states
   const [coupons, setCoupons] = useState([])
   const [newCoupon, setNewCoupon] = useState({
@@ -573,10 +592,10 @@ export default function AdminDashboard() {
   }
 
   const handleLogout = () => {
-    if (confirm('Are you sure you want to logout from admin panel?')) {
+    showConfirm('Are you sure you want to logout from admin panel?', () => {
       clearAdminSession()
       router.push('/admin')
-    }
+    }, 'Confirm Logout')
   }
 
   const handleAddPlan = async () => {
@@ -3172,6 +3191,31 @@ export default function AdminDashboard() {
               <button onClick={() => setReceiptModalUrl('')} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--text)' }}>×</button>
             </div>
             <img src={receiptModalUrl} alt="Receipt" style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '8px' }} />
+          </div>
+        </div>
+      )}
+      {/* Custom Confirm Modal */}
+      {confirmModal.isOpen && (
+        <div className={styles.editModal} onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} style={{ zIndex: 20000 }}>
+          <div className={styles.editModalBox} style={{ maxWidth: '400px', textAlign: 'center', padding: '24px', borderRadius: '12px' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 12px', fontSize: '18px', color: 'var(--text)' }}>{confirmModal.title}</h3>
+            <p style={{ margin: '0 0 24px', fontSize: '14.5px', color: 'var(--text-dim)', lineHeight: '1.5' }}>{confirmModal.message}</p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button 
+                className={`${styles.btn} ${styles.btnOutline}`} 
+                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                style={{ flex: 1, padding: '10px 16px' }}
+              >
+                Cancel
+              </button>
+              <button 
+                className={`${styles.btn} ${styles.btnGold}`} 
+                onClick={confirmModal.onConfirm}
+                style={{ flex: 1, padding: '10px 16px' }}
+              >
+                OK
+              </button>
+            </div>
           </div>
         </div>
       )}
