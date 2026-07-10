@@ -113,13 +113,37 @@ export async function POST(request) {
     const PKR_RATE = 300;
     const rewardPKR = rewardUSD * PKR_RATE;
     
-    // Credit reward to:
+    // Calculate level salary based on current level block
+    let levelSalaryUSD = 0;
+    if (level >= 1 && level <= 10) levelSalaryUSD = 10;
+    else if (level >= 11 && level <= 20) levelSalaryUSD = 20;
+    else if (level >= 21 && level <= 30) levelSalaryUSD = 30;
+    else if (level >= 31 && level <= 40) levelSalaryUSD = 40;
+    else if (level >= 41 && level <= 50) levelSalaryUSD = 50;
+    const levelSalaryPKR = levelSalaryUSD * PKR_RATE;
+    
+    // Credit reward and level salary to:
     // 1. My rewards (totalCommissionEarned)
     // 2. Total earnings (earnBalance)
-    // 3. Current balance (balance) - as requested by user
-    user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
-    user.earnBalance = (user.earnBalance || 0) + rewardPKR;
+    user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR + levelSalaryPKR;
+    user.earnBalance = (user.earnBalance || 0) + rewardPKR + levelSalaryPKR;
+    
+    // 3. Current balance (balance) gets the standard level reward
     user.balance = (user.balance || 0) + rewardPKR;
+
+    // 4. Milestone Check: If milestone level is reached (10, 20, 30, 40, 50), 
+    // move the entire accumulated block salary to the withdrawable current balance.
+    if (level === 10) {
+      user.balance += 100 * PKR_RATE; // $100 salary to balance
+    } else if (level === 20) {
+      user.balance += 200 * PKR_RATE; // $200 salary to balance
+    } else if (level === 30) {
+      user.balance += 300 * PKR_RATE; // $300 salary to balance
+    } else if (level === 40) {
+      user.balance += 400 * PKR_RATE; // $400 salary to balance
+    } else if (level === 50) {
+      user.balance += 500 * PKR_RATE; // $500 salary to balance
+    }
     
     if (!user.claimedLevels) {
       user.claimedLevels = [];

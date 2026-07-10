@@ -1125,6 +1125,19 @@ export default function Page() {
 
   const streakDots = useMemo(() => Array.from({ length: 10 }), [])
 
+  const mySalaryUSD = useMemo(() => {
+    let total = 0
+    const claimed = profile.claimedLevels || []
+    for (const lv of claimed) {
+      if (lv >= 1 && lv <= 10) total += 10
+      else if (lv >= 11 && lv <= 20) total += 20
+      else if (lv >= 21 && lv <= 30) total += 30
+      else if (lv >= 31 && lv <= 40) total += 40
+      else if (lv >= 41 && lv <= 50) total += 50
+    }
+    return total
+  }, [profile.claimedLevels])
+
   const streakDays = useMemo(() => {
     if (!profile || !profile.createdAt || !teamData.levelA?.members || teamData.levelA.members.length === 0) {
       return 0
@@ -1332,7 +1345,7 @@ export default function Page() {
                 <div className="stat-icon" style={{ background: 'rgba(201,160,74,.12)' }}>📈</div>
                 <div>
                   <div className="stat-label">My salary</div>
-                  <div className="stat-value">{currency === 'USD' ? '$0.00' : 'Rs 0'}</div>
+                  <div className="stat-value">{currency === 'USD' ? `$${mySalaryUSD.toFixed(2)}` : `Rs ${(mySalaryUSD * PKR_RATE).toLocaleString()}`}</div>
                 </div>
               </div>
               <div className="card stat-card">
