@@ -2014,7 +2014,7 @@ export default function Page() {
                     </span>
                   </div>
 
-                  {/* Mock Video Player */}
+                  {/* Real Video Player */}
                   <div style={{
                     aspectRatio: '16/9',
                     background: '#000000',
@@ -2028,29 +2028,57 @@ export default function Page() {
                     overflow: 'hidden',
                     marginBottom: '22px'
                   }}>
-                    {/* Simulated Loading/Wave Animation */}
-                    <div style={{ display: 'flex', gap: '5px', alignItems: 'center', justifyContent: 'center', height: '40px', marginBottom: '14px' }}>
-                      {[1, 2, 3, 4, 5].map((bar) => {
-                        const heights = [20, 35, 15, 30, 25];
-                        return (
-                          <div
-                            key={bar}
-                            style={{
-                              width: '4px',
-                              background: 'var(--gold)',
-                              borderRadius: '2px',
-                              height: `${heights[bar - 1]}px`,
-                              animation: watchCountdown > 0 ? `bounce 1s ease-in-out infinite alternate ${bar * 0.1}s` : 'none',
-                              opacity: watchCountdown > 0 ? 0.8 : 0.2
-                            }}
-                          />
-                        );
-                      })}
-                    </div>
-
-                    <div style={{ color: 'var(--text-dim)', fontSize: '13.5px', fontWeight: '600' }}>
-                      {watchCountdown > 0 ? 'Video Ad playing...' : 'Ad complete! You can claim your reward.'}
-                    </div>
+                    {currentWatchingAd.url ? (
+                      (currentWatchingAd.url.includes('youtube.com') || currentWatchingAd.url.includes('youtu.be')) ? (
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          src={`https://www.youtube.com/embed/${
+                            currentWatchingAd.url.includes('v=') 
+                              ? currentWatchingAd.url.split('v=')[1]?.split('&')[0] 
+                              : currentWatchingAd.url.split('youtu.be/')[1]?.split('?')[0]
+                          }?autoplay=1&mute=1&controls=0&modestbranding=1`}
+                          title="YouTube video player"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}
+                        ></iframe>
+                      ) : (
+                        <video 
+                          src={currentWatchingAd.url} 
+                          autoPlay 
+                          muted 
+                          playsInline 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0, zIndex: 1 }}
+                        />
+                      )
+                    ) : (
+                      <>
+                        {/* Simulated Loading/Wave Animation Fallback */}
+                        <div style={{ display: 'flex', gap: '5px', alignItems: 'center', justifyContent: 'center', height: '40px', marginBottom: '14px', zIndex: 1 }}>
+                          {[1, 2, 3, 4, 5].map((bar) => {
+                            const heights = [20, 35, 15, 30, 25];
+                            return (
+                              <div
+                                key={bar}
+                                style={{
+                                  width: '4px',
+                                  background: 'var(--gold)',
+                                  borderRadius: '2px',
+                                  height: `${heights[bar - 1]}px`,
+                                  animation: watchCountdown > 0 ? `bounce 1s ease-in-out infinite alternate ${bar * 0.1}s` : 'none',
+                                  opacity: watchCountdown > 0 ? 0.8 : 0.2
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+                        <div style={{ color: 'var(--text-dim)', fontSize: '13.5px', fontWeight: '600', zIndex: 1 }}>
+                          {watchCountdown > 0 ? 'Video Ad playing...' : 'Ad complete! You can claim your reward.'}
+                        </div>
+                      </>
+                    )}
 
                     {/* Progress Bar inside Player */}
                     <div style={{
@@ -2060,7 +2088,8 @@ export default function Page() {
                       height: '4px',
                       background: 'var(--gold)',
                       width: `${((15 - watchCountdown) / 15) * 100}%`,
-                      transition: 'width 1s linear'
+                      transition: 'width 1s linear',
+                      zIndex: 10
                     }} />
                   </div>
 
