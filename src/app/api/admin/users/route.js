@@ -27,22 +27,23 @@ export async function GET(request) {
       };
     }
 
-    // Get users with pagination
-    const users = await User.find(searchQuery)
-      .select('-password -investmentPlans.screenshotData')
+    // Get users with pagination using raw collection query (bypasses slow Mongoose overhead)
+    const users = await User.collection.find(searchQuery)
+      .project({ password: 0, 'investmentPlans.screenshotData': 0 })
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .toArray();
 
     // Get total count for pagination
-    const totalUsers = await User.countDocuments(searchQuery);
+    const totalUsers = await User.collection.countDocuments(searchQuery);
 
     // Get statistics (heavy aggregations removed to prevent timeouts)
     const totalDepositsVal = 0;
     const totalWithdrawalsVal = 0;
 
-    const blockedUsers = await User.countDocuments({ isBlocked: true });
-    const activeUsers = await User.countDocuments({ isBlocked: false });
+    const blockedUsers = await User.collection.countDocuments({ isBlocked: true });
+    const activeUsers = await User.collection.countDocuments({ isBlocked: false });
 
     return NextResponse.json({
       users,
