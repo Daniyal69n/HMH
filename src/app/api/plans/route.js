@@ -68,7 +68,7 @@ export async function GET(request) {
       console.log('Default investment plans created automatically');
     }
     
-    const plans = await InvestmentPlan.find(query).sort({ order: 1, name: 1 });
+    const plans = await InvestmentPlan.find(query).sort({ order: 1, name: 1 }).lean();
     
     return Response.json(plans, {
       headers: {

@@ -13,7 +13,7 @@ export async function GET(request) {
     // Find users who have investmentPlans with the given status
     const users = await User.find({
       'investmentPlans.status': status
-    }).select('-password -profilePicture');
+    }).select('-password -profilePicture').lean();
 
     // Flatten to a list of plan requests with user info
     const planRequests = [];

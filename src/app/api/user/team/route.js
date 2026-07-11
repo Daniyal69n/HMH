@@ -14,24 +14,24 @@ export async function GET(request) {
     }
     
     // Find the user (excluding base64 profilePicture for speed)
-    const user = await User.findOne({ phone: userId }).select('-profilePicture');
+    const user = await User.findOne({ phone: userId }).select('-profilePicture -investmentPlans.screenshotData').lean();
     if (!user) {
       return Response.json({ message: 'User not found' }, { status: 404 });
     }
     
     // Get Level A members (direct referrals)
-    const levelAMembers = await User.find({ referredBy: user.phone }).select('-profilePicture');
+    const levelAMembers = await User.find({ referredBy: user.phone }).select('-profilePicture -investmentPlans.screenshotData').lean();
     const levelAPhones = levelAMembers.map(m => m.phone);
  
     // Get Level B members (indirect referrals)
     const levelBMembers = levelAPhones.length > 0 
-      ? await User.find({ referredBy: { $in: levelAPhones } }).select('-profilePicture')
+      ? await User.find({ referredBy: { $in: levelAPhones } }).select('-profilePicture -investmentPlans.screenshotData').lean()
       : [];
     const levelBPhones = levelBMembers.map(m => m.phone);
  
     // Get Level C members (downline referrals)
     const levelCMembers = levelBPhones.length > 0
-      ? await User.find({ referredBy: { $in: levelBPhones } }).select('-profilePicture')
+      ? await User.find({ referredBy: { $in: levelBPhones } }).select('-profilePicture -investmentPlans.screenshotData').lean()
       : [];
 
     // Calculate actual earnings per level from Transaction history
@@ -40,7 +40,7 @@ export async function GET(request) {
       userId: user.phone,
       type: 'referral_income',
       status: 'approved'
-    });
+    }).lean();
 
     let earningsLevelA = 0;
     let earningsLevelB = 0;

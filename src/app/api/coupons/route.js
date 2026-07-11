@@ -14,7 +14,7 @@ export async function GET(request) {
       query.isActive = true;
     }
     
-    const coupons = await Coupon.find(query).sort({ createdAt: -1 });
+    const coupons = await Coupon.find(query).sort({ createdAt: -1 }).lean();
     
     return Response.json(coupons, {
       headers: {

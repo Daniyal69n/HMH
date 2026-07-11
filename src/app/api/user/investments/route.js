@@ -23,7 +23,8 @@ export async function GET(request) {
     
     const investments = await UserInvestment.find(query)
       .populate('planId', 'name image color')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     
     return Response.json(investments, {
       headers: {

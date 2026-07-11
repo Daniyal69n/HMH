@@ -10,7 +10,7 @@ export async function GET(request) {
     
     if (key) {
       // Get specific setting
-      const setting = await SystemSettings.findOne({ key });
+      const setting = await SystemSettings.findOne({ key }).lean();
       return Response.json(setting, {
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -20,7 +20,7 @@ export async function GET(request) {
       });
     } else {
       // Get all settings
-      const settings = await SystemSettings.find({});
+      const settings = await SystemSettings.find({}).lean();
       return Response.json(settings, {
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',

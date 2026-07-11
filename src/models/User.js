@@ -192,6 +192,12 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Performance Indexes
+userSchema.index({ isAdmin: 1, isBlocked: 1 });
+userSchema.index({ referredBy: 1 });
+userSchema.index({ earnBalance: -1 });
+userSchema.index({ totalCommissionEarned: -1 });
+
 // Hash password before saving
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();

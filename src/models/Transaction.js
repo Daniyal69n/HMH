@@ -87,6 +87,10 @@ const transactionSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Performance Indexes
+transactionSchema.index({ userId: 1 });
+transactionSchema.index({ status: 1 });
+
 // Generate transaction ID
 transactionSchema.pre('save', function(next) {
   if (!this.transactionId) {

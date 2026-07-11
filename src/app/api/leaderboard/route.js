@@ -13,7 +13,7 @@ export async function GET(request) {
     const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
     
     // Check if we have a cached leaderboard
-    let cachedLeaderboard = await SystemSettings.findOne({ key: 'leaderboard_v4' });
+    let cachedLeaderboard = await SystemSettings.findOne({ key: 'leaderboard_v4' }).lean();
     let data = null;
     let shouldRecalculate = force || !cachedLeaderboard || !cachedLeaderboard.value;
 
@@ -31,7 +31,9 @@ export async function GET(request) {
     if (shouldRecalculate) {
       // Recalculate leaderboard
       // Query active, non-admin, non-blocked users
-      const users = await User.find({ isAdmin: { $ne: true }, isBlocked: { $ne: true } });
+      const users = await User.find({ isAdmin: { $ne: true }, isBlocked: { $ne: true } })
+        .select('-investmentPlans.screenshotData')
+        .lean();
       
       // Calculate earnings and level for each user
       const realLeaders = users.map(user => {
