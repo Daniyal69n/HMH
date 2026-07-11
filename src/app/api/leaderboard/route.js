@@ -13,7 +13,7 @@ export async function GET(request) {
     const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
     
     // Check if we have a cached leaderboard
-    let cachedLeaderboard = await SystemSettings.findOne({ key: 'leaderboard' });
+    let cachedLeaderboard = await SystemSettings.findOne({ key: 'leaderboard_v3' });
     let data = null;
     let shouldRecalculate = force || !cachedLeaderboard || !cachedLeaderboard.value;
 
@@ -71,7 +71,7 @@ export async function GET(request) {
 
       // Update cache in SystemSettings
       await SystemSettings.findOneAndUpdate(
-        { key: 'leaderboard' },
+        { key: 'leaderboard_v3' },
         {
           value: {
             lastUpdated: new Date(),
