@@ -29,7 +29,7 @@ export async function GET(request) {
 
     // Get users with pagination
     const users = await User.find(searchQuery)
-      .select('-password')
+      .select('-password -investmentPlans.screenshotData')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -37,20 +37,9 @@ export async function GET(request) {
     // Get total count for pagination
     const totalUsers = await User.countDocuments(searchQuery);
 
-    // Get statistics
-    const totalDeposits = await User.aggregate([
-      { $match: { rechargeHistory: { $type: 'array' } } },
-      { $unwind: '$rechargeHistory' },
-      { $match: { 'rechargeHistory.status': 'approved' } },
-      { $group: { _id: null, total: { $sum: '$rechargeHistory.amount' } } }
-    ]);
-
-    const totalWithdrawals = await User.aggregate([
-      { $match: { withdrawHistory: { $type: 'array' } } },
-      { $unwind: '$withdrawHistory' },
-      { $match: { 'withdrawHistory.status': 'approved' } },
-      { $group: { _id: null, total: { $sum: '$withdrawHistory.amount' } } }
-    ]);
+    // Get statistics (heavy aggregations removed to prevent timeouts)
+    const totalDepositsVal = 0;
+    const totalWithdrawalsVal = 0;
 
     const blockedUsers = await User.countDocuments({ isBlocked: true });
     const activeUsers = await User.countDocuments({ isBlocked: false });
@@ -65,8 +54,8 @@ export async function GET(request) {
         hasPrevPage: page > 1
       },
       statistics: {
-        totalDeposits: totalDeposits[0]?.total || 0,
-        totalWithdrawals: totalWithdrawals[0]?.total || 0,
+        totalDeposits: totalDepositsVal,
+        totalWithdrawals: totalWithdrawalsVal,
         blockedUsers,
         activeUsers
       }
