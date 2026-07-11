@@ -1409,9 +1409,10 @@ export default function Page() {
     }).join('       •       ')
   }, [currency])
 
+  if (isAppLoading) return <Loader />;
+
   return (
     <div className="meridian">
-      {isAppLoading && <Loader />}
       <div className="app">
         <div className={`overlay ${sidebarOpen ? 'show' : ''}`} onClick={() => setSidebarOpen(false)} />
 

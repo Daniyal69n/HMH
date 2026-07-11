@@ -2101,6 +2101,8 @@ export default function AdminDashboard() {
     return null
   }
 
+  if (isAppLoading) return <Loader />;
+
   return (
     <AdminShell
       activeTab={activeTab}
@@ -4071,7 +4073,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-      {isAppLoading && <Loader />}
     </AdminShell>
   )
 } 

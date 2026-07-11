@@ -14,7 +14,14 @@ export async function GET(request) {
       return Response.json({ message: 'Phone number is required' }, { status: 400 });
     }
     
-    const user = await User.findOne({ phone }).select('-profilePicture');
+    // Run all database queries concurrently
+    const [user, activeInvestment, adSetting, earningsSetting] = await Promise.all([
+      User.findOne({ phone }).select('-profilePicture').lean(),
+      UserInvestment.findOne({ userId: phone, isActive: true }).lean(),
+      SystemSettings.findOne({ key: 'admin_ads' }).lean(),
+      SystemSettings.findOne({ key: 'earnings_plans' }).lean()
+    ]);
+    
     if (!user) {
       return Response.json({ message: 'User not found' }, { status: 404 });
     }
@@ -30,14 +37,7 @@ export async function GET(request) {
       watchedToday = 0;
     }
     
-    // Get active investment plan
-    const activeInvestment = await UserInvestment.findOne({
-      userId: phone,
-      isActive: true
-    });
-    
     // Fetch ads from system settings
-    const adSetting = await SystemSettings.findOne({ key: 'admin_ads' });
     const allAds = adSetting && adSetting.value && adSetting.value.length > 0 ? adSetting.value : [
       { id: 'ad_1', title: 'Bsnns', url: 'https://youtube.com/watch?v=demo1', active: true },
       { id: 'ad_2', title: 'Hmh', url: 'https://youtube.com/watch?v=demo2', active: true }
@@ -47,7 +47,6 @@ export async function GET(request) {
     const activeAds = allAds.filter(ad => ad.active !== false);
 
     // Fetch earnings plans config
-    const earningsSetting = await SystemSettings.findOne({ key: 'earnings_plans' });
     const earningsPlans = earningsSetting && earningsSetting.value ? earningsSetting.value : [
       { id: 'free',     name: 'Free Plan',     perAd: 0.02, refA: 0,  refB: 0, refC: 0 },
       { id: 'basic',    name: 'Basic Plan',    perAd: 0.20, refA: 20, refB: 5, refC: 5 },
