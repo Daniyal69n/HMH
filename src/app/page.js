@@ -170,21 +170,18 @@ export default function Page() {
     []
   )
 
-  const leaders = useMemo(
-    () => [
-      { name: 'Jordan K.', level: 12, amt: 482.5 },
-      { name: 'Sam T.', level: 9, amt: 361.2 },
-      { name: 'Riley M.', level: 8, amt: 298.75 },
-      { name: 'Casey P.', level: 6, amt: 210.0 },
-      { name: 'Morgan L.', level: 5, amt: 175.4 },
-      { name: 'Drew H.', level: 4, amt: 140.0 },
-      { name: 'Taylor B.', level: 3, amt: 98.6 },
-      { name: 'Jamie F.', level: 2, amt: 64.1 },
-      { name: 'Avery S.', level: 1, amt: 32.0 },
-      { name: 'Quinn R.', level: 1, amt: 18.5 }
-    ],
-    []
-  )
+  const [leaders, setLeaders] = useState([
+    { name: 'Jordan K.', level: 12, amt: 482.5 },
+    { name: 'Sam T.', level: 9, amt: 361.2 },
+    { name: 'Riley M.', level: 8, amt: 298.75 },
+    { name: 'Casey P.', level: 6, amt: 210.0 },
+    { name: 'Morgan L.', level: 5, amt: 175.4 },
+    { name: 'Drew H.', level: 4, amt: 140.0 },
+    { name: 'Taylor B.', level: 3, amt: 98.6 },
+    { name: 'Jamie F.', level: 2, amt: 64.1 },
+    { name: 'Avery S.', level: 1, amt: 32.0 },
+    { name: 'Quinn R.', level: 1, amt: 18.5 }
+  ])
 
   const plans = useMemo(
     () => [
@@ -308,6 +305,15 @@ export default function Page() {
         console.error(err)
         setProductsLoading(false)
       })
+
+    fetch(`/api/leaderboard?_t=${ts}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setLeaders(data)
+        }
+      })
+      .catch(console.error)
 
     if (profile?.phone) {
       fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone)}&_t=${ts}`)
