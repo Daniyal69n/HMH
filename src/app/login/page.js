@@ -1,11 +1,17 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, Suspense, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Loader from '@/components/Loader'
 
 function LoginContent() {
   const router = useRouter()
+  const [isAppLoading, setIsAppLoading] = useState(true)
+  useEffect(() => {
+    const timer = setTimeout(() => setIsAppLoading(false), 800)
+    return () => clearTimeout(timer)
+  }, [])
   const searchParams = useSearchParams()
   const registered = searchParams.get('registered')
   const [email, setEmail] = useState('')
@@ -108,6 +114,7 @@ function LoginContent() {
           </div>
         </div>
       </div>
+      {(loading || isAppLoading) && <Loader />}
     </div>
   )
 }

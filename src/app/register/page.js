@@ -3,9 +3,15 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Loader from '@/components/Loader'
 
 export default function RegisterPage() {
   const router = useRouter()
+  const [isAppLoading, setIsAppLoading] = useState(true)
+  useEffect(() => {
+    const timer = setTimeout(() => setIsAppLoading(false), 800)
+    return () => clearTimeout(timer)
+  }, [])
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -174,6 +180,7 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+      {(loading || isAppLoading) && <Loader />}
     </div>
   )
 }

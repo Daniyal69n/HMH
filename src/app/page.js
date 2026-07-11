@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Loader from '@/components/Loader'
 
 const EMPTY_PROFILE = {
   name: '',
@@ -47,6 +48,11 @@ function loadStoredProfile() {
 
 export default function Page() {
   const router = useRouter()
+  const [isAppLoading, setIsAppLoading] = useState(true)
+  useEffect(() => {
+    const timer = setTimeout(() => setIsAppLoading(false), 800)
+    return () => clearTimeout(timer)
+  }, [])
   const [page, setPage] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [bellOpen, setBellOpen] = useState(false)
@@ -1405,6 +1411,7 @@ export default function Page() {
 
   return (
     <div className="meridian">
+      {isAppLoading && <Loader />}
       <div className="app">
         <div className={`overlay ${sidebarOpen ? 'show' : ''}`} onClick={() => setSidebarOpen(false)} />
 

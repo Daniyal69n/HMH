@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Loader from '@/components/Loader'
 import { useNotification } from '../../context/NotificationContext'
 import AdminShell from '@/components/admin/AdminShell'
 import { clearAdminSession } from '@/lib/adminAuth'
@@ -9,6 +10,11 @@ import styles from '@/components/admin/admin.module.css'
 
 export default function AdminDashboard() {
   const router = useRouter()
+  const [isAppLoading, setIsAppLoading] = useState(true)
+  useEffect(() => {
+    const timer = setTimeout(() => setIsAppLoading(false), 800)
+    return () => clearTimeout(timer)
+  }, [])
   const { showSuccess, showError, showWarning, showInfo } = useNotification()
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -4065,6 +4071,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+      {isAppLoading && <Loader />}
     </AdminShell>
   )
 } 
