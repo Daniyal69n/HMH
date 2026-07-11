@@ -1553,6 +1553,11 @@ export default function Page() {
                             <span>🕐 {new Date(h.createdAt || h.date).toLocaleDateString()}</span>
                           )}
                         </div>
+                        {h.description && (
+                          <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-dim)' }}>
+                            📝 {h.description}
+                          </div>
+                        )}
                         {h.withdrawalFee > 0 && (
                           <div style={{ marginTop: 6, fontSize: 11.5, color: 'var(--text-faint)' }}>
                             Fee: {formatVal(h.withdrawalFee)} &nbsp;·&nbsp; Net payout: {formatVal(h.amountAfterFee)}

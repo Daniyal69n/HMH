@@ -61,9 +61,20 @@ export async function PUT(request) {
         }
 
         user.balance -= order.amount;
+        
+        // Add to user's withdrawHistory in User model
+        if (!user.withdrawHistory) {
+          user.withdrawHistory = [];
+        }
+        user.withdrawHistory.push({
+          amount: order.amount,
+          status: 'approved',
+          date: new Date()
+        });
+
         await user.save();
 
-        // Create a transaction log
+        // Create a transaction log of type 'withdraw'
         const txnId = `TXN-ORDER-${Date.now()}`;
         await Transaction.create({
           transactionId: txnId,
@@ -71,7 +82,7 @@ export async function PUT(request) {
           userName: user.name,
           userPhone: user.phone,
           amount: order.amount,
-          type: 'ecommerce_purchase',
+          type: 'withdraw',
           status: 'approved',
           description: `Purchased: ${order.productName}`,
           createdAt: new Date()
