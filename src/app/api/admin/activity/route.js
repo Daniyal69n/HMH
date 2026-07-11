@@ -13,11 +13,25 @@ export async function GET(request) {
     
     const activities = [];
     
-    // Get recent user registrations
-    const recentUsers = await User.find({})
-      .select('name phone createdAt')
-      .sort({ createdAt: -1 })
-      .limit(limit);
+    // Fetch all activities in parallel using raw collections (bypasses slow Mongoose document wrappers)
+    const [recentUsers, recentInvestments, recentTransactions] = await Promise.all([
+      User.collection.find({})
+        .project({ name: 1, phone: 1, createdAt: 1 })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .toArray(),
+      UserInvestment.collection.find({})
+        .project({ planName: 1, createdAt: 1, investAmount: 1 })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .toArray(),
+      Transaction.collection.find({
+        type: { $in: ['recharge', 'withdraw', 'coupon_redeem', 'daily_income', 'referral_income'] }
+      })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .toArray()
+    ]);
     
     recentUsers.forEach(user => {
       activities.push({
@@ -29,13 +43,7 @@ export async function GET(request) {
         icon: '👤'
       });
     });
-    
-    // Get recent investments
-    const recentInvestments = await UserInvestment.find({})
-      .populate('planId', 'name')
-      .sort({ createdAt: -1 })
-      .limit(limit);
-    
+
     recentInvestments.forEach(investment => {
       activities.push({
         type: 'investment',
@@ -47,14 +55,7 @@ export async function GET(request) {
         amount: investment.investAmount
       });
     });
-    
-    // Get recent transactions (recharge, withdraw, coupon_redeem, daily_income, referral_income)
-    const recentTransactions = await Transaction.find({
-      type: { $in: ['recharge', 'withdraw', 'coupon_redeem', 'daily_income', 'referral_income'] }
-    })
-      .sort({ createdAt: -1 })
-      .limit(limit);
-    
+
     recentTransactions.forEach(transaction => {
       let message = '';
       let icon = '';
