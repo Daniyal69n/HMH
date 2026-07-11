@@ -75,6 +75,7 @@ export async function GET(request) {
           return {
             name: member.name,
             phone: member.phone,
+            email: member.email,
             balance: member.balance,
             earnBalance: member.earnBalance,
             joinDate: member.createdAt,
@@ -89,6 +90,7 @@ export async function GET(request) {
           return {
             name: member.name,
             phone: member.phone,
+            email: member.email,
             balance: member.balance,
             earnBalance: member.earnBalance,
             joinDate: member.createdAt,
@@ -103,6 +105,7 @@ export async function GET(request) {
           return {
             name: member.name,
             phone: member.phone,
+            email: member.email,
             balance: member.balance,
             earnBalance: member.earnBalance,
             joinDate: member.createdAt,
