@@ -1034,11 +1034,9 @@ export default function AdminDashboard() {
             console.log('Loaded users:', data.users?.length || 0)
           } else {
             console.warn('Failed to load users from API')
-            setUsers([])
           }
         } catch (error) {
           console.warn('Error loading users:', error)
-          setUsers([])
         }
       }
       
