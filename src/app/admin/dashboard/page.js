@@ -28,7 +28,29 @@ export default function AdminDashboard() {
   const [planRequests, setPlanRequests] = useState([])
   const [planRequestsLoading, setPlanRequestsLoading] = useState(false)
   const [previewReceiptUrl, setPreviewReceiptUrl] = useState(null)
-  const [users, setUsers] = useState([])
+  const [users, setUsers] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = sessionStorage.getItem('admin_cached_users')
+        if (cached) return JSON.parse(cached)
+      } catch (e) {
+        console.warn('Error reading cached users:', e)
+      }
+    }
+    return []
+  })
+  const [isUsersLoading, setIsUsersLoading] = useState(false)
+
+  const updateUsersWithCache = (newUsers) => {
+    setUsers(newUsers)
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('admin_cached_users', JSON.stringify(newUsers))
+      } catch (e) {
+        console.warn('Error setting cached users:', e)
+      }
+    }
+  }
   const [dashboardStats, setDashboardStats] = useState({
     totalUsers: 0,
     pendingWithdrawals: 0,
@@ -1026,17 +1048,20 @@ export default function AdminDashboard() {
       // Load users from MongoDB API
       const loadUsers = async () => {
         try {
+          setIsUsersLoading(true)
           // Get all users by setting a high limit
           const response = await fetch('/api/admin/users?limit=1000')
           if (response.ok) {
             const data = await response.json()
-            setUsers(data.users || [])
+            updateUsersWithCache(data.users || [])
             console.log('Loaded users:', data.users?.length || 0)
           } else {
             console.warn('Failed to load users from API')
           }
         } catch (error) {
           console.warn('Error loading users:', error)
+        } finally {
+          setIsUsersLoading(false)
         }
       }
       
@@ -1799,11 +1824,13 @@ export default function AdminDashboard() {
   }
 
   const refreshUsers = async () => {
+    if (isUsersLoading) return
     try {
+      setIsUsersLoading(true)
       const response = await fetch('/api/admin/users?limit=1000')
       if (response.ok) {
         const data = await response.json()
-        setUsers(data.users || [])
+        updateUsersWithCache(data.users || [])
         showSuccess(`Users list refreshed successfully! Found ${data.users?.length || 0} users.`)
       } else {
         showError('Failed to refresh users list')
@@ -1811,6 +1838,8 @@ export default function AdminDashboard() {
     } catch (error) {
       console.warn('Error refreshing users:', error)
       showError('Failed to refresh users list')
+    } finally {
+      setIsUsersLoading(false)
     }
   }
 
@@ -2068,6 +2097,11 @@ export default function AdminDashboard() {
       setActiveTab={setActiveTab}
       onLogout={handleLogout}
     >
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
         {activeTab === 'users' && (
           <div className={styles.usersPage}>
             <div className={styles.pageHeadRow}>
@@ -2081,11 +2115,18 @@ export default function AdminDashboard() {
                 type="button"
                 onClick={refreshUsers}
                 className={`${styles.btn} ${styles.btnOutline}`}
+                disabled={isUsersLoading}
               >
-                <svg className={styles.btnIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg 
+                  className={styles.btnIcon} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                  style={{ animation: isUsersLoading ? 'spin 1s linear infinite' : 'none' }}
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span>Refresh</span>
+                <span>{isUsersLoading ? 'Refreshing...' : 'Refresh'}</span>
               </button>
             </div>
 
@@ -2102,7 +2143,20 @@ export default function AdminDashboard() {
               />
             </div>
             
-            {filteredUsers.length === 0 ? (
+            {isUsersLoading && users.length === 0 ? (
+              <div className={styles.empty}>
+                <svg 
+                  className={styles.btnIcon} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                  style={{ animation: 'spin 1.5s linear infinite', width: '36px', height: '36px', margin: '0 auto 12px auto' }}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <p>Loading users...</p>
+              </div>
+            ) : filteredUsers.length === 0 ? (
               <div className={styles.empty}>
                 <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
