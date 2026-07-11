@@ -623,3 +623,32 @@
   from { transform: scale(0.9); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+.meridian .ticker-card {
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(201, 160, 74, 0.04);
+  border: 1px solid rgba(201, 160, 74, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 20px;
+}
+.meridian .ticker-wrap {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+  position: relative;
+}
+.meridian .ticker-content {
+  display: inline-block;
+  animation: marquee 30s linear infinite;
+  color: var(--text-dim);
+  font-size: 14.5px;
+  font-weight: 500;
+}
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}

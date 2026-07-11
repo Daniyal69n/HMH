@@ -1216,6 +1216,22 @@ export default function Page() {
     return Math.min(10, streak)
   }, [profile, teamData.levelA?.members])
 
+  const tickerText = useMemo(() => {
+    const rawAmounts = [15, 30, 45, 10, 55, 20, 5, 25, 80, 60, 35, 15, 75, 50, 90, 40]
+    const phones = [
+      '0321****384', '0300****129', '0345****811', '0312****556',
+      '0333****944', '0302****677', '0315****230', '0344****489',
+      '0322****812', '0301****391', '0324****721', '0307****538',
+      '0343****992', '0318****647', '0334****104', '0306****483'
+    ]
+    
+    return phones.map((phone, i) => {
+      const amtUSD = rawAmounts[i]
+      const amtText = currency === 'USD' ? `$${amtUSD.toFixed(2)}` : `Rs ${(amtUSD * 300).toLocaleString()}`
+      return `User ${phone} Withdraw ${amtText} successfully`
+    }).join('       •       ')
+  }, [currency])
+
   return (
     <div className="meridian">
       <div className="app">
@@ -1376,6 +1392,16 @@ export default function Page() {
                     {activePlanName === 'Free' ? '🆓 Free' : `⭐ ${activePlanName} Plan`}
                   </span>
                   <span className="badge gold">Level {currentLevel}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Withdrawal Ticker */}
+            <div className="card ticker-card">
+              <span style={{ fontSize: '18px', flexShrink: 0 }}>📢</span>
+              <div className="ticker-wrap">
+                <div className="ticker-content">
+                  {tickerText}
                 </div>
               </div>
             </div>
