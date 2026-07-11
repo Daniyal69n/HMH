@@ -71,9 +71,11 @@ export async function GET(request) {
     });
 
   } catch (error) {
-    console.warn('Get users connection failed (offline mode):', error.message);
+    console.error('Get users connection error:', error);
     return NextResponse.json({
       users: [],
+      error: error.message,
+      stack: error.stack,
       pagination: {
         currentPage: 1,
         totalPages: 0,
