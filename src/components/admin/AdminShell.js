@@ -130,9 +130,23 @@ export default function AdminShell({
             ☰
           </button>
           <h1 className={styles.topbarTitle}>{pageTitle}</h1>
-          <button type="button" className={styles.logoutBtn} onClick={onLogout}>
-            Logout
-          </button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button 
+              type="button" 
+              className={styles.logoutBtn}
+              style={{ backgroundColor: '#4a5568', borderColor: '#4a5568', marginRight: '4px' }}
+              onClick={() => {
+                sessionStorage.clear()
+                localStorage.clear()
+                window.location.reload()
+              }}
+            >
+              Clear Cache
+            </button>
+            <button type="button" className={styles.logoutBtn} onClick={onLogout}>
+              Logout
+            </button>
+          </div>
         </header>
 
         <div className={styles.content}>{children}</div>

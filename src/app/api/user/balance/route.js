@@ -19,7 +19,7 @@ export async function PUT(request) {
     let user = null;
     try {
       await connectDB();
-      user = await User.findOne({ phone: userId });
+      user = await User.findOne({ phone: userId }).select('-profilePicture');
     } catch (dbError) {
       console.error('MongoDB connection failed:', dbError);
       return NextResponse.json(
@@ -257,7 +257,7 @@ export async function PUT(request) {
         let levelCIncome = 0;
         
         // Level A members (direct referrals)
-        const levelAMembers = await User.find({ referredBy: user.phone });
+        const levelAMembers = await User.find({ referredBy: user.phone }).select('-profilePicture');
         const levelAPhones = levelAMembers.map(m => m.phone);
         
         // Level A: Direct referrals (20% commission, if user has any active plan)
@@ -282,7 +282,7 @@ export async function PUT(request) {
         
         // Level B: Indirect referrals (5% commission, if user has any active plan)
         const levelBMembers = levelAPhones.length > 0 
-          ? await User.find({ referredBy: { $in: levelAPhones } })
+          ? await User.find({ referredBy: { $in: levelAPhones } }).select('-profilePicture')
           : [];
         const levelBPhones = levelBMembers.map(m => m.phone);
         
@@ -307,7 +307,7 @@ export async function PUT(request) {
         
         // Level C: Downline referrals (5% commission, if user has active plan >= $40)
         const levelCMembers = levelBPhones.length > 0
-          ? await User.find({ referredBy: { $in: levelBPhones } })
+          ? await User.find({ referredBy: { $in: levelBPhones } }).select('-profilePicture')
           : [];
           
         if (userPlanPrice >= 40) {

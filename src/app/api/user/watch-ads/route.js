@@ -14,7 +14,7 @@ export async function GET(request) {
       return Response.json({ message: 'Phone number is required' }, { status: 400 });
     }
     
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ phone }).select('-profilePicture');
     if (!user) {
       return Response.json({ message: 'User not found' }, { status: 404 });
     }
@@ -96,7 +96,7 @@ export async function POST(request) {
       return Response.json({ message: 'Phone number and Ad ID are required' }, { status: 400 });
     }
     
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ phone }).select('-profilePicture');
     if (!user) {
       return Response.json({ message: 'User not found' }, { status: 404 });
     }
