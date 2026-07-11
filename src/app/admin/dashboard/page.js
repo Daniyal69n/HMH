@@ -37,6 +37,25 @@ export default function AdminDashboard() {
     totalWithdrawalsPaid: 0
   })
   const [userSearchQuery, setUserSearchQuery] = useState('')
+  const [editingUserData, setEditingUserData] = useState(null)
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    balance: 0,
+    earnBalance: 0,
+    totalCommissionEarned: 0,
+    totalRecharge: 0,
+    status: 'approved',
+    isBlocked: false,
+    isAdmin: false,
+    investmentPlans: [],
+    withdrawHistory: [],
+    rechargeHistory: []
+  })
+  const [newPlanToAdd, setNewPlanToAdd] = useState({ planName: '', amount: 0, status: 'active', startDate: '' })
+  const [newWdToAdd, setNewWdToAdd] = useState({ amount: 0, status: 'approved', date: '' })
   const [ads, setAds] = useState([])
   const [newAd, setNewAd] = useState({ title: '', url: '' })
   
@@ -1800,6 +1819,77 @@ export default function AdminDashboard() {
     return initials || 'U'
   }
 
+  const handleStartEditUser = (user) => {
+    setEditingUserData(user)
+    setEditForm({
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      password: '',
+      balance: user.balance || 0,
+      earnBalance: user.earnBalance || 0,
+      totalCommissionEarned: user.totalCommissionEarned || 0,
+      totalRecharge: user.totalRecharge || 0,
+      status: user.status || 'approved',
+      isBlocked: !!user.isBlocked,
+      isAdmin: !!user.isAdmin,
+      investmentPlans: user.investmentPlans ? JSON.parse(JSON.stringify(user.investmentPlans)) : [],
+      withdrawHistory: user.withdrawHistory ? JSON.parse(JSON.stringify(user.withdrawHistory)) : [],
+      rechargeHistory: user.rechargeHistory ? JSON.parse(JSON.stringify(user.rechargeHistory)) : []
+    })
+  }
+
+  const handleSaveEditUser = async () => {
+    if (!editForm.name.trim() || !editForm.phone.trim()) {
+      showError('Name and phone are required')
+      return
+    }
+    
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: editingUserData._id || editingUserData.phone,
+          action: 'edit_user',
+          data: editForm
+        }),
+      })
+
+      if (response.ok) {
+        showSuccess('User updated successfully!')
+        setEditingUserData(null)
+        await refreshUsers()
+      } else {
+        const errorData = await response.json()
+        showError(errorData.error || 'Failed to update user')
+      }
+    } catch (error) {
+      console.warn('Error updating user:', error)
+      showError('Error updating user')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleImpersonateUser = (user) => {
+    if (confirm(`Are you sure you want to log in as and access the dashboard of ${user.name || user.phone}?`)) {
+      const userData = {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        isAdmin: !!user.isAdmin
+      }
+      localStorage.setItem('user', JSON.stringify(userData))
+      window.open('/', '_blank')
+      showSuccess(`Impersonation session started for ${user.name}`)
+    }
+  }
+
   const filteredUsers = users.filter((user) => {
     const q = userSearchQuery.trim().toLowerCase()
     if (!q) return true
@@ -2068,6 +2158,22 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div className={styles.cardActions}>
+                    <button
+                      type="button"
+                      className={`${styles.btn}`}
+                      style={{ backgroundColor: 'var(--gold)', color: '#fff', borderColor: 'var(--gold)' }}
+                      onClick={() => handleStartEditUser(user)}
+                    >
+                      Edit User
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.btn}`}
+                      style={{ backgroundColor: '#3490dc', color: '#fff', borderColor: '#3490dc' }}
+                      onClick={() => handleImpersonateUser(user)}
+                    >
+                      Access Dashboard
+                    </button>
                     {user.status !== 'approved' && (
                       <button
                         type="button"
@@ -2105,6 +2211,381 @@ export default function AdminDashboard() {
                 </div>
               ))
             )}
+          </div>
+        )}
+
+        {editingUserData && (
+          <div className={styles.editModal}>
+            <div className={styles.editModalBox} style={{ maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div className={styles.editModalTitle}>Edit User Profile: {editingUserData.name || editingUserData.phone}</div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                {/* Basic Fields */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Full Name</label>
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Phone (User ID)</label>
+                  <input
+                    type="text"
+                    value={editForm.phone}
+                    onChange={e => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Email Address</label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={e => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>New Password (leave empty to keep current)</label>
+                  <input
+                    type="password"
+                    placeholder="Set new password..."
+                    value={editForm.password}
+                    onChange={e => setEditForm(prev => ({ ...prev, password: e.target.value }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  />
+                </div>
+              </div>
+
+              {/* Financial Fields */}
+              <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Financial Balances</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Deposit Balance (Rs)</label>
+                  <input
+                    type="number"
+                    value={editForm.balance}
+                    onChange={e => setEditForm(prev => ({ ...prev, balance: parseFloat(e.target.value) || 0 }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Earning Balance (Rs)</label>
+                  <input
+                    type="number"
+                    value={editForm.earnBalance}
+                    onChange={e => setEditForm(prev => ({ ...prev, earnBalance: parseFloat(e.target.value) || 0 }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Recharge (Rs)</label>
+                  <input
+                    type="number"
+                    value={editForm.totalRecharge}
+                    onChange={e => setEditForm(prev => ({ ...prev, totalRecharge: parseFloat(e.target.value) || 0 }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Commission Earned (Rs)</label>
+                  <input
+                    type="number"
+                    value={editForm.totalCommissionEarned}
+                    onChange={e => setEditForm(prev => ({ ...prev, totalCommissionEarned: parseFloat(e.target.value) || 0 }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  />
+                </div>
+              </div>
+
+              {/* Status and Access Toggles */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px', background: 'var(--surface-2)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Status</label>
+                  <select
+                    value={editForm.status}
+                    onChange={e => setEditForm(prev => ({ ...prev, status: e.target.value }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '6px', color: '#fff' }}
+                  >
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '100%', paddingTop: '16px' }}>
+                  <input
+                    type="checkbox"
+                    id="edit_isBlocked"
+                    checked={editForm.isBlocked}
+                    onChange={e => setEditForm(prev => ({ ...prev, isBlocked: e.target.checked }))}
+                    style={{ width: '16px', height: '16px' }}
+                  />
+                  <label htmlFor="edit_isBlocked" style={{ fontSize: '13px', color: '#fff', cursor: 'pointer' }}>Suspended</label>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '100%', paddingTop: '16px' }}>
+                  <input
+                    type="checkbox"
+                    id="edit_isAdmin"
+                    checked={editForm.isAdmin}
+                    onChange={e => setEditForm(prev => ({ ...prev, isAdmin: e.target.checked }))}
+                    style={{ width: '16px', height: '16px' }}
+                  />
+                  <label htmlFor="edit_isAdmin" style={{ fontSize: '13px', color: '#fff', cursor: 'pointer' }}>Is Admin</label>
+                </div>
+              </div>
+
+              {/* User Investment Plans Section */}
+              <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Investment Plans ({editForm.investmentPlans.length})</div>
+              
+              <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: 'var(--gold-bright)' }}>Add Custom Investment Plan</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr auto', gap: '8px', alignItems: 'end' }}>
+                  <div>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Select Plan</label>
+                    <select
+                      value={newPlanToAdd.planName}
+                      onChange={e => {
+                        const planName = e.target.value
+                        const matchedPlan = samplePlans.find(p => p.name === planName)
+                        setNewPlanToAdd(prev => ({
+                          ...prev,
+                          planName,
+                          amount: matchedPlan ? parseFloat(matchedPlan.investAmount.replace(/[^0-9.]/g, '')) || 0 : 0
+                        }))
+                      }}
+                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
+                    >
+                      <option value="">-- Choose Plan --</option>
+                      {samplePlans.map(p => (
+                        <option key={p._id} value={p.name}>{p.name} ({p.investAmount})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Amount (Rs)</label>
+                    <input
+                      type="number"
+                      value={newPlanToAdd.amount}
+                      onChange={e => setNewPlanToAdd(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Status</label>
+                    <select
+                      value={newPlanToAdd.status}
+                      onChange={e => setNewPlanToAdd(prev => ({ ...prev, status: e.target.value }))}
+                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
+                    >
+                      <option value="active">Active</option>
+                      <option value="pending">Pending</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Start Date</label>
+                    <input
+                      type="date"
+                      value={newPlanToAdd.startDate}
+                      onChange={e => setNewPlanToAdd(prev => ({ ...prev, startDate: e.target.value }))}
+                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '5px', borderRadius: '4px', color: '#fff' }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.btn}
+                    onClick={() => {
+                      if (!newPlanToAdd.planName) {
+                        showError('Please select a plan')
+                        return
+                      }
+                      const dateObj = newPlanToAdd.startDate ? new Date(newPlanToAdd.startDate) : new Date()
+                      const updatedPlans = [...editForm.investmentPlans, {
+                        _id: 'new_' + Date.now(),
+                        planName: newPlanToAdd.planName,
+                        amount: newPlanToAdd.amount,
+                        status: newPlanToAdd.status,
+                        startDate: dateObj,
+                        paymentMethod: 'admin_manual',
+                        createdAt: new Date()
+                      }]
+                      setEditForm(prev => ({ ...prev, investmentPlans: updatedPlans }))
+                      setNewPlanToAdd({ planName: '', amount: 0, status: 'active', startDate: '' })
+                      showSuccess('Plan added to list')
+                    }}
+                    style={{ height: '34px', padding: '0 12px' }}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {editForm.investmentPlans.length === 0 ? (
+                <p style={{ fontSize: '13px', color: 'var(--text-dim)', fontStyle: 'italic', marginBottom: '24px' }}>No investment plans found for this user.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', maxHeight: '180px', overflowY: 'auto' }}>
+                  {editForm.investmentPlans.map((plan, index) => (
+                    <div key={plan._id || index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-2)', padding: '8px 12px', borderRadius: '6px', gap: '12px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{plan.planName}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
+                          Rs{plan.amount} · Start: {plan.startDate ? formatPakistanDate(plan.startDate) : 'N/A'}
+                        </div>
+                      </div>
+                      <select
+                        value={plan.status}
+                        onChange={e => {
+                          const updated = [...editForm.investmentPlans]
+                          updated[index].status = e.target.value
+                          setEditForm(prev => ({ ...prev, investmentPlans: updated }))
+                        }}
+                        style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = editForm.investmentPlans.filter((_, idx) => idx !== index)
+                          setEditForm(prev => ({ ...prev, investmentPlans: updated }))
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer', fontSize: '16px' }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* User Withdrawal History Section */}
+              <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Withdrawals ({editForm.withdrawHistory.length})</div>
+              
+              <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: 'var(--gold-bright)' }}>Add Manual Withdrawal Record</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '8px', alignItems: 'end' }}>
+                  <div>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Amount (Rs)</label>
+                    <input
+                      type="number"
+                      value={newWdToAdd.amount}
+                      onChange={e => setNewWdToAdd(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Status</label>
+                    <select
+                      value={newWdToAdd.status}
+                      onChange={e => setNewWdToAdd(prev => ({ ...prev, status: e.target.value }))}
+                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
+                    >
+                      <option value="approved">Approved</option>
+                      <option value="pending">Pending</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Date</label>
+                    <input
+                      type="date"
+                      value={newWdToAdd.date}
+                      onChange={e => setNewWdToAdd(prev => ({ ...prev, date: e.target.value }))}
+                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '5px', borderRadius: '4px', color: '#fff' }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.btn}
+                    onClick={() => {
+                      if (newWdToAdd.amount <= 0) {
+                        showError('Please enter a valid amount')
+                        return
+                      }
+                      const dateObj = newWdToAdd.date ? new Date(newWdToAdd.date) : new Date()
+                      const updatedWd = [...editForm.withdrawHistory, {
+                        _id: 'new_wd_' + Date.now(),
+                        amount: newWdToAdd.amount,
+                        status: newWdToAdd.status,
+                        date: dateObj
+                      }]
+                      setEditForm(prev => ({ ...prev, withdrawHistory: updatedWd }))
+                      setNewWdToAdd({ amount: 0, status: 'approved', date: '' })
+                      showSuccess('Withdrawal added to list')
+                    }}
+                    style={{ height: '34px', padding: '0 12px' }}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {editForm.withdrawHistory.length === 0 ? (
+                <p style={{ fontSize: '13px', color: 'var(--text-dim)', fontStyle: 'italic', marginBottom: '24px' }}>No withdrawals found for this user.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', maxHeight: '180px', overflowY: 'auto' }}>
+                  {editForm.withdrawHistory.map((wd, index) => (
+                    <div key={wd._id || index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-2)', padding: '8px 12px', borderRadius: '6px', gap: '12px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '13px', fontWeight: 'bold' }}>Rs{wd.amount}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
+                          Date: {wd.date ? formatPakistanDate(wd.date) : 'N/A'}
+                        </div>
+                      </div>
+                      <select
+                        value={wd.status}
+                        onChange={e => {
+                          const updated = [...editForm.withdrawHistory]
+                          updated[index].status = e.target.value
+                          setEditForm(prev => ({ ...prev, withdrawHistory: updated }))
+                        }}
+                        style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = editForm.withdrawHistory.filter((_, idx) => idx !== index)
+                          setEditForm(prev => ({ ...prev, withdrawHistory: updated }))
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer', fontSize: '16px' }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className={styles.editModalActions}>
+                <button
+                  type="button"
+                  className={styles.btn}
+                  style={{ backgroundColor: 'var(--green)', color: '#fff', borderColor: 'var(--green)' }}
+                  onClick={handleSaveEditUser}
+                >
+                  Save Changes
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnOutline}`}
+                  onClick={() => setEditingUserData(null)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

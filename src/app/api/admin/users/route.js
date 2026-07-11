@@ -39,12 +39,14 @@ export async function GET(request) {
 
     // Get statistics
     const totalDeposits = await User.aggregate([
+      { $match: { rechargeHistory: { $type: 'array' } } },
       { $unwind: '$rechargeHistory' },
       { $match: { 'rechargeHistory.status': 'approved' } },
       { $group: { _id: null, total: { $sum: '$rechargeHistory.amount' } } }
     ]);
 
     const totalWithdrawals = await User.aggregate([
+      { $match: { withdrawHistory: { $type: 'array' } } },
       { $unwind: '$withdrawHistory' },
       { $match: { 'withdrawHistory.status': 'approved' } },
       { $group: { _id: null, total: { $sum: '$withdrawHistory.amount' } } }
@@ -148,6 +150,72 @@ export async function PUT(request) {
       case 'update_balance':
         updateData = { balance: data.balance };
         break;
+      case 'edit_user':
+        let editUser;
+        if (userId.match(/^[0-9a-fA-F]{24}$/)) {
+          editUser = await User.findById(userId);
+        } else {
+          editUser = await User.findOne({ phone: userId });
+        }
+        
+        if (!editUser) {
+          return NextResponse.json(
+            { error: 'User not found' },
+            { status: 404 }
+          );
+        }
+        
+        editUser.name = data.name;
+        editUser.email = data.email;
+        editUser.phone = data.phone;
+        editUser.balance = parseFloat(data.balance) || 0;
+        editUser.earnBalance = parseFloat(data.earnBalance) || 0;
+        editUser.totalCommissionEarned = parseFloat(data.totalCommissionEarned) || 0;
+        editUser.totalRecharge = parseFloat(data.totalRecharge) || 0;
+        editUser.status = data.status;
+        editUser.isBlocked = data.isBlocked;
+        editUser.isAdmin = data.isAdmin;
+
+        // Handle plans
+        const oldPlans = editUser.investmentPlans || [];
+        const newPlans = data.investmentPlans || [];
+        
+        // Find if any plan status was changed to 'active'
+        let planToActivate = null;
+        for (const newPlan of newPlans) {
+          if (newPlan.status === 'active') {
+            const oldPlan = oldPlans.find(p => p._id && p._id.toString() === newPlan._id?.toString());
+            if (!oldPlan || oldPlan.status !== 'active') {
+              planToActivate = newPlan;
+            }
+          }
+        }
+        
+        // Set new plans
+        editUser.investmentPlans = newPlans;
+        
+        // If there's a plan to activate, run the commission activation
+        if (planToActivate) {
+          const actualPlanToActivate = editUser.investmentPlans.find(p => p.planName === planToActivate.planName && p.status === 'active');
+          if (actualPlanToActivate) {
+            const { activateUserPlan } = await import('@/lib/commission');
+            await activateUserPlan(editUser, actualPlanToActivate);
+          }
+        }
+        
+        editUser.withdrawHistory = data.withdrawHistory || [];
+        editUser.rechargeHistory = data.rechargeHistory || [];
+        
+        if (data.password) {
+          editUser.password = data.password;
+        }
+        
+        await editUser.save();
+        
+        return NextResponse.json({
+          message: 'User updated successfully',
+          user: editUser.toPublicJSON()
+        });
       case 'delete':
         // Delete the user and related data
         let deletedUser;
