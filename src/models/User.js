@@ -95,6 +95,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  claimedStreakReward: {
+    type: Boolean,
+    default: false
+  },
   claimedLevels: {
     type: [Number],
     default: []

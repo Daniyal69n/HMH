@@ -1173,7 +1173,41 @@ export default function Page() {
     } catch (err) {
       showToast('Network error')
     }
-    setWatchSubmitting(false)
+  }
+
+  const [streakClaiming, setStreakClaiming] = useState(false)
+
+  const claimStreakReward = async () => {
+    if (streakClaiming || !profile || !profile.phone || streakDays < 10) return
+    setStreakClaiming(true)
+    try {
+      const res = await fetch('/api/user/claim-streak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: profile.phone })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        showToast(data.message)
+        
+        // Update local profile state
+        setProfile(prev => {
+          const next = {
+            ...prev,
+            claimedStreakReward: true,
+            totalCommissionEarned: data.totalCommissionEarned,
+            earnBalance: data.earnBalance
+          }
+          localStorage.setItem('hmh-profile', JSON.stringify(next))
+          return next
+        })
+      } else {
+        showToast(data.message || 'Error claiming streak reward')
+      }
+    } catch (err) {
+      showToast('Network error')
+    }
+    setStreakClaiming(false)
   }
 
   const claimLevelReward = async (level) => {
@@ -1554,6 +1588,30 @@ export default function Page() {
                 }
               </div>
               <div className="streak-note">Complete a 10-day streak to earn a $10 bonus reward.</div>
+
+              <div style={{ marginTop: '16px' }}>
+                <button
+                  className={`btn ${streakDays === 10 && !profile.claimedStreakReward ? 'btn-gold' : 'btn-outline'}`}
+                  disabled={streakDays < 10 || profile.claimedStreakReward || streakClaiming}
+                  onClick={claimStreakReward}
+                  style={{
+                    width: '100%',
+                    padding: '10px 16px',
+                    fontSize: '13.5px',
+                    fontWeight: '700',
+                    borderRadius: '8px',
+                    cursor: (streakDays < 10 || profile.claimedStreakReward || streakClaiming) ? 'not-allowed' : 'pointer',
+                    opacity: (streakDays < 10 || profile.claimedStreakReward) ? 0.5 : 1
+                  }}
+                >
+                  {profile.claimedStreakReward
+                    ? '✅ Reward Claimed ($10)'
+                    : streakDays === 10
+                      ? '🎁 Claim $10 Reward'
+                      : '🔒 Claim $10 Reward (Reach Day 10)'
+                  }
+                </button>
+              </div>
             </div>
 
             {mysteryBoxesEnabled && mysteryBoxes.length > 0 && (

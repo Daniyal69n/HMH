@@ -33,6 +33,34 @@ export async function GET(request) {
       await user.save();
     }
 
+    // Auto-reset claimedStreakReward if current streak is broken
+    if (user.claimedStreakReward) {
+      const levelAMembers = await User.find({ referredBy: user.phone });
+      const getLocalDayIndex = (dateVal) => {
+        const d = new Date(dateVal);
+        const localTime = d.getTime() + 5 * 60 * 60 * 1000; // PKT
+        return Math.floor(localTime / (24 * 60 * 60 * 1000));
+      }
+      const activeDays = new Set();
+      for (const m of levelAMembers) {
+        activeDays.add(getLocalDayIndex(m.createdAt));
+      }
+      const todayDay = getLocalDayIndex(Date.now());
+      let checkDay = todayDay;
+      if (!activeDays.has(todayDay)) {
+        checkDay = todayDay - 1;
+      }
+      let streak = 0;
+      while (activeDays.has(checkDay)) {
+        streak++;
+        checkDay--;
+      }
+      if (streak < 10) {
+        user.claimedStreakReward = false;
+        await user.save();
+      }
+    }
+
     // Auto-populate shortId for existing users that don't have it yet
     if (!user.shortId) {
       user.shortId = user._id.toString().slice(-8);
