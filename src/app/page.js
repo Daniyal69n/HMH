@@ -2769,7 +2769,7 @@ export default function Page() {
           {/* COURSES */}
           <section className={`page ${page === 'courses' ? 'active' : ''}`}>
             <div className="page-head" style={{ marginBottom: '24px' }}>
-              <h1>🎓 SkillSider Digital University</h1>
+              <h1>🎓 HMHPro Academy</h1>
               <p>Upgrade your skills with our professional course library.</p>
             </div>
 

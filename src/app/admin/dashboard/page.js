@@ -684,7 +684,7 @@ export default function AdminDashboard() {
         body: JSON.stringify({
           key: 'admin_courses',
           value: nextCourses,
-          description: 'SkillSider Digital University Courses list'
+          description: 'HMHPro Academy Courses list'
         })
       })
     } catch (err) {
