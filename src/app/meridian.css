@@ -204,7 +204,7 @@
 .meridian .leader-row.rank2{ background:rgba(150,160,180,.08); }
 .meridian .leader-row.rank3{ background:rgba(196,120,74,.08); }
 .meridian .leader-rank{ width:26px; text-align:center; font-size:13px; color:var(--text-faint); font-weight:700; }
-.meridian .leader-avatar{ width:34px; height:34px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--text-dim); flex:none; }
+.meridian .leader-avatar{ width:34px; height:34px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--text-dim); flex:none; overflow:hidden; }
 .meridian .leader-name{ font-weight:600; font-size:14px; }
 .meridian .leader-level{ color:var(--text-faint); font-size:12px; }
 .meridian .leader-amt{ margin-left:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-weight:600; }

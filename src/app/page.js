@@ -1520,19 +1520,19 @@ export default function Page() {
                 </div>
               </div>
               <div className="card stat-card">
-                <div className="stat-icon" style={{ background: 'rgba(201,160,74,.12)' }}>📈</div>
-                <div>
-                  <div className="stat-label">My salary</div>
-                  <div className="stat-value">{currency === 'USD' ? `$${mySalaryUSD.toFixed(2)}` : `Rs ${(mySalaryUSD * PKR_RATE).toLocaleString()}`}</div>
-                </div>
-              </div>
-              <div className="card stat-card">
                 <div className="stat-icon" style={{ background: 'rgba(196,87,74,.12)' }}>📤</div>
                 <div>
                   <div className="stat-label">Total withdrawals</div>
                   <div className="stat-value">{formatVal((withdrawHistory || [])
                     .filter(w => w.status !== 'rejected' && w.status !== 'cancelled')
                     .reduce((sum, w) => sum + w.amount, 0))}</div>
+                </div>
+              </div>
+              <div className="card stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(201,160,74,.12)' }}>📈</div>
+                <div>
+                  <div className="stat-label">My salary</div>
+                  <div className="stat-value">{currency === 'USD' ? `$${mySalaryUSD.toFixed(2)}` : `Rs ${(mySalaryUSD * PKR_RATE).toLocaleString()}`}</div>
                 </div>
               </div>
             </div>
@@ -1589,7 +1589,13 @@ export default function Page() {
                   leaders.map((u, i) => (
                     <div key={u.name} className={`leader-row ${i < 3 ? `rank${i + 1}` : ''}`}>
                       <div className="leader-rank">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</div>
-                      <div className="leader-avatar">{u.name[0]}</div>
+                      <div className="leader-avatar">
+                        {u.profilePicture ? (
+                          <img src={u.profilePicture} alt={u.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          u.name[0]
+                        )}
+                      </div>
                       <div>
                         <div className="leader-name">{u.name}</div>
                         <div className="leader-level">Level {u.level}</div>
