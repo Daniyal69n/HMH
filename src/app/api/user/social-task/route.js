@@ -17,9 +17,22 @@ export async function POST(request) {
       return Response.json({ message: 'User not found' }, { status: 404 });
     }
     
-    // Check if the user has already completed a task today?
-    // The user didn't specify a daily limit, but usually there's a limit.
-    // I will just process it as requested: "do nothing just when user click on submit after filling all fields he will be awarded"
+    // Calculate today at 12:00 AM PKT (UTC+5)
+    const now = new Date();
+    const pktTime = new Date(now.getTime() + 5 * 60 * 60 * 1000);
+    pktTime.setUTCHours(0, 0, 0, 0);
+    const startOfToday = new Date(pktTime.getTime() - 5 * 60 * 60 * 1000);
+
+    // Check if the user has already completed a task today
+    const existingTxn = await Transaction.findOne({
+      userId: user.phone,
+      type: 'social_task_reward',
+      createdAt: { $gte: startOfToday }
+    });
+    
+    if (existingTxn) {
+      return Response.json({ message: 'You have already completed the social task for today. Please try again after 12:00 AM.' }, { status: 400 });
+    }
     
     // Find active plan
     const activePlan = (user.investmentPlans || []).reverse().find(p => p.status === 'active');

@@ -578,16 +578,21 @@ export default function Page() {
   }, [profile.phone])
 
   useEffect(() => {
-    if (!profile || !profile.createdAt) return
+    if (!profile) return
     const updateCountdown = () => {
-      const joinTime = new Date(profile.createdAt).getTime()
-      const now = Date.now()
-      const cycleMs = 24 * 60 * 60 * 1000 // 24 hours
-      const msSinceJoined = now - joinTime
-      const currentCycleIndex = Math.max(0, Math.floor(msSinceJoined / cycleMs))
-      const currentCycleStart = joinTime + (currentCycleIndex * cycleMs)
-      const currentCycleEnd = currentCycleStart + cycleMs
-      const msRemaining = Math.max(0, currentCycleEnd - now)
+      const now = new Date()
+      
+      // Calculate today at 12:00 AM (midnight)
+      const todayStart = new Date(now)
+      todayStart.setHours(0, 0, 0, 0)
+      const currentCycleStart = todayStart.getTime()
+      
+      // Calculate tomorrow at 12:00 AM (midnight)
+      const tomorrowStart = new Date(todayStart)
+      tomorrowStart.setDate(todayStart.getDate() + 1)
+      const currentCycleEnd = tomorrowStart.getTime()
+      
+      const msRemaining = Math.max(0, currentCycleEnd - now.getTime())
 
       // Format remaining time as hh:mm:ss
       const hours = Math.floor(msRemaining / (3600 * 1000))
@@ -597,14 +602,18 @@ export default function Page() {
       const formatNum = (num) => String(num).padStart(2, '0')
       setSpinCountdown(`${formatNum(hours)}h ${formatNum(minutes)}m ${formatNum(seconds)}s`)
 
-      // Check how many referrals joined in this cycle
+      // Check how many referrals joined in this calendar day (12am to 12am)
       const cycleInvites = (teamData.levelA?.members || []).filter(member => {
         const joinDate = new Date(member.joinDate).getTime()
         return joinDate >= currentCycleStart && joinDate < currentCycleEnd
       }).length
       setCurrentCycleInvites(cycleInvites)
 
-      // Check if user has already spun in this cycle
+      // Cycle index is represented as local day index since epoch
+      const localTime = todayStart.getTime() - todayStart.getTimezoneOffset() * 60000
+      const currentCycleIndex = Math.floor(localTime / (24 * 60 * 60 * 1000))
+
+      // Check if user has already spun in this calendar day
       const lastSpunCycle = localStorage.getItem(`hmh-last-spin-cycle-${profile.phone}`)
       setHasSpunThisCycle(lastSpunCycle === String(currentCycleIndex))
     }
@@ -1021,10 +1030,11 @@ export default function Page() {
     showToast(`🎉 You won ${prize.label}!`)
 
     // Save last spun cycle to localStorage to lock it until reset
-    if (profile && profile.createdAt) {
-      const joinTime = new Date(profile.createdAt).getTime()
-      const cycleMs = 24 * 60 * 60 * 1000
-      const currentCycleIndex = Math.max(0, Math.floor((Date.now() - joinTime) / cycleMs))
+    if (profile) {
+      const todayStart = new Date()
+      todayStart.setHours(0, 0, 0, 0)
+      const localTime = todayStart.getTime() - todayStart.getTimezoneOffset() * 60000
+      const currentCycleIndex = Math.floor(localTime / (24 * 60 * 60 * 1000))
       localStorage.setItem(`hmh-last-spin-cycle-${profile.phone}`, String(currentCycleIndex))
       setHasSpunThisCycle(true)
     }
@@ -1145,35 +1155,35 @@ export default function Page() {
   }, [profile.claimedLevels])
 
   const streakDays = useMemo(() => {
-    if (!profile || !profile.createdAt || !teamData.levelA?.members || teamData.levelA.members.length === 0) {
+    if (!profile || !teamData.levelA?.members || teamData.levelA.members.length === 0) {
       return 0
     }
 
-    const joinTime = new Date(profile.createdAt).getTime()
-    const cycleMs = 24 * 60 * 60 * 1000
-
-    // Group referrals by their cycle index
-    const activeCycles = new Set()
-    for (const m of teamData.levelA.members) {
-      const mTime = new Date(m.joinDate).getTime()
-      const cycleIdx = Math.floor((mTime - joinTime) / cycleMs)
-      if (cycleIdx >= 0) {
-        activeCycles.add(cycleIdx)
-      }
+    const getLocalDayIndex = (dateVal) => {
+      const d = new Date(dateVal);
+      const localTime = d.getTime() - d.getTimezoneOffset() * 60000;
+      return Math.floor(localTime / (24 * 60 * 60 * 1000));
     }
 
-    const currentCycle = Math.floor((Date.now() - joinTime) / cycleMs)
+    // Group referrals by their local calendar day index
+    const activeDays = new Set()
+    for (const m of teamData.levelA.members) {
+      const mDay = getLocalDayIndex(m.joinDate)
+      activeDays.add(mDay)
+    }
+
+    const todayDay = getLocalDayIndex(Date.now())
 
     // Determine start of consecutive check
-    let checkCycle = currentCycle
-    if (!activeCycles.has(checkCycle)) {
-      checkCycle = currentCycle - 1
+    let checkDay = todayDay
+    if (!activeDays.has(todayDay)) {
+      checkDay = todayDay - 1
     }
 
     let streak = 0
-    while (checkCycle >= 0 && activeCycles.has(checkCycle)) {
+    while (activeDays.has(checkDay)) {
       streak++
-      checkCycle--
+      checkDay--
     }
 
     return Math.min(10, streak)
