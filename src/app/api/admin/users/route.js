@@ -29,7 +29,7 @@ export async function GET(request) {
 
     // Get users with pagination using raw collection query (bypasses slow Mongoose overhead)
     const users = await User.collection.find(searchQuery)
-      .project({ password: 0, 'investmentPlans.screenshotData': 0 })
+      .project({ password: 0, 'investmentPlans.screenshotData': 0, profilePicture: 0 })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
