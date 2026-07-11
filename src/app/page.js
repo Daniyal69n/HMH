@@ -108,6 +108,10 @@ export default function Page() {
     dailyIncome: '$0.00'
   })
   const [watchAdModalOpen, setWatchAdModalOpen] = useState(false)
+
+  // Course states
+  const [userCourses, setUserCourses] = useState([])
+  const [activeVideoUrl, setActiveVideoUrl] = useState(null)
   const [currentWatchingAd, setCurrentWatchingAd] = useState(null)
   const [watchCountdown, setWatchCountdown] = useState(15)
   const [watchSubmitting, setWatchSubmitting] = useState(false)
@@ -179,6 +183,7 @@ export default function Page() {
       { id: 'social-task', label: 'Social Task', icon: 'M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z' },
       { id: 'spin', label: 'Lucky spin', icon: 'M12 2v20M2 12h20' },
       { id: 'store', label: 'E-commerce', icon: 'M4 8h16l-1.5 11h-13zM8 8V6a4 4 0 0 1 8 0v2' },
+      { id: 'courses', label: 'Courses', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
       { id: 'membership', label: 'Membership card', icon: 'M3 6h18v12H3zM3 10h18' },
       { id: 'profile', label: 'Profile settings', icon: 'M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5' },
       { id: 'admin', label: 'Admin panel', icon: 'M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z' }
@@ -583,6 +588,47 @@ export default function Page() {
       fetchAdWatchProgress()
     }
   }, [page, profile])
+
+  // Fetch courses list
+  useEffect(() => {
+    if (page === 'courses') {
+      const fetchCourses = async () => {
+        try {
+          const res = await fetch(`/api/settings?key=admin_courses&_t=${Date.now()}`)
+          if (res.ok) {
+            const data = await res.json()
+            if (data && data.value) {
+              setUserCourses(data.value.filter(c => c.active !== false))
+              return
+            }
+          }
+        } catch (err) {
+          console.error(err)
+        }
+        
+        const seededCourses = [
+          {
+            id: 'course_1',
+            title: 'CAPCUT MOBILE VIDEO EDITING',
+            videoUrl: 'https://www.youtube.com/watch?v=F28Z8Gz4fks',
+            imageUrl: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500',
+            description: 'Learn professional video editing on your phone with CapCut.',
+            active: true
+          },
+          {
+            id: 'course_2',
+            title: 'YOUTUBE COURSE (From Beginner to Pro)',
+            videoUrl: 'https://www.youtube.com/watch?v=HlyLQQG1fCc',
+            imageUrl: 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=500',
+            description: 'Learn how to start, grow and monetize your own YouTube channel.',
+            active: true
+          }
+        ]
+        setUserCourses(seededCourses)
+      }
+      fetchCourses()
+    }
+  }, [page])
 
   // Fetch user's profile and active plan from DB
   useEffect(() => {
@@ -2719,6 +2765,230 @@ export default function Page() {
               )}
             </div>
           </section>
+
+          {/* COURSES */}
+          <section className={`page ${page === 'courses' ? 'active' : ''}`}>
+            <div className="page-head" style={{ marginBottom: '24px' }}>
+              <h1>🎓 SkillSider Digital University</h1>
+              <p>Upgrade your skills with our professional course library.</p>
+            </div>
+
+            {userCourses.length === 0 ? (
+              <div className="card text-center" style={{ padding: '40px 20px' }}>
+                <div style={{ fontSize: '40px', marginBottom: '12px' }}>📚</div>
+                <h3>No courses available right now</h3>
+                <p style={{ color: 'var(--text-dim)' }}>Check back later or contact support.</p>
+              </div>
+            ) : (
+              <div className="courses-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: '20px',
+                marginBottom: '40px'
+              }}>
+                {userCourses.map((c) => {
+                  const storageKey = `course-started-${c.id}`;
+                  const isStarted = typeof window !== 'undefined' ? localStorage.getItem(storageKey) === 'true' : false;
+                  
+                  return (
+                    <div 
+                      key={c.id} 
+                      className="card course-card" 
+                      style={{ 
+                        padding: '0', 
+                        overflow: 'hidden', 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        borderRadius: '16px',
+                        background: 'linear-gradient(180deg, #12151d 0%, #0d0f15 100%)',
+                        border: '1px solid var(--border-soft)'
+                      }}
+                    >
+                      <div style={{ position: 'relative', width: '100%', height: '160px' }}>
+                        <img 
+                          src={c.imageUrl} 
+                          alt={c.title} 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        />
+                        <div style={{
+                          position: 'absolute',
+                          top: '12px',
+                          left: '12px',
+                          background: 'rgba(0,0,0,0.65)',
+                          backdropFilter: 'blur(4px)',
+                          padding: '4px 10px',
+                          borderRadius: '20px',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          color: '#4ade80',
+                          border: '1px solid rgba(74,222,128,0.2)'
+                        }}>
+                          LITE / PREMIUM
+                        </div>
+                      </div>
+                      
+                      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                        <h3 style={{ 
+                          fontSize: '15px', 
+                          fontWeight: '800', 
+                          lineHeight: '1.4', 
+                          margin: '0 0 10px', 
+                          color: '#ffffff',
+                          textTransform: 'uppercase'
+                        }}>
+                          {c.title}
+                        </h3>
+                        
+                        <p style={{ 
+                          fontSize: '12.5px', 
+                          color: 'var(--text-dim)', 
+                          margin: '0 0 16px', 
+                          lineHeight: '1.5',
+                          flex: 1
+                        }}>
+                          {c.description}
+                        </p>
+
+                        <div style={{ marginBottom: '16px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '700', marginBottom: '6px', color: 'var(--text-dim)' }}>
+                            <span>Status</span>
+                            <span>{isStarted ? '100% Completed' : '0%'}</span>
+                          </div>
+                          <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ 
+                              width: isStarted ? '100%' : '0%', 
+                              height: '100%', 
+                              background: 'linear-gradient(90deg, #d9a94e 0%, #f3d082 100%)',
+                              borderRadius: '4px',
+                              transition: 'width 0.4s ease'
+                            }} />
+                          </div>
+                        </div>
+
+                        <button
+                          className="btn btn-gold"
+                          onClick={() => {
+                            if (typeof window !== 'undefined') {
+                              localStorage.setItem(storageKey, 'true');
+                            }
+                            setActiveVideoUrl(c.videoUrl);
+                          }}
+                          style={{ 
+                            width: '100%', 
+                            padding: '10px 16px', 
+                            fontSize: '13px', 
+                            fontWeight: '700', 
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          {isStarted ? (
+                            <>
+                              Retake Course <span style={{ fontSize: '14px' }}>→</span>
+                            </>
+                          ) : (
+                            <>
+                              Start Course <span style={{ fontSize: '14px' }}>→</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* COURSE VIDEO POPUP MODAL */}
+          {activeVideoUrl && (() => {
+            let videoId = 'F28Z8Gz4fks';
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = activeVideoUrl.match(regExp);
+            if (match && match[2].length === 11) {
+              videoId = match[2];
+            }
+
+            return (
+              <div 
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'rgba(5, 7, 12, 0.85)',
+                  backdropFilter: 'blur(8px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 99999,
+                  padding: '16px'
+                }}
+                onClick={() => setActiveVideoUrl(null)}
+              >
+                <div 
+                  style={{
+                    width: 'min(100%, 800px)',
+                    background: '#0d0f15',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    boxShadow: '0 24px 60px rgba(0,0,0,0.8)'
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div style={{
+                    padding: '16px 20px',
+                    borderBottom: '1px solid rgba(255,255,255,0.06)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <span style={{ fontWeight: '800', fontSize: '15px', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🎓 Video Lesson
+                    </span>
+                    <button 
+                      onClick={() => setActiveVideoUrl(null)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--text-dim)',
+                        fontSize: '22px',
+                        cursor: 'pointer',
+                        lineHeight: '1',
+                        padding: '4px'
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+                    <iframe
+                      src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
+                      title="YouTube video player"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        border: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* MEMBERSHIP */}
           <section className={`page ${page === 'membership' ? 'active' : ''}`}>

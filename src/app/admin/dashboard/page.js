@@ -39,6 +39,10 @@ export default function AdminDashboard() {
   const [userSearchQuery, setUserSearchQuery] = useState('')
   const [ads, setAds] = useState([])
   const [newAd, setNewAd] = useState({ title: '', url: '' })
+  
+  // Courses states
+  const [courses, setCourses] = useState([])
+  const [newCourse, setNewCourse] = useState({ title: '', videoUrl: '', imageUrl: '', description: '' })
   const [paymentDetails, setPaymentDetails] = useState({
     easypaisa: { number: '', accountName: '' },
     jazzcash: { number: '', accountName: '' }
@@ -628,6 +632,99 @@ export default function AdminDashboard() {
   const handleDeleteAd = (id) => {
     saveAds(ads.filter((ad) => ad.id !== id))
     showSuccess('Ad deleted successfully')
+  }
+
+  // Courses loader, saver and event handlers
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await fetch(`/api/settings?key=admin_courses&_t=${Date.now()}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data && data.value) {
+            setCourses(data.value)
+            return
+          }
+        }
+      } catch (err) {
+        console.error(err)
+      }
+      
+      const seededCourses = [
+        {
+          id: 'course_1',
+          title: 'CAPCUT MOBILE VIDEO EDITING',
+          videoUrl: 'https://www.youtube.com/watch?v=F28Z8Gz4fks',
+          imageUrl: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500',
+          description: 'Learn professional video editing on your phone with CapCut.',
+          active: true
+        },
+        {
+          id: 'course_2',
+          title: 'YOUTUBE COURSE (From Beginner to Pro)',
+          videoUrl: 'https://www.youtube.com/watch?v=HlyLQQG1fCc',
+          imageUrl: 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=500',
+          description: 'Learn how to start, grow and monetize your own YouTube channel.',
+          active: true
+        }
+      ]
+      setCourses(seededCourses)
+    }
+    if (isAdminLoggedIn) {
+      fetchCourses()
+    }
+  }, [isAdminLoggedIn])
+
+  const saveCourses = async (nextCourses) => {
+    setCourses(nextCourses)
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'admin_courses',
+          value: nextCourses,
+          description: 'SkillSider Digital University Courses list'
+        })
+      })
+    } catch (err) {
+      console.error('Failed to save courses to DB:', err)
+    }
+  }
+
+  const handleAddCourse = () => {
+    const title = newCourse.title.trim()
+    const videoUrl = newCourse.videoUrl.trim()
+    
+    if (!title || !videoUrl) {
+      showError('Please enter both a title and a video URL.')
+      return
+    }
+
+    saveCourses([
+      ...courses,
+      {
+        id: `course_${Date.now()}`,
+        title,
+        videoUrl,
+        imageUrl: newCourse.imageUrl.trim() || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500',
+        description: newCourse.description.trim() || 'A professional digital training course.',
+        active: true
+      }
+    ])
+    setNewCourse({ title: '', videoUrl: '', imageUrl: '', description: '' })
+    showSuccess('Course added successfully')
+  }
+
+  const handleToggleCourse = (id) => {
+    saveCourses(courses.map((c) => (
+      c.id === id ? { ...c, active: !c.active } : c
+    )))
+  }
+
+  const handleDeleteCourse = (id) => {
+    saveCourses(courses.filter((c) => c.id !== id))
+    showSuccess('Course deleted successfully')
   }
 
   const handleLogout = () => {
@@ -2301,6 +2398,147 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))
+            )}
+          </div>
+        )}
+
+        {activeTab === 'manageCourses' && (
+          <div className={styles.usersPage}>
+            <h2 className={styles.pageTitle}>Manage Courses</h2>
+            <p className={styles.pageSub}>Add and manage digital learning courses for users</p>
+
+            <div className={styles.card}>
+              <div className={styles.formTitle}>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add New Course
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="courseTitle">Course Title</label>
+                <input
+                  type="text"
+                  id="courseTitle"
+                  value={newCourse.title}
+                  onChange={(event) => setNewCourse({ ...newCourse, title: event.target.value })}
+                  placeholder="e.g. CAPCUT MOBILE VIDEO EDITING"
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="courseUrl">YouTube Video URL</label>
+                <input
+                  type="url"
+                  id="courseUrl"
+                  value={newCourse.videoUrl}
+                  onChange={(event) => setNewCourse({ ...newCourse, videoUrl: event.target.value })}
+                  placeholder="e.g. https://youtube.com/watch?v=..."
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="courseImage">Image/Thumbnail URL (Optional)</label>
+                <input
+                  type="url"
+                  id="courseImage"
+                  value={newCourse.imageUrl}
+                  onChange={(event) => setNewCourse({ ...newCourse, imageUrl: event.target.value })}
+                  placeholder="Leave empty for fallback thumbnail"
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="courseDesc">Description (Optional)</label>
+                <textarea
+                  id="courseDesc"
+                  value={newCourse.description}
+                  onChange={(event) => setNewCourse({ ...newCourse, description: event.target.value })}
+                  placeholder="Brief summary of what this course covers..."
+                  style={{
+                    width: '100%',
+                    background: 'var(--panel-2, #161d2e)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '8px',
+                    padding: '10px',
+                    color: 'var(--text, #f2eee4)',
+                    fontSize: '14px',
+                    minHeight: '80px',
+                    outline: 'none',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnGold} ${styles.btnFull}`}
+                onClick={handleAddCourse}
+                style={{ marginTop: '16px' }}
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add Course
+              </button>
+            </div>
+
+            {courses.length === 0 ? (
+              <div className={styles.empty}>
+                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" stroke="currentColor">
+                  <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <p>No courses yet. Add one above.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+                {courses.map((c) => (
+                  <div className={styles.rowCard} key={c.id} style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                    <img 
+                      src={c.imageUrl} 
+                      alt={c.title} 
+                      style={{ 
+                        width: '80px', 
+                        height: '50px', 
+                        objectFit: 'cover', 
+                        borderRadius: '6px',
+                        border: '1px solid rgba(255,255,255,0.08)'
+                      }} 
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div className={styles.rowTitle} style={{ fontSize: '15px', fontWeight: '700' }}>{c.title}</div>
+                      <div className={styles.rowSub} style={{ fontSize: '12px', marginTop: '2px', color: 'var(--muted)' }}>
+                        {c.videoUrl.length > 40 ? c.videoUrl.slice(0, 40) + '...' : c.videoUrl}
+                      </div>
+                    </div>
+                    <div className={styles.rowActions} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <label className={styles.switch}>
+                        <input
+                          type="checkbox"
+                          checked={c.active}
+                          onChange={() => handleToggleCourse(c.id)}
+                        />
+                        <span className={styles.slider}></span>
+                      </label>
+                      <button
+                        type="button"
+                        className={styles.iconBtn}
+                        onClick={() => handleDeleteCourse(c.id)}
+                        aria-label="Delete course"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path d="M10 11v6M14 11v6" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}
