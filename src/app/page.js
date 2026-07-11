@@ -569,7 +569,7 @@ export default function Page() {
       }
       loadTeamData()
     }
-  }, [profile])
+  }, [profile?.phone])
 
   // Fetch ads progress
   useEffect(() => {
@@ -587,7 +587,7 @@ export default function Page() {
       }
       fetchAdWatchProgress()
     }
-  }, [page, profile])
+  }, [page, profile?.phone])
 
   // Fetch courses list
   useEffect(() => {

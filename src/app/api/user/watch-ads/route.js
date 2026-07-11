@@ -38,7 +38,7 @@ export async function GET(request) {
     
     // Fetch ads from system settings
     const adSetting = await SystemSettings.findOne({ key: 'admin_ads' });
-    const allAds = adSetting && adSetting.value ? adSetting.value : [
+    const allAds = adSetting && adSetting.value && adSetting.value.length > 0 ? adSetting.value : [
       { id: 'ad_1', title: 'Bsnns', url: 'https://youtube.com/watch?v=demo1', active: true },
       { id: 'ad_2', title: 'Hmh', url: 'https://youtube.com/watch?v=demo2', active: true }
     ];
@@ -124,7 +124,10 @@ export async function POST(request) {
     
     // Fetch ads from system settings
     const adSetting = await SystemSettings.findOne({ key: 'admin_ads' });
-    const allAds = adSetting && adSetting.value ? adSetting.value : [];
+    const allAds = adSetting && adSetting.value && adSetting.value.length > 0 ? adSetting.value : [
+      { id: 'ad_1', title: 'Bsnns', url: 'https://youtube.com/watch?v=demo1', active: true },
+      { id: 'ad_2', title: 'Hmh', url: 'https://youtube.com/watch?v=demo2', active: true }
+    ];
     const ad = allAds.find(a => a.id === adId) || { title: 'Video Ad' };
     
     // Fetch earnings plans config
