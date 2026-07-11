@@ -53,31 +53,13 @@ export async function GET(request) {
           amt
         };
       }).filter(l => l.amt > 0); // only keep users with positive earnings
-
-      // Fallback/Seed data in case there aren't enough real users with earnings
-      const SEED_LEADERS = [
-        { name: 'Jordan K.', level: 12, amt: 482.5 },
-        { name: 'Sam T.', level: 9, amt: 361.2 },
-        { name: 'Riley M.', level: 8, amt: 298.75 },
-        { name: 'Casey P.', level: 6, amt: 210.0 },
-        { name: 'Morgan L.', level: 5, amt: 175.4 },
-        { name: 'Drew H.', level: 4, amt: 140.0 },
-        { name: 'Taylor B.', level: 3, amt: 98.6 },
-        { name: 'Jamie F.', level: 2, amt: 64.1 },
-        { name: 'Avery S.', level: 1, amt: 32.0 },
-        { name: 'Quinn R.', level: 1, amt: 18.5 }
-      ];
-
-      // Combine real and seed leaders
-      const combined = [...realLeaders, ...SEED_LEADERS];
-      
-      // Sort combined by amount descending
-      combined.sort((a, b) => b.amt - a.amt);
+      // Sort real leaders by amount descending
+      realLeaders.sort((a, b) => b.amt - a.amt);
       
       // Take top 10 unique names
       const uniqueLeaders = [];
       const seenNames = new Set();
-      for (const u of combined) {
+      for (const u of realLeaders) {
         if (!seenNames.has(u.name)) {
           seenNames.add(u.name);
           uniqueLeaders.push(u);
@@ -111,19 +93,6 @@ export async function GET(request) {
 
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
-    // Fallback to seed leaders in case of DB errors or connection issues
-    const SEED_LEADERS = [
-      { name: 'Jordan K.', level: 12, amt: 482.5 },
-      { name: 'Sam T.', level: 9, amt: 361.2 },
-      { name: 'Riley M.', level: 8, amt: 298.75 },
-      { name: 'Casey P.', level: 6, amt: 210.0 },
-      { name: 'Morgan L.', level: 5, amt: 175.4 },
-      { name: 'Drew H.', level: 4, amt: 140.0 },
-      { name: 'Taylor B.', level: 3, amt: 98.6 },
-      { name: 'Jamie F.', level: 2, amt: 64.1 },
-      { name: 'Avery S.', level: 1, amt: 32.0 },
-      { name: 'Quinn R.', level: 1, amt: 18.5 }
-    ];
-    return Response.json(SEED_LEADERS);
+    return Response.json([]);
   }
 }

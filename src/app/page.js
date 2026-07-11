@@ -170,18 +170,7 @@ export default function Page() {
     []
   )
 
-  const [leaders, setLeaders] = useState([
-    { name: 'Jordan K.', level: 12, amt: 482.5 },
-    { name: 'Sam T.', level: 9, amt: 361.2 },
-    { name: 'Riley M.', level: 8, amt: 298.75 },
-    { name: 'Casey P.', level: 6, amt: 210.0 },
-    { name: 'Morgan L.', level: 5, amt: 175.4 },
-    { name: 'Drew H.', level: 4, amt: 140.0 },
-    { name: 'Taylor B.', level: 3, amt: 98.6 },
-    { name: 'Jamie F.', level: 2, amt: 64.1 },
-    { name: 'Avery S.', level: 1, amt: 32.0 },
-    { name: 'Quinn R.', level: 1, amt: 18.5 }
-  ])
+  const [leaders, setLeaders] = useState([])
 
   const plans = useMemo(
     () => [
@@ -1438,17 +1427,23 @@ export default function Page() {
                 Ranked by total earnings.
               </p>
               <div>
-                {leaders.map((u, i) => (
-                  <div key={u.name} className={`leader-row ${i < 3 ? `rank${i + 1}` : ''}`}>
-                    <div className="leader-rank">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</div>
-                    <div className="leader-avatar">{u.name[0]}</div>
-                    <div>
-                      <div className="leader-name">{u.name}</div>
-                      <div className="leader-level">Level {u.level}</div>
-                    </div>
-                    <div className="leader-amt">{currency === 'USD' ? `$${u.amt.toFixed(2)}` : `Rs ${(u.amt * PKR_RATE).toLocaleString()}`}</div>
+                {leaders.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-dim)', fontSize: 13.5 }}>
+                    No active leaders yet.
                   </div>
-                ))}
+                ) : (
+                  leaders.map((u, i) => (
+                    <div key={u.name} className={`leader-row ${i < 3 ? `rank${i + 1}` : ''}`}>
+                      <div className="leader-rank">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</div>
+                      <div className="leader-avatar">{u.name[0]}</div>
+                      <div>
+                        <div className="leader-name">{u.name}</div>
+                        <div className="leader-level">Level {u.level}</div>
+                      </div>
+                      <div className="leader-amt">{currency === 'USD' ? `$${u.amt.toFixed(2)}` : `Rs ${(u.amt * PKR_RATE).toLocaleString()}`}</div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </section>
