@@ -1206,34 +1206,46 @@ export default function AdminDashboard() {
         }
       }
       
-      // Load all data
-      loadDashboardStats()
-      loadUsers()
+      // Load only active tab data to prevent parallel query storms
+      if (activeTab === 'dashboard') {
+        loadDashboardStats()
+        loadRecentActivities()
+      } else if (activeTab === 'users') {
+        loadUsers()
+      } else if (activeTab === 'withdrawals') {
+        loadPendingRequests()
+        loadWithdrawHistory()
+      } else if (activeTab === 'planRequests') {
+        loadPendingRequests()
+        loadRechargeHistory()
+      }
+      
+      // Load settings-like data once
       loadPaymentDetails()
       loadCoupons()
       loadImages()
-      loadPendingRequests()
-      loadRechargeHistory()
-      loadWithdrawHistory()
-      loadRecentActivities()
       
-      // Set up periodic refresh every 10 seconds for real-time dashboard feel
+      // Set up periodic refresh every 15 seconds for the active tab only
       const refreshInterval = setInterval(() => {
-        loadDashboardStats()
-        loadUsers()
-        loadPaymentDetails()
-        loadCoupons()
-        loadPendingRequests()
-        loadRechargeHistory()
-        loadWithdrawHistory()
-        loadRecentActivities()
-      }, 10000)
+        if (activeTab === 'dashboard') {
+          loadDashboardStats()
+          loadRecentActivities()
+        } else if (activeTab === 'users') {
+          loadUsers()
+        } else if (activeTab === 'withdrawals') {
+          loadPendingRequests()
+          loadWithdrawHistory()
+        } else if (activeTab === 'planRequests') {
+          loadPendingRequests()
+          loadRechargeHistory()
+        }
+      }, 15000)
       
       return () => {
         clearInterval(refreshInterval)
       }
     }
-  }, [isAdminLoggedIn, isCheckingAuth])
+  }, [isAdminLoggedIn, isCheckingAuth, activeTab])
 
   // Load recharge history when tab is activated
   useEffect(() => {
