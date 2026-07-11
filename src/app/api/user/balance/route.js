@@ -123,6 +123,36 @@ export async function PUT(request) {
         });
       }
 
+      case 'spin_reward': {
+        const rewardUSD = Number(data.amount) || 0;
+        const rewardPKR = rewardUSD * 300; // $1 = Rs 300
+        
+        user.balance = (user.balance || 0) + rewardPKR;
+        user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
+        user.earnBalance = (user.earnBalance || 0) + rewardPKR;
+        
+        await user.save();
+        
+        // Create transaction log
+        await Transaction.create({
+          userId: userId,
+          userName: user.name,
+          userPhone: user.phone,
+          amount: rewardPKR,
+          type: 'level_reward',
+          status: 'completed',
+          description: `Lucky Spin Reward ($${rewardUSD})`,
+          createdAt: new Date()
+        });
+        
+        return NextResponse.json({
+          message: 'Spin reward added successfully',
+          newBalance: user.balance,
+          newEarnBalance: user.earnBalance,
+          newTotalCommissionEarned: user.totalCommissionEarned
+        });
+      }
+
       case 'cancel_plan': {
         // Cancel investment plan
         await UserInvestment.findOneAndUpdate(

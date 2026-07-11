@@ -96,6 +96,8 @@ export default function Page() {
   const [spinRunning, setSpinRunning] = useState(false)
   const [spinResult, setSpinResult] = useState('Locked')
   const spinAngleRef = useRef(0)
+  const [winModalOpen, setWinModalOpen] = useState(false)
+  const [wonAmount, setWonAmount] = useState('')
 
   const [teamData, setTeamData] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -994,55 +996,80 @@ export default function Page() {
     setCheckoutSubmitting(false)
   }
 
-  const startSpin = () => {
+  const startSpin = async () => {
     if (spinRunning) return
     setSpinRunning(true)
     setSpinResult('Spinning...')
-    if (spinTimer.current) clearInterval(spinTimer.current)
-    spinTimer.current = setInterval(() => {
-      setSpinAngle((current) => {
-        const next = (current + 18) % 360
-        spinAngleRef.current = next
-        return next
-      })
-    }, 40)
-  }
-
-  const stopSpin = () => {
-    if (!spinRunning) return
-    if (spinTimer.current) clearInterval(spinTimer.current)
-    spinTimer.current = null
-    setSpinRunning(false)
-
-    // Always land on 1$ (index 0 or 9) or 2$ (index 1 or 10)
-    const winningIndices = [0, 1, 9, 10]
-    const chosenIndex = winningIndices[Math.floor(Math.random() * winningIndices.length)]
+    
+    // Choose winning prize index: 60% chance for 1$ (index 0 or 9), 40% chance for 2$ (index 1 or 10)
+    const rand = Math.random()
+    let chosenIndex;
+    if (rand < 0.6) {
+      chosenIndex = Math.random() < 0.5 ? 0 : 9
+    } else {
+      chosenIndex = Math.random() < 0.5 ? 1 : 10
+    }
     const prize = spinPrizes[chosenIndex]
-    setSpinResult(prize.label)
-
-    // Compute final angle so pointer lands exactly on chosen sector
-    // (360 - (chosenIndex*30 + 15)) centers pointer in the middle of that sector
-    const baseRotations = Math.ceil(Math.abs(spinAngleRef.current) / 360) * 360 + 720
+    
+    // Rotate wheel at least 10 times (3600 deg) + offset to align pointer to winning sector
+    const currentAngle = spinAngleRef.current
     const targetSectorAngle = (360 - (chosenIndex * 30 + 15) + 360) % 360
-    const finalAngle = baseRotations + targetSectorAngle
+    const finalAngle = currentAngle + 3600 + targetSectorAngle
     spinAngleRef.current = finalAngle
     setSpinAngle(finalAngle)
-    showToast(`🎉 You won ${prize.label}!`)
 
-    // Save last spun cycle to localStorage to lock it until reset
-    if (profile) {
-      const todayStart = new Date()
-      todayStart.setHours(0, 0, 0, 0)
-      const localTime = todayStart.getTime() - todayStart.getTimezoneOffset() * 60000
-      const currentCycleIndex = Math.floor(localTime / (24 * 60 * 60 * 1000))
-      localStorage.setItem(`hmh-last-spin-cycle-${profile.phone}`, String(currentCycleIndex))
-      setHasSpunThisCycle(true)
-    }
+    // Stop automatically after 4 seconds (4000ms)
+    setTimeout(async () => {
+      setSpinRunning(false)
+      setSpinResult(prize.label)
+      
+      // Save last spun cycle to localStorage to lock it until reset
+      if (profile) {
+        const todayStart = new Date()
+        todayStart.setHours(0, 0, 0, 0)
+        const localTime = todayStart.getTime() - todayStart.getTimezoneOffset() * 60000
+        const currentCycleIndex = Math.floor(localTime / (24 * 60 * 60 * 1000))
+        localStorage.setItem(`hmh-last-spin-cycle-${profile.phone}`, String(currentCycleIndex))
+        setHasSpunThisCycle(true)
+        
+        // Award user balance on the database
+        try {
+          const rewardAmount = prize.label === '2$' ? 2 : 1
+          const res = await fetch('/api/user/balance', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: profile.phone,
+              operation: 'spin_reward',
+              amount: rewardAmount
+            })
+          })
+          if (res.ok) {
+            const data = await res.json()
+            // Update local profile state
+            setProfile(prev => {
+              const next = {
+                ...prev,
+                balance: data.newBalance,
+                earnBalance: data.newEarnBalance,
+                totalCommissionEarned: data.newTotalCommissionEarned
+              }
+              localStorage.setItem('hmh-profile', JSON.stringify(next))
+              return next
+            })
+          }
+        } catch (err) {
+          console.error('Failed to credit spin reward:', err)
+        }
+      }
+      
+      // Show big modal
+      setWonAmount(prize.label)
+      setWinModalOpen(true)
+    }, 4000)
   }
 
   const resetSpin = () => {
-    if (spinTimer.current) clearInterval(spinTimer.current)
-    spinTimer.current = null
     setSpinRunning(false)
     setSpinAngle(0)
     spinAngleRef.current = 0
@@ -2156,7 +2183,11 @@ export default function Page() {
 
               <div className="spin-wheel-holder">
                 <div className="spin-wheel-pointer" />
-                <div className="spin-wheel" style={{ background: spinGradient, transform: `rotate(${spinAngle}deg)` }}>
+                <div className="spin-wheel" style={{
+                  background: spinGradient,
+                  transform: `rotate(${spinAngle}deg)`,
+                  transition: spinRunning ? 'transform 4s cubic-bezier(0.15, 0.85, 0.35, 1)' : 'none'
+                }}>
                   {spinPrizes.map((prize, index) => {
                     const angle = index * 30 + 15
                     return (
@@ -2174,31 +2205,82 @@ export default function Page() {
                 <div className="spin-wheel-hub">🎰</div>
               </div>
 
-              <div className="spin-actions">
+              <div className="spin-actions" style={{ justifyContent: 'center' }}>
                 <button
                   className="btn btn-gold spin-lock-btn"
                   onClick={startSpin}
                   disabled={currentCycleInvites < 3 || hasSpunThisCycle || spinRunning}
                   style={{
                     opacity: (currentCycleInvites < 3 || hasSpunThisCycle) ? 0.65 : 1,
-                    cursor: (currentCycleInvites < 3 || hasSpunThisCycle) ? 'not-allowed' : 'pointer'
+                    cursor: (currentCycleInvites < 3 || hasSpunThisCycle) ? 'not-allowed' : 'pointer',
+                    width: '100%',
+                    maxWidth: '240px'
                   }}
                 >
                   {currentCycleInvites < 3
                     ? '🔒 Locked (Invite 3 members)'
                     : (hasSpunThisCycle ? '✅ Spun (Wait for Reset)' : (spinRunning ? 'Spinning...' : 'Start spin'))}
                 </button>
-                <button className="btn btn-outline spin-secondary-btn" onClick={stopSpin} disabled={!spinRunning}>
-                  Stop spin
-                </button>
-                <button className="btn btn-ghost spin-tertiary-btn" onClick={resetSpin}>
+                <button className="btn btn-ghost spin-tertiary-btn" onClick={resetSpin} disabled={spinRunning}>
                   Reset
                 </button>
               </div>
 
-              <div className="spin-result">Result: <b>{spinResult}</b></div>
+              <p className="spin-note">Click Start spin to spin the wheel. It will automatically stop after 4 seconds and award your prize.</p>
 
-              <p className="spin-note">The wheel now moves and stops in-app. Use Start spin, then Stop spin to land on a prize.</p>
+              {winModalOpen && (
+                <div style={{
+                  position: 'fixed',
+                  inset: 0,
+                  backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 9999,
+                  animation: 'fadeIn 0.3s ease-out'
+                }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #1b1917 0%, #0c0a09 100%)',
+                    border: '2px solid var(--gold)',
+                    borderRadius: '20px',
+                    padding: '40px 30px',
+                    textAlign: 'center',
+                    maxWidth: '360px',
+                    width: '90%',
+                    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5), 0 0 30px rgba(201,160,74,0.3)',
+                    animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                  }}>
+                    <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎉</div>
+                    <h2 style={{ color: 'var(--gold-bright)', fontSize: '24px', fontWeight: 800, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                      Congratulations!
+                    </h2>
+                    <p style={{ color: 'var(--text-dim)', fontSize: '15px', margin: '0 0 24px' }}>
+                      You have successfully spun the wheel and won:
+                    </p>
+                    <div style={{
+                      fontSize: '42px',
+                      fontWeight: 900,
+                      color: '#ffffff',
+                      background: 'rgba(201, 160, 74, 0.12)',
+                      border: '1px dashed rgba(201, 160, 74, 0.3)',
+                      padding: '12px 20px',
+                      borderRadius: '12px',
+                      margin: '0 auto 30px',
+                      width: 'fit-content',
+                      boxShadow: '0 0 15px rgba(201, 160, 74, 0.1)'
+                    }}>
+                      {wonAmount === '2$' ? 'Rs 600 ($2)' : 'Rs 300 ($1)'}
+                    </div>
+                    <button
+                      className="btn btn-gold"
+                      onClick={() => setWinModalOpen(false)}
+                      style={{ width: '100%', padding: '12px', fontWeight: 800, fontSize: '15px' }}
+                    >
+                      Awesome!
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 
