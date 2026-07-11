@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     await connectDB();
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products = await Product.collection.find().sort({ createdAt: -1 }).toArray();
     return Response.json(products);
   } catch (error) {
     return Response.json({ message: 'Error fetching products', error: error.message }, { status: 500 });

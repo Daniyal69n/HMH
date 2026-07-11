@@ -8,19 +8,12 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     await connectDB();
-    const orders = await Order.find().sort({ createdAt: -1 }).lean();
+    const orders = await Order.collection.find().sort({ createdAt: -1 }).toArray();
     
-    // Fetch users for these orders to append profilePicture
-    const userPhones = [...new Set(orders.map(o => o.userId))];
-    const users = await User.find({ phone: { $in: userPhones } }).select('phone profilePicture').lean();
-    const userPicMap = {};
-    users.forEach(u => {
-      userPicMap[u.phone] = u.profilePicture || '';
-    });
-    
+    // Enriched orders payload (avoiding slow base64 userProfilePicture queries)
     const enrichedOrders = orders.map(o => ({
       ...o,
-      userProfilePicture: userPicMap[o.userId] || ''
+      userProfilePicture: ''
     }));
 
     return Response.json(enrichedOrders);

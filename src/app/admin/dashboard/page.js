@@ -282,16 +282,20 @@ export default function AdminDashboard() {
   const fetchEcommerceData = async () => {
     try {
       const ts = Date.now()
-      const pRes = await fetch(`/api/admin/products?_t=${ts}`)
-      const pData = await pRes.json()
-      setProducts(Array.isArray(pData) ? pData : [])
+      const [pRes, oRes, bRes] = await Promise.all([
+        fetch(`/api/admin/products?_t=${ts}`),
+        fetch(`/api/admin/orders?_t=${ts}`),
+        fetch(`/api/admin/ecommerce-settings?_t=${ts}`)
+      ])
       
-      const oRes = await fetch(`/api/admin/orders?_t=${ts}`)
-      const oData = await oRes.json()
+      const [pData, oData, bData] = await Promise.all([
+        pRes.json(),
+        oRes.json(),
+        bRes.json()
+      ])
+      
+      setProducts(Array.isArray(pData) ? pData : [])
       setOrders(Array.isArray(oData) ? oData : [])
-
-      const bRes = await fetch(`/api/admin/ecommerce-settings?_t=${ts}`)
-      const bData = await bRes.json()
       if (bRes.ok && bData) setEcommerceBankSettings(bData)
     } catch (err) {
       console.error(err)
