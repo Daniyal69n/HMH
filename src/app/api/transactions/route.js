@@ -4,7 +4,9 @@ import User from '@/models/User';
 
 export async function GET(request) {
   try {
+    console.time("connectDB");
     await connectDB();
+    console.timeEnd("connectDB");
     
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -25,14 +27,19 @@ export async function GET(request) {
       query.status = status;
     }
     
+    console.time("query1");
     const transactions = await Transaction.find(query)
       .sort({ createdAt: -1 })
       .limit(100)
       .lean();
+    console.timeEnd("query1");
 
     // Enrich transactions with userProfilePicture
     const userIds = [...new Set(transactions.map(t => t.userId))];
+    console.time("query2");
     const users = await User.find({ phone: { $in: userIds } }).select('phone profilePicture').lean();
+    console.timeEnd("query2");
+    console.time("processing");
     const userPicMap = {};
     users.forEach(u => {
       userPicMap[u.phone] = u.profilePicture || '';
@@ -42,14 +49,18 @@ export async function GET(request) {
       ...t,
       userProfilePicture: userPicMap[t.userId] || ''
     }));
+    console.timeEnd("processing");
     
-    return Response.json(enrichedTransactions, {
+    console.time("response");
+    const res = Response.json(enrichedTransactions, {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0'
       }
     });
+    console.timeEnd("response");
+    return res;
     
   } catch (error) {
     console.warn('Transaction fetch connection failed (offline mode):', error.message);

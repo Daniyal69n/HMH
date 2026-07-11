@@ -18,8 +18,13 @@ export async function PUT(request) {
     // Try to connect to MongoDB
     let user = null;
     try {
+      console.time("connectDB");
       await connectDB();
+      console.timeEnd("connectDB");
+      
+      console.time("query1");
       user = await User.findOne({ phone: userId }).select('-profilePicture');
+      console.timeEnd("query1");
     } catch (dbError) {
       console.error('MongoDB connection failed:', dbError);
       return NextResponse.json(
@@ -41,6 +46,8 @@ export async function PUT(request) {
     }
 
     let updateData = {};
+    
+    console.time("processing");
 
     switch (operation) {
       case 'recharge': {
@@ -403,10 +410,14 @@ export async function PUT(request) {
       userData.totalRecharge = 0;
     }
 
-    return NextResponse.json({
+    console.timeEnd("processing");
+    console.time("response");
+    const res = NextResponse.json({
       message: 'Operation completed successfully',
       user: userData
     });
+    console.timeEnd("response");
+    return res;
 
   } catch (error) {
     console.error('User balance operation error:', error);

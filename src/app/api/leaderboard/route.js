@@ -4,7 +4,9 @@ import SystemSettings from '@/models/SystemSettings';
 
 export async function GET(request) {
   try {
+    console.time("connectDB");
     await connectDB();
+    console.timeEnd("connectDB");
     
     const { searchParams } = new URL(request.url);
     const force = searchParams.get('force') === 'true';
@@ -13,7 +15,9 @@ export async function GET(request) {
     const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
     
     // Check if we have a cached leaderboard
+    console.time("query1");
     let cachedLeaderboard = await SystemSettings.findOne({ key: 'leaderboard_v4' }).lean();
+    console.timeEnd("query1");
     let data = null;
     let shouldRecalculate = force || !cachedLeaderboard || !cachedLeaderboard.value;
 
@@ -31,10 +35,13 @@ export async function GET(request) {
     if (shouldRecalculate) {
       // Recalculate leaderboard
       // Query active, non-admin, non-blocked users
+      console.time("query2");
       const users = await User.find({ isAdmin: { $ne: true }, isBlocked: { $ne: true } })
         .select('-investmentPlans.screenshotData')
         .lean();
+      console.timeEnd("query2");
       
+      console.time("processing");
       // Calculate earnings and level for each user
       const realLeaders = users.map(user => {
         const level = (user.claimedLevels && user.claimedLevels.length > 0) ? Math.max(...user.claimedLevels) : 1;
@@ -84,15 +91,20 @@ export async function GET(request) {
         },
         { upsert: true, new: true }
       );
+      console.timeEnd("processing");
     }
 
-    return Response.json(data, {
+    console.time("response");
+
+    const res = Response.json(data, {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0'
       }
     });
+    console.timeEnd("response");
+    return res;
 
   } catch (error) {
     console.error('Error fetching leaderboard:', error);

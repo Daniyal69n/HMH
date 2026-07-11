@@ -4,7 +4,9 @@ import User from '@/models/User';
 
 export async function GET(request) {
   try {
+    console.time("connectDB");
     await connectDB();
+    console.timeEnd("connectDB");
     
     const { searchParams } = new URL(request.url);
     const phone = searchParams.get('phone');
@@ -18,7 +20,9 @@ export async function GET(request) {
       );
     }
 
+    console.time("query1");
     const user = await User.findOne({ phone });
+    console.timeEnd("query1");
 
     if (!user) {
       return NextResponse.json(
@@ -33,9 +37,12 @@ export async function GET(request) {
       await user.save();
     }
 
+    console.time("processing");
     // Auto-reset claimedStreakReward if current streak is broken
     if (user.claimedStreakReward) {
+      console.time("query2");
       const levelAMembers = await User.find({ referredBy: user.phone }).select('-profilePicture -investmentPlans.screenshotData').lean();
+      console.timeEnd("query2");
       const getLocalDayIndex = (dateVal) => {
         const d = new Date(dateVal);
         const localTime = d.getTime() + 5 * 60 * 60 * 1000; // PKT
@@ -82,13 +89,17 @@ export async function GET(request) {
       totalRecharge: userData.totalRecharge
     });
 
-    return NextResponse.json(userData, {
+    console.time("response");
+    const res = NextResponse.json(userData, {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0'
       }
     });
+    console.timeEnd("response");
+    console.timeEnd("processing");
+    return res;
 
   } catch (error) {
     console.error('Get user profile error:', error);

@@ -4,7 +4,9 @@ import UserInvestment from '@/models/UserInvestment';
 
 export async function GET(request) {
   try {
+    console.time("connectDB");
     await connectDB();
+    console.timeEnd("connectDB");
     
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -14,12 +16,15 @@ export async function GET(request) {
     }
     
     // Find the user (excluding base64 profilePicture for speed)
+    console.time("query1");
     const user = await User.findOne({ phone: userId }).select('-profilePicture -investmentPlans.screenshotData').lean();
+    console.timeEnd("query1");
     if (!user) {
       return Response.json({ message: 'User not found' }, { status: 404 });
     }
     
     // Get Level A members (direct referrals)
+    console.time("query2");
     const levelAMembers = await User.find({ referredBy: user.phone }).select('-profilePicture -investmentPlans.screenshotData').lean();
     const levelAPhones = levelAMembers.map(m => m.phone);
  
@@ -41,6 +46,8 @@ export async function GET(request) {
       type: 'referral_income',
       status: 'approved'
     }).lean();
+    console.timeEnd("query2");
+    console.time("processing");
 
     let earningsLevelA = 0;
     let earningsLevelB = 0;
@@ -59,7 +66,7 @@ export async function GET(request) {
     const totalMembers = levelAMembers.length + levelBMembers.length + levelCMembers.length;
     const totalTeamEarnings = user.referralCommission || 0;
 
-    return Response.json({
+    const responseData = {
       totalMembers,
       totalTeamEarnings,
       earnings: {
@@ -113,13 +120,19 @@ export async function GET(request) {
           };
         })
       }
-    }, {
+    };
+    
+    console.timeEnd("processing");
+    console.time("response");
+    const res = Response.json(responseData, {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0'
       }
     });
+    console.timeEnd("response");
+    return res;
     
   } catch (error) {
     console.error('Team data error:', error.message);
