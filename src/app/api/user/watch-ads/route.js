@@ -45,13 +45,39 @@ export async function GET(request) {
     
     // Filter active ads
     const activeAds = allAds.filter(ad => ad.active !== false);
+
+    // Fetch earnings plans config
+    const earningsSetting = await SystemSettings.findOne({ key: 'earnings_plans' });
+    const earningsPlans = earningsSetting && earningsSetting.value ? earningsSetting.value : [
+      { id: 'free',     name: 'Free Plan',     perAd: 0.02, refA: 0,  refB: 0, refC: 0 },
+      { id: 'basic',    name: 'Basic Plan',    perAd: 0.20, refA: 20, refB: 5, refC: 5 },
+      { id: 'standard', name: 'Standard Plan', perAd: 0.40, refA: 20, refB: 5, refC: 5 },
+      { id: 'diamond',  name: 'Diamond Plan',  perAd: 0.80, refA: 20, refB: 5, refC: 5 },
+      { id: 'pro',      name: 'Pro Plan',      perAd: 1.20, refA: 20, refB: 5, refC: 5 },
+      { id: 'premium',  name: 'Premium Plan',  perAd: 1.60, refA: 20, refB: 5, refC: 5 },
+      { id: 'legend',   name: 'Legend Plan',   perAd: 2.00, refA: 20, refB: 5, refC: 5 }
+    ];
+
+    let planId = 'free';
+    if (activeInvestment) {
+      const name = activeInvestment.planName.toLowerCase();
+      if (name.includes('basic')) planId = 'basic';
+      else if (name.includes('standard')) planId = 'standard';
+      else if (name.includes('diamond')) planId = 'diamond';
+      else if (name.includes('pro')) planId = 'pro';
+      else if (name.includes('premium')) planId = 'premium';
+      else if (name.includes('legend')) planId = 'legend';
+    }
+
+    const planConfig = earningsPlans.find(p => p.id === planId) || earningsPlans[0];
+    const fullDailyUSD = planConfig.perAd * 5;
     
     return Response.json({
       watchedToday,
       activeAds,
       hasActivePlan: !!activeInvestment,
       planName: activeInvestment ? activeInvestment.planName : 'No Plan',
-      dailyIncome: activeInvestment ? activeInvestment.dailyIncome : '$0.00'
+      dailyIncome: `$${fullDailyUSD.toFixed(2)}`
     });
     
   } catch (error) {
@@ -101,18 +127,35 @@ export async function POST(request) {
     const allAds = adSetting && adSetting.value ? adSetting.value : [];
     const ad = allAds.find(a => a.id === adId) || { title: 'Video Ad' };
     
-    let rewardUSD = 0;
-    let rewardPKR = 0;
-    
+    // Fetch earnings plans config
+    const earningsSetting = await SystemSettings.findOne({ key: 'earnings_plans' });
+    const earningsPlans = earningsSetting && earningsSetting.value ? earningsSetting.value : [
+      { id: 'free',     name: 'Free Plan',     perAd: 0.02, refA: 0,  refB: 0, refC: 0 },
+      { id: 'basic',    name: 'Basic Plan',    perAd: 0.20, refA: 20, refB: 5, refC: 5 },
+      { id: 'standard', name: 'Standard Plan', perAd: 0.40, refA: 20, refB: 5, refC: 5 },
+      { id: 'diamond',  name: 'Diamond Plan',  perAd: 0.80, refA: 20, refB: 5, refC: 5 },
+      { id: 'pro',      name: 'Pro Plan',      perAd: 1.20, refA: 20, refB: 5, refC: 5 },
+      { id: 'premium',  name: 'Premium Plan',  perAd: 1.60, refA: 20, refB: 5, refC: 5 },
+      { id: 'legend',   name: 'Legend Plan',   perAd: 2.00, refA: 20, refB: 5, refC: 5 }
+    ];
+
+    let planId = 'free';
     if (activeInvestment) {
-      const dailyIncomeAmount = parseFloat(activeInvestment.dailyIncome.replace(/[$,₹Rs]/g, '').replace(/,/g, '')) || 0;
-      
-      // Each ad earns 20% of daily income
-      rewardUSD = dailyIncomeAmount / 5;
-      
-      // Convert to PKR ($1 = Rs 300)
-      rewardPKR = rewardUSD * 300;
-      
+      const name = activeInvestment.planName.toLowerCase();
+      if (name.includes('basic')) planId = 'basic';
+      else if (name.includes('standard')) planId = 'standard';
+      else if (name.includes('diamond')) planId = 'diamond';
+      else if (name.includes('pro')) planId = 'pro';
+      else if (name.includes('premium')) planId = 'premium';
+      else if (name.includes('legend')) planId = 'legend';
+    }
+
+    const planConfig = earningsPlans.find(p => p.id === planId) || earningsPlans[0];
+    const rewardUSD = planConfig.perAd || 0;
+    const rewardPKR = rewardUSD * 300;
+    
+    // Only credit reward if they have an active plan OR they are on Free plan (which might be configured with a reward too!)
+    if (rewardPKR > 0) {
       // Credit reward to user balance
       user.balance = (user.balance || 0) + rewardPKR;
       user.earnBalance = (user.earnBalance || 0) + rewardPKR;
@@ -131,10 +174,12 @@ export async function POST(request) {
         createdAt: new Date()
       });
       
-      // Update investment record
-      activeInvestment.totalEarned = (activeInvestment.totalEarned || 0) + rewardPKR;
-      activeInvestment.lastIncomeDate = new Date();
-      await activeInvestment.save();
+      // Update investment record if there is one active
+      if (activeInvestment) {
+        activeInvestment.totalEarned = (activeInvestment.totalEarned || 0) + rewardPKR;
+        activeInvestment.lastIncomeDate = new Date();
+        await activeInvestment.save();
+      }
     }
     
     user.adsWatchedToday += 1;

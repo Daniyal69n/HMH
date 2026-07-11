@@ -79,28 +79,40 @@ export default function AdminDashboard() {
   const EARNINGS_STORAGE_KEY = 'admin_earnings_plans'
   function seedEarningsData() {
     return [
-      { id: 'free',   name: 'Free Plan',   perAd: 0.02, referral: 0.10 },
-      { id: 'bronze', name: 'Bronze Plan', perAd: 0.05, referral: 0.25 },
-      { id: 'silver', name: 'Silver Plan', perAd: 0.10, referral: 0.50 },
-      { id: 'gold',   name: 'Gold Plan',   perAd: 0.20, referral: 1.00 },
+      { id: 'free',     name: 'Free Plan',     perAd: 0.02, refA: 0,  refB: 0, refC: 0 },
+      { id: 'basic',    name: 'Basic Plan',    perAd: 0.20, refA: 20, refB: 5, refC: 5 },
+      { id: 'standard', name: 'Standard Plan', perAd: 0.40, refA: 20, refB: 5, refC: 5 },
+      { id: 'diamond',  name: 'Diamond Plan',  perAd: 0.80, refA: 20, refB: 5, refC: 5 },
+      { id: 'pro',      name: 'Pro Plan',      perAd: 1.20, refA: 20, refB: 5, refC: 5 },
+      { id: 'premium',  name: 'Premium Plan',  perAd: 1.60, refA: 20, refB: 5, refC: 5 },
+      { id: 'legend',   name: 'Legend Plan',   perAd: 2.00, refA: 20, refB: 5, refC: 5 }
     ]
   }
-  function loadEarningsPlans() {
-    if (typeof window === 'undefined') return seedEarningsData()
-    const raw = localStorage.getItem(EARNINGS_STORAGE_KEY)
-    if (raw) return JSON.parse(raw)
-    const seeded = seedEarningsData()
-    localStorage.setItem(EARNINGS_STORAGE_KEY, JSON.stringify(seeded))
-    return seeded
-  }
+
   const [earningsPlans, setEarningsPlans] = useState(seedEarningsData)
   const [earningsSavedMsg, setEarningsSavedMsg] = useState(false)
 
-  // Load earnings plans from localStorage on mount
+  const loadEarningsPlans = async () => {
+    try {
+      const res = await fetch(`/api/settings?key=earnings_plans&_t=${Date.now()}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data && data.value) {
+          setEarningsPlans(data.value)
+          return
+        }
+      }
+    } catch (err) {
+      console.error(err)
+    }
+    setEarningsPlans(seedEarningsData())
+  }
+
   useEffect(() => {
-    setEarningsPlans(loadEarningsPlans())
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (isAdminLoggedIn) {
+      loadEarningsPlans()
+    }
+  }, [isAdminLoggedIn])
 
   function handleEarningsFieldChange(id, field, value) {
     setEarningsPlans(prev =>
@@ -108,13 +120,27 @@ export default function AdminDashboard() {
     )
   }
 
-  function saveEarningsPlans() {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(EARNINGS_STORAGE_KEY, JSON.stringify(earningsPlans))
+  const saveEarningsPlans = async () => {
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'earnings_plans',
+          value: earningsPlans,
+          description: 'Earnings control reward rates and commissions'
+        })
+      })
+      if (res.ok) {
+        setEarningsSavedMsg(true)
+        setTimeout(() => setEarningsSavedMsg(false), 2000)
+        showSuccess('Earnings settings saved successfully!')
+      } else {
+        showError('Failed to save settings to DB')
+      }
+    } catch (err) {
+      showError('Network error')
     }
-    setEarningsSavedMsg(true)
-    setTimeout(() => setEarningsSavedMsg(false), 2000)
-    showSuccess('Earnings settings saved!')
   }
 
   // ─── Mystery Boxes state ───────────────────────────────────────────────
@@ -2536,18 +2562,38 @@ export default function AdminDashboard() {
                       type="number"
                       step="0.01"
                       min="0"
-                      value={p.perAd.toFixed(2)}
+                      value={(p.perAd || 0).toFixed(2)}
                       onChange={e => handleEarningsFieldChange(p.id, 'perAd', e.target.value)}
                     />
                   </div>
                   <div className={styles.field}>
-                    <label>Referral bonus ($)</label>
+                    <label>Direct Referral % (Lvl A)</label>
                     <input
                       type="number"
-                      step="0.01"
                       min="0"
-                      value={p.referral.toFixed(2)}
-                      onChange={e => handleEarningsFieldChange(p.id, 'referral', e.target.value)}
+                      max="100"
+                      value={p.refA || 0}
+                      onChange={e => handleEarningsFieldChange(p.id, 'refA', e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label>Indirect Referral % (Lvl B)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={p.refB || 0}
+                      onChange={e => handleEarningsFieldChange(p.id, 'refB', e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label>Downline Referral % (Lvl C)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={p.refC || 0}
+                      onChange={e => handleEarningsFieldChange(p.id, 'refC', e.target.value)}
                     />
                   </div>
                 </div>

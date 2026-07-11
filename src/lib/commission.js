@@ -55,6 +55,42 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
     return;
   }
 
+  // Load dynamic earnings settings from DB
+  let earningsPlans = [
+    { id: 'free',     name: 'Free Plan',     perAd: 0.02, refA: 0,  refB: 0, refC: 0 },
+    { id: 'basic',    name: 'Basic Plan',    perAd: 0.20, refA: 20, refB: 5, refC: 5 },
+    { id: 'standard', name: 'Standard Plan', perAd: 0.40, refA: 20, refB: 5, refC: 5 },
+    { id: 'diamond',  name: 'Diamond Plan',  perAd: 0.80, refA: 20, refB: 5, refC: 5 },
+    { id: 'pro',      name: 'Pro Plan',      perAd: 1.20, refA: 20, refB: 5, refC: 5 },
+    { id: 'premium',  name: 'Premium Plan',  perAd: 1.60, refA: 20, refB: 5, refC: 5 },
+    { id: 'legend',   name: 'Legend Plan',   perAd: 2.00, refA: 20, refB: 5, refC: 5 }
+  ];
+
+  try {
+    const SystemSettings = (await import('../models/SystemSettings.js')).default;
+    const settings = await SystemSettings.findOne({ key: 'earnings_plans' });
+    if (settings && settings.value) {
+      earningsPlans = settings.value;
+    }
+  } catch (err) {
+    console.warn('[Commission] Failed to load earnings plans settings, using fallback.', err.message);
+  }
+
+  // Find config of the purchased plan to determine commission percentages
+  const name = (planName || '').toLowerCase();
+  let purchasedPlanId = 'free';
+  if (name.includes('basic')) purchasedPlanId = 'basic';
+  else if (name.includes('standard')) purchasedPlanId = 'standard';
+  else if (name.includes('diamond')) purchasedPlanId = 'diamond';
+  else if (name.includes('pro')) purchasedPlanId = 'pro';
+  else if (name.includes('premium')) purchasedPlanId = 'premium';
+  else if (name.includes('legend')) purchasedPlanId = 'legend';
+
+  const planConfig = earningsPlans.find(p => p.id === purchasedPlanId) || earningsPlans[0];
+  const rateA = (planConfig.refA || 0) / 100.0;
+  const rateB = (planConfig.refB || 0) / 100.0;
+  const rateC = (planConfig.refC || 0) / 100.0;
+
   // --- LEVEL 1: Direct Referrer (R1) ---
   const r1 = await User.findOne({ phone: buyer.referredBy });
   if (!r1) {
@@ -65,25 +101,27 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
   // R1 must have an active plan to receive commission
   const r1PlanPrice = await getUserActivePlanPrice(r1);
   if (r1PlanPrice > 0) {
-    // 20% Direct Commission
-    const comm1 = purchaseAmountPKR * 0.20;
-    r1.earnBalance = (r1.earnBalance || 0) + comm1;
-    r1.balance = (r1.balance || 0) + comm1;
-    r1.referralCommission = (r1.referralCommission || 0) + comm1;
-    await r1.save();
+    // Dynamic Level A Commission
+    const comm1 = purchaseAmountPKR * rateA;
+    if (comm1 > 0) {
+      r1.earnBalance = (r1.earnBalance || 0) + comm1;
+      r1.balance = (r1.balance || 0) + comm1;
+      r1.referralCommission = (r1.referralCommission || 0) + comm1;
+      await r1.save();
 
-    await Transaction.create({
-      userId: r1.phone,
-      userName: r1.name,
-      type: 'referral_income',
-      amount: comm1,
-      status: 'approved',
-      description: `Direct referral commission (20%) from ${buyer.name} (${buyer.phone}) for purchasing ${planName}`,
-      referredUser: buyer.phone,
-      referralLevel: 'A',
-      transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
-    });
-    console.log(`[Commission] Level 1 (Direct) commission of ${comm1} PKR awarded to ${r1.name} (${r1.phone})`);
+      await Transaction.create({
+        userId: r1.phone,
+        userName: r1.name,
+        type: 'referral_income',
+        amount: comm1,
+        status: 'approved',
+        description: `Direct referral commission (${(rateA * 100).toFixed(0)}%) from ${buyer.name} (${buyer.phone}) for purchasing ${planName}`,
+        referredUser: buyer.phone,
+        referralLevel: 'A',
+        transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
+      });
+      console.log(`[Commission] Level 1 (Direct) commission of ${comm1} PKR awarded to ${r1.name} (${r1.phone})`);
+    }
   } else {
     console.log(`[Commission] Level 1 referrer ${r1.name} (${r1.phone}) ineligible (No active plan)`);
   }
@@ -101,25 +139,27 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
   // R2 must have an active plan to receive commission
   const r2PlanPrice = await getUserActivePlanPrice(r2);
   if (r2PlanPrice > 0) {
-    // 5% Indirect Commission
-    const comm2 = purchaseAmountPKR * 0.05;
-    r2.earnBalance = (r2.earnBalance || 0) + comm2;
-    r2.balance = (r2.balance || 0) + comm2;
-    r2.referralCommission = (r2.referralCommission || 0) + comm2;
-    await r2.save();
+    // Dynamic Level B Commission
+    const comm2 = purchaseAmountPKR * rateB;
+    if (comm2 > 0) {
+      r2.earnBalance = (r2.earnBalance || 0) + comm2;
+      r2.balance = (r2.balance || 0) + comm2;
+      r2.referralCommission = (r2.referralCommission || 0) + comm2;
+      await r2.save();
 
-    await Transaction.create({
-      userId: r2.phone,
-      userName: r2.name,
-      type: 'referral_income',
-      amount: comm2,
-      status: 'approved',
-      description: `Indirect referral commission (5%) from ${buyer.name} (${buyer.phone}) via ${r1.name}`,
-      referredUser: buyer.phone,
-      referralLevel: 'B',
-      transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
-    });
-    console.log(`[Commission] Level 2 (Indirect) commission of ${comm2} PKR awarded to ${r2.name} (${r2.phone}) (Active plan: $${r2PlanPrice})`);
+      await Transaction.create({
+        userId: r2.phone,
+        userName: r2.name,
+        type: 'referral_income',
+        amount: comm2,
+        status: 'approved',
+        description: `Indirect referral commission (${(rateB * 100).toFixed(0)}%) from ${buyer.name} (${buyer.phone}) via ${r1.name}`,
+        referredUser: buyer.phone,
+        referralLevel: 'B',
+        transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
+      });
+      console.log(`[Commission] Level 2 (Indirect) commission of ${comm2} PKR awarded to ${r2.name} (${r2.phone})`);
+    }
   } else {
     console.log(`[Commission] Level 2 referrer ${r2.name} (${r2.phone}) ineligible (No active plan)`);
   }
@@ -137,25 +177,27 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
   // R3 must have a plan of $40 or $50 to receive Downline Commission
   const r3PlanPrice = await getUserActivePlanPrice(r3);
   if (r3PlanPrice >= 40) {
-    // 5% Downline Commission
-    const comm3 = purchaseAmountPKR * 0.05;
-    r3.earnBalance = (r3.earnBalance || 0) + comm3;
-    r3.balance = (r3.balance || 0) + comm3;
-    r3.referralCommission = (r3.referralCommission || 0) + comm3;
-    await r3.save();
+    // Dynamic Level C Commission
+    const comm3 = purchaseAmountPKR * rateC;
+    if (comm3 > 0) {
+      r3.earnBalance = (r3.earnBalance || 0) + comm3;
+      r3.balance = (r3.balance || 0) + comm3;
+      r3.referralCommission = (r3.referralCommission || 0) + comm3;
+      await r3.save();
 
-    await Transaction.create({
-      userId: r3.phone,
-      userName: r3.name,
-      type: 'referral_income',
-      amount: comm3,
-      status: 'approved',
-      description: `Downline commission (5%) from ${buyer.name} (${buyer.phone}) via ${r2.name}`,
-      referredUser: buyer.phone,
-      referralLevel: 'C',
-      transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
-    });
-    console.log(`[Commission] Level 3 (Downline) commission of ${comm3} PKR awarded to ${r3.name} (${r3.phone}) (Active plan: $${r3PlanPrice})`);
+      await Transaction.create({
+        userId: r3.phone,
+        userName: r3.name,
+        type: 'referral_income',
+        amount: comm3,
+        status: 'approved',
+        description: `Downline commission (${(rateC * 100).toFixed(0)}%) from ${buyer.name} (${buyer.phone}) via ${r2.name}`,
+        referredUser: buyer.phone,
+        referralLevel: 'C',
+        transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
+      });
+      console.log(`[Commission] Level 3 (Downline) commission of ${comm3} PKR awarded to ${r3.name} (${r3.phone})`);
+    }
   } else {
     console.log(`[Commission] Level 3 referrer ${r3.name} (${r3.phone}) ineligible (Active plan $${r3PlanPrice} < $40)`);
   }
