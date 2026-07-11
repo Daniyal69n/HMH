@@ -636,19 +636,21 @@
   margin-bottom: 20px;
 }
 .meridian .ticker-wrap {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
-  width: 100%;
   position: relative;
 }
 .meridian .ticker-content {
   display: inline-block;
-  animation: marquee 30s linear infinite;
-  color: var(--text-dim);
+  padding-left: 100%;
+  animation: marquee 25s linear infinite;
+  color: var(--text);
   font-size: 14.5px;
-  font-weight: 500;
+  font-weight: 600;
 }
 @keyframes marquee {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-100%, 0, 0); }
 }
