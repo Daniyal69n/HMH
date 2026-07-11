@@ -87,6 +87,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  adsWatchedToday: {
+    type: Number,
+    default: 0
+  },
+  lastAdWatchDate: {
+    type: String,
+    default: ''
+  },
   claimedLevels: {
     type: [Number],
     default: []

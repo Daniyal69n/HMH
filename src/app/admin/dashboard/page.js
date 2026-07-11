@@ -536,30 +536,43 @@ export default function AdminDashboard() {
   }, [activeTab])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    const raw = localStorage.getItem('admin_ads')
-    if (raw) {
+    const fetchAds = async () => {
       try {
-        setAds(JSON.parse(raw))
-      } catch (error) {
-        setAds([])
+        const res = await fetch(`/api/settings?key=admin_ads&_t=${Date.now()}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data && data.value) {
+            setAds(data.value)
+            return
+          }
+        }
+      } catch (err) {
+        console.error(err)
       }
-      return
+      
+      const seededAds = [
+        { id: 'ad_1', title: 'Bsnns', url: 'https://youtube.com/watch?v=demo1', active: true },
+        { id: 'ad_2', title: 'Hmh', url: 'https://youtube.com/watch?v=demo2', active: true },
+      ]
+      setAds(seededAds)
     }
-
-    const seededAds = [
-      { id: 'ad_1', title: 'Bsnns', url: 'https://youtube.com/watch?v=demo1', active: true },
-      { id: 'ad_2', title: 'Hmh', url: 'https://youtube.com/watch?v=demo2', active: true },
-    ]
-    localStorage.setItem('admin_ads', JSON.stringify(seededAds))
-    setAds(seededAds)
+    fetchAds()
   }, [])
 
-  const saveAds = (nextAds) => {
+  const saveAds = async (nextAds) => {
     setAds(nextAds)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('admin_ads', JSON.stringify(nextAds))
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'admin_ads',
+          value: nextAds,
+          description: 'Managed Video Ads for watch and earn'
+        })
+      })
+    } catch (err) {
+      console.error('Failed to save ads to DB:', err)
     }
   }
 

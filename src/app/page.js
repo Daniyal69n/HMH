@@ -99,6 +99,19 @@ export default function Page() {
   const [winModalOpen, setWinModalOpen] = useState(false)
   const [wonAmount, setWonAmount] = useState('')
 
+  // Watch ads states
+  const [adWatchData, setAdWatchData] = useState({
+    watchedToday: 0,
+    activeAds: [],
+    hasActivePlan: false,
+    planName: 'No Plan',
+    dailyIncome: '$0.00'
+  })
+  const [watchAdModalOpen, setWatchAdModalOpen] = useState(false)
+  const [currentWatchingAd, setCurrentWatchingAd] = useState(null)
+  const [watchCountdown, setWatchCountdown] = useState(15)
+  const [watchSubmitting, setWatchSubmitting] = useState(false)
+
   const [teamData, setTeamData] = useState(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('hmh-team-data')
@@ -159,6 +172,7 @@ export default function Page() {
     () => [
       { id: 'dashboard', label: 'Dashboard', icon: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z' },
       { id: 'withdraw', label: 'Withdraw funds', icon: 'M3 7h18v10H3zM3 10h18' },
+      { id: 'watch-ads', label: 'Watch Ads & Earn', icon: 'M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7.5v-3l5 1.5-5 1.5z' },
       { id: 'network', label: 'My network', icon: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM17 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 3-5 6-5s6 2 6 5M13 20c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4' },
       { id: 'plans', label: 'My plan', icon: 'M12 3v18M5 8l7-5 7 5' },
       { id: 'levels', label: 'Rewards & levels', icon: 'M8 21h8M12 17v4M6 3h12l-1 8a5 5 0 0 1-10 0z' },
@@ -551,6 +565,24 @@ export default function Page() {
       loadTeamData()
     }
   }, [profile])
+
+  // Fetch ads progress
+  useEffect(() => {
+    if (page === 'watch-ads' && profile && profile.phone) {
+      const fetchAdWatchProgress = async () => {
+        try {
+          const res = await fetch(`/api/user/watch-ads?phone=${encodeURIComponent(profile.phone)}&_t=${Date.now()}`)
+          if (res.ok) {
+            const data = await res.json()
+            setAdWatchData(data)
+          }
+        } catch (err) {
+          console.error('Error fetching ad progress:', err)
+        }
+      }
+      fetchAdWatchProgress()
+    }
+  }, [page, profile])
 
   // Fetch user's profile and active plan from DB
   useEffect(() => {
@@ -1075,6 +1107,73 @@ export default function Page() {
     spinAngleRef.current = 0
     setSpinResult('Locked')
     showToast('Spin reset')
+  }
+
+  const handleWatchAd = (ad) => {
+    if (adWatchData.watchedToday >= 5) {
+      showToast('You have already watched the limit of 5 ads for today.')
+      return
+    }
+    setCurrentWatchingAd(ad)
+    setWatchCountdown(15)
+    setWatchAdModalOpen(true)
+  }
+
+  // Timer countdown for watching ad
+  useEffect(() => {
+    let interval = null
+    if (watchAdModalOpen && watchCountdown > 0) {
+      interval = setInterval(() => {
+        setWatchCountdown(prev => prev - 1)
+      }, 1000)
+    }
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [watchAdModalOpen, watchCountdown])
+
+  const claimAdReward = async () => {
+    if (watchSubmitting || !profile || !profile.phone || !currentWatchingAd) return
+    setWatchSubmitting(true)
+    try {
+      const res = await fetch('/api/user/watch-ads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: profile.phone,
+          adId: currentWatchingAd.id
+        })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        showToast(data.message)
+        setWatchAdModalOpen(false)
+        setCurrentWatchingAd(null)
+        
+        // Refresh local React profile state with updated balances
+        setProfile(prev => {
+          const next = {
+            ...prev,
+            balance: data.balance,
+            earnBalance: data.earnBalance
+          }
+          localStorage.setItem('hmh-profile', JSON.stringify(next))
+          return next
+        })
+        
+        // Refetch ad watch progress
+        const updatedRes = await fetch(`/api/user/watch-ads?phone=${encodeURIComponent(profile.phone)}&_t=${Date.now()}`)
+        if (updatedRes.ok) {
+          const updatedData = await updatedRes.json()
+          setAdWatchData(updatedData)
+        }
+      } else {
+        showToast(data.message || 'Error claiming ad reward')
+      }
+    } catch (err) {
+      showToast('Network error')
+    }
+    setWatchSubmitting(false)
   }
 
   const claimLevelReward = async (level) => {
@@ -1624,6 +1723,261 @@ export default function Page() {
                 </div>
               )}
             </div>
+          </section>
+
+          {/* WATCH ADS & EARN */}
+          <section className={`page ${page === 'watch-ads' ? 'active' : ''}`}>
+            <div className="page-head">
+              <h1>Watch Ads & Earn</h1>
+              <p>Watch video ads and collect rewards</p>
+            </div>
+
+            <div className="card" style={{ marginBottom: '20px', padding: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  🎁 Daily Task Progress
+                </h3>
+                <span className="streak-pill" style={{ fontSize: '12px', background: 'rgba(201,160,74,0.15)', borderColor: 'rgba(201,160,74,0.3)', color: 'var(--gold-bright)', padding: '3px 10px', borderRadius: '12px' }}>
+                  {adWatchData.planName} Plan
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '13.5px', color: 'var(--text-dim)' }}>
+                <span>{adWatchData.watchedToday} / 5 ads watched</span>
+                <span style={{ fontWeight: '700', color: 'var(--gold-bright)' }}>
+                  {Math.min(100, (adWatchData.watchedToday / 5) * 100).toFixed(0)}%
+                </span>
+              </div>
+
+              <div className="spin-progress-bar" style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden', marginBottom: '14px' }}>
+                <div
+                  className="spin-progress-fill"
+                  style={{
+                    height: '100%',
+                    background: 'var(--gold)',
+                    borderRadius: '4px',
+                    transition: 'width 0.3s ease',
+                    width: `${Math.min(100, (adWatchData.watchedToday / 5) * 100)}%`
+                  }}
+                />
+              </div>
+
+              {(() => {
+                const parsedIncome = parseFloat(adWatchData.dailyIncome.replace(/[$,₹Rs]/g, '').replace(/,/g, '')) || 0;
+                const parsedIncomePKR = adWatchData.dailyIncome.includes('$') ? (parsedIncome * 300) : parsedIncome;
+                
+                const perAdUSD = parsedIncome / 5;
+                const perAdPKR = parsedIncomePKR / 5;
+                
+                const perAdText = currency === 'USD' ? `$${perAdUSD.toFixed(2)}` : `Rs ${perAdPKR.toLocaleString()}`;
+                const fullDailyText = currency === 'USD' ? `$${parsedIncome.toFixed(2)}` : `Rs ${parsedIncomePKR.toLocaleString()}`;
+                
+                return (
+                  <div style={{ fontSize: '13px', color: 'var(--text-faint)', marginTop: '8px', borderTop: '1px solid var(--line)', paddingTop: '10px' }}>
+                    Per ad: <strong style={{ color: 'var(--text)' }}>{perAdText}</strong> (20% of daily) &nbsp;·&nbsp; Full daily earning: <strong style={{ color: 'var(--text)' }}>{fullDailyText}</strong>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div style={{ marginBottom: '14px', fontSize: '14.5px', fontWeight: '700', color: 'var(--text)' }}>
+              Active Video Ads
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {adWatchData.activeAds.length === 0 ? (
+                <div className="card" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-faint)' }}>
+                  🎥 No active ads available. Check back later.
+                </div>
+              ) : (
+                adWatchData.activeAds.map((ad, idx) => {
+                  const parsedIncome = parseFloat(adWatchData.dailyIncome.replace(/[$,₹Rs]/g, '').replace(/,/g, '')) || 0;
+                  const parsedIncomePKR = adWatchData.dailyIncome.includes('$') ? (parsedIncome * 300) : parsedIncome;
+                  
+                  const perAdUSD = parsedIncome / 5;
+                  const perAdPKR = parsedIncomePKR / 5;
+                  const perAdText = currency === 'USD' ? `$${perAdUSD.toFixed(2)}` : `Rs ${perAdPKR.toLocaleString()}`;
+                  
+                  const isLimitReached = adWatchData.watchedToday >= 5;
+
+                  return (
+                    <div
+                      key={ad.id || idx}
+                      className="card"
+                      style={{
+                        padding: '14px 16px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid var(--line)',
+                        borderRadius: '12px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        <div style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '10px',
+                          background: 'rgba(201, 160, 74, 0.1)',
+                          color: 'var(--gold)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '18px'
+                        }}>
+                          ▶
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text)' }}>
+                            {ad.title}
+                          </div>
+                          <div style={{ fontSize: '12.5px', color: 'var(--gold-bright)' }}>
+                            +{perAdText} (20% daily)
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        className="btn btn-gold"
+                        onClick={() => handleWatchAd(ad)}
+                        disabled={isLimitReached}
+                        style={{
+                          padding: '8px 18px',
+                          fontSize: '13px',
+                          fontWeight: '700',
+                          borderRadius: '8px',
+                          opacity: isLimitReached ? 0.5 : 1,
+                          cursor: isLimitReached ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        {isLimitReached ? '🔒 Locked' : '▶ Watch'}
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* WATCH AD MODAL */}
+            {watchAdModalOpen && currentWatchingAd && (
+              <div style={{
+                position: 'fixed',
+                inset: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 9999,
+                animation: 'fadeIn 0.3s ease-out'
+              }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #1b1917 0%, #0c0a09 100%)',
+                  border: '1px solid rgba(201,160,74,0.4)',
+                  borderRadius: '20px',
+                  padding: '30px 24px',
+                  maxWidth: '480px',
+                  width: '92%',
+                  boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+                  animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+                    <h3 style={{ color: '#ffffff', margin: 0, fontSize: '17px', fontWeight: '800' }}>
+                      📺 Watching: {currentWatchingAd.title}
+                    </h3>
+                    <span style={{
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'var(--text-dim)',
+                      padding: '4px 10px',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}>
+                      {watchCountdown > 0 ? `⌛ ${watchCountdown}s` : '✅ Ready'}
+                    </span>
+                  </div>
+
+                  {/* Mock Video Player */}
+                  <div style={{
+                    aspectRatio: '16/9',
+                    background: '#000000',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    marginBottom: '22px'
+                  }}>
+                    {/* Simulated Loading/Wave Animation */}
+                    <div style={{ display: 'flex', gap: '5px', alignItems: 'center', justifyContent: 'center', height: '40px', marginBottom: '14px' }}>
+                      {[1, 2, 3, 4, 5].map((bar) => {
+                        const heights = [20, 35, 15, 30, 25];
+                        return (
+                          <div
+                            key={bar}
+                            style={{
+                              width: '4px',
+                              background: 'var(--gold)',
+                              borderRadius: '2px',
+                              height: `${heights[bar - 1]}px`,
+                              animation: watchCountdown > 0 ? `bounce 1s ease-in-out infinite alternate ${bar * 0.1}s` : 'none',
+                              opacity: watchCountdown > 0 ? 0.8 : 0.2
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+
+                    <div style={{ color: 'var(--text-dim)', fontSize: '13.5px', fontWeight: '600' }}>
+                      {watchCountdown > 0 ? 'Video Ad playing...' : 'Ad complete! You can claim your reward.'}
+                    </div>
+
+                    {/* Progress Bar inside Player */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      height: '4px',
+                      background: 'var(--gold)',
+                      width: `${((15 - watchCountdown) / 15) * 100}%`,
+                      transition: 'width 1s linear'
+                    }} />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                      className="btn btn-outline"
+                      onClick={() => {
+                        setWatchAdModalOpen(false);
+                        setCurrentWatchingAd(null);
+                      }}
+                      disabled={watchSubmitting}
+                      style={{ flex: 1, padding: '12px', borderRadius: '10px' }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="btn btn-gold"
+                      onClick={claimAdReward}
+                      disabled={watchCountdown > 0 || watchSubmitting}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        borderRadius: '10px',
+                        fontWeight: '800',
+                        opacity: (watchCountdown > 0 || watchSubmitting) ? 0.6 : 1,
+                        cursor: (watchCountdown > 0 || watchSubmitting) ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      {watchSubmitting ? 'Submitting...' : 'Claim Reward'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* NETWORK (direct + indirect only) */}
