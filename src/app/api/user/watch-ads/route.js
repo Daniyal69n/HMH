@@ -6,7 +6,10 @@ import SystemSettings from '@/models/SystemSettings';
 
 export async function GET(request) {
   try {
+    console.time("connectDB");
     await connectDB();
+    console.timeEnd("connectDB");
+    
     const { searchParams } = new URL(request.url);
     const phone = searchParams.get('phone');
     
@@ -14,6 +17,7 @@ export async function GET(request) {
       return Response.json({ message: 'Phone number is required' }, { status: 400 });
     }
     
+    console.time("query1");
     // Run all database queries concurrently
     const [user, activeInvestment, adSetting, earningsSetting] = await Promise.all([
       User.findOne({ phone }).select('-profilePicture').lean(),
@@ -21,8 +25,11 @@ export async function GET(request) {
       SystemSettings.findOne({ key: 'admin_ads' }).lean(),
       SystemSettings.findOne({ key: 'earnings_plans' }).lean()
     ]);
+    console.timeEnd("query1");
     
+    console.time("processing");
     if (!user) {
+      console.timeEnd("processing");
       return Response.json({ message: 'User not found' }, { status: 404 });
     }
     
@@ -71,8 +78,10 @@ export async function GET(request) {
     const planConfig = earningsPlans.find(p => p.id === planId) || earningsPlans[0];
     const fullDailyUSD = planConfig.perAd * activeAds.length;
     const claimedToday = user.lastAdRewardClaimDate === currentDate;
-    
-    return Response.json({
+    console.timeEnd("processing");
+
+    console.time("response");
+    const res = Response.json({
       watchedToday,
       activeAds,
       hasActivePlan: !!activeInvestment,
@@ -80,7 +89,8 @@ export async function GET(request) {
       dailyIncome: `$${fullDailyUSD.toFixed(2)}`,
       claimedToday
     });
-    
+    console.timeEnd("response");
+    return res;
   } catch (error) {
     console.error('Error fetching watch ads progress:', error);
     return Response.json({ message: 'Internal server error' }, { status: 500 });
