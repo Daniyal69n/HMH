@@ -649,14 +649,8 @@ export default function Page() {
         if (res.ok) {
           const data = await res.json()
           // Update profile state with live database values
-          setProfile(prev => {
-            const next = {
-              ...prev,
-              ...data
-            }
-            localStorage.setItem('hmh-profile', JSON.stringify(next))
-            return next
-          })
+          setProfile(data)
+          localStorage.setItem('hmh-profile', JSON.stringify(data))
           const activePlan = [...(data.investmentPlans || [])].reverse().find(p => p.status === 'active')
           const planName = activePlan ? activePlan.planName : 'Free'
           setActivePlanName(planName)

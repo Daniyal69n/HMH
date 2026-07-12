@@ -24,6 +24,17 @@ export default function AdminDashboard() {
   })
   const [plans, setPlans] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [editUserTeamData, setEditUserTeamData] = useState(null)
+  const [isAddingNetworkMember, setIsAddingNetworkMember] = useState(false)
+  const [networkMemberForm, setNetworkMemberForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: 'password123',
+    level: 'A',
+    planName: 'Free',
+    planAmount: '0'
+  })
   const [editingPlan, setEditingPlan] = useState(null)
   const [showAddPlan, setShowAddPlan] = useState(false)
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false)
@@ -1868,7 +1879,64 @@ export default function AdminDashboard() {
     return initials || 'U'
   }
 
+  const fetchEditingUserTeamData = async (phone) => {
+    try {
+      const response = await fetch(`/api/user/team?userId=${phone}`)
+      if (response.ok) {
+        const data = await response.json()
+        setEditUserTeamData(data)
+      }
+    } catch (error) {
+      console.warn('Error fetching editing user team:', error)
+    }
+  }
+
+  const handleAddNetworkMember = async (e) => {
+    e.preventDefault()
+    if (!networkMemberForm.name.trim() || !networkMemberForm.phone.trim() || !networkMemberForm.password.trim()) {
+      showError('Name, phone, and password are required')
+      return
+    }
+
+    try {
+      setIsAddingNetworkMember(true)
+      const response = await fetch('/api/admin/add-network-member', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          referrerPhone: editingUserData.phone,
+          ...networkMemberForm
+        })
+      })
+
+      const data = await response.json()
+      if (response.ok) {
+        showSuccess('Referral member added to network successfully!')
+        setNetworkMemberForm({
+          name: '',
+          email: '',
+          phone: '',
+          password: 'password123',
+          level: 'A',
+          planName: 'Free',
+          planAmount: '0'
+        })
+        // Refresh team details list
+        await fetchEditingUserTeamData(editingUserData.phone)
+      } else {
+        showError(data.error || 'Failed to add member to network')
+      }
+    } catch (error) {
+      console.warn('Error adding network member:', error)
+      showError('Error adding network member')
+    } finally {
+      setIsAddingNetworkMember(false)
+    }
+  }
+
   const handleStartEditUser = (user) => {
+    setEditUserTeamData(null)
+    fetchEditingUserTeamData(user.phone)
     setEditingUserData(user)
     setEditForm({
       name: user.name || '',
@@ -2708,6 +2776,194 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                 </div>
+              )}
+
+              {/* Referral Network Section */}
+              <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Referral Network</div>
+              
+              {/* Add Network Member Form */}
+              <div style={{ background: 'var(--surface-2)', padding: '16px', borderRadius: '10px', marginBottom: '20px' }}>
+                <h4 style={{ margin: '0 0 12px', fontSize: '13px', color: 'var(--gold)' }}>Add Member to Network</h4>
+                <form onSubmit={handleAddNetworkMember} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Name</label>
+                    <input
+                      type="text"
+                      placeholder="Member's full name"
+                      value={networkMemberForm.name}
+                      onChange={e => setNetworkMemberForm(prev => ({ ...prev, name: e.target.value }))}
+                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Email</label>
+                    <input
+                      type="email"
+                      placeholder="Member's email"
+                      value={networkMemberForm.email}
+                      onChange={e => setNetworkMemberForm(prev => ({ ...prev, email: e.target.value }))}
+                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Phone (User ID)</label>
+                    <input
+                      type="text"
+                      placeholder="03*********"
+                      value={networkMemberForm.phone}
+                      onChange={e => setNetworkMemberForm(prev => ({ ...prev, phone: e.target.value }))}
+                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Password</label>
+                    <input
+                      type="text"
+                      placeholder="Password"
+                      value={networkMemberForm.password}
+                      onChange={e => setNetworkMemberForm(prev => ({ ...prev, password: e.target.value }))}
+                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Referral Level</label>
+                    <select
+                      value={networkMemberForm.level}
+                      onChange={e => setNetworkMemberForm(prev => ({ ...prev, level: e.target.value }))}
+                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                    >
+                      <option value="A">Level A (Direct Referral)</option>
+                      <option value="B">Level B (Indirect Referral)</option>
+                      <option value="C">Level C (Downline Referral)</option>
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Plan</label>
+                      <select
+                        value={networkMemberForm.planName}
+                        onChange={e => {
+                          const name = e.target.value;
+                          let amount = '0';
+                          if (name === 'Basic') amount = '1000';
+                          else if (name === 'Standard') amount = '3000';
+                          else if (name === 'Diamond') amount = '6000';
+                          else if (name === 'Pro') amount = '12000';
+                          else if (name === 'Premium') amount = '25000';
+                          else if (name === 'Legend') amount = '50000';
+                          setNetworkMemberForm(prev => ({ ...prev, planName: name, planAmount: amount }));
+                        }}
+                        style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                      >
+                        <option value="Free">Free Plan (Rs0)</option>
+                        <option value="Basic">Basic Plan (Rs1,000)</option>
+                        <option value="Standard">Standard Plan (Rs3,000)</option>
+                        <option value="Diamond">Diamond Plan (Rs6,000)</option>
+                        <option value="Pro">Pro Plan (Rs12,000)</option>
+                        <option value="Premium">Premium Plan (Rs25,000)</option>
+                        <option value="Legend">Legend Plan (Rs50,000)</option>
+                      </select>
+                    </div>
+                    <div style={{ width: '80px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Amount</label>
+                      <input
+                        type="number"
+                        value={networkMemberForm.planAmount}
+                        onChange={e => setNetworkMemberForm(prev => ({ ...prev, planAmount: e.target.value }))}
+                        style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ gridColumn: 'span 2', marginTop: '6px' }}>
+                    <button
+                      type="submit"
+                      disabled={isAddingNetworkMember}
+                      className={styles.btn}
+                      style={{ width: '100%', backgroundColor: 'var(--gold)', color: '#000', fontWeight: 'bold' }}
+                    >
+                      {isAddingNetworkMember ? 'Adding member...' : 'Add Member to Network'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Network Members Lists */}
+              {editUserTeamData ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                  {/* Level A */}
+                  <div>
+                    <h5 style={{ margin: '0 0 6px', fontSize: '12.5px', color: '#fff' }}>
+                      👤 Level A - Direct Referrals ({editUserTeamData.levelA?.count || 0})
+                    </h5>
+                    {editUserTeamData.levelA?.members?.length === 0 ? (
+                      <p style={{ fontSize: '12px', color: 'var(--text-dim)', fontStyle: 'italic', margin: 0 }}>No Level A members</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '150px', overflowY: 'auto' }}>
+                        {editUserTeamData.levelA.members.map((m, idx) => (
+                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}>
+                            <div>
+                              <strong>{m.name}</strong> ({m.phone})<br/>
+                              <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Email: {m.email || 'N/A'}</span>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <span className="badge" style={{ background: 'var(--gold-bg)', color: 'var(--gold-bright)', fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px' }}>{m.plan}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Level B */}
+                  <div>
+                    <h5 style={{ margin: '0 0 6px', fontSize: '12.5px', color: '#fff' }}>
+                      🔗 Level B - Indirect Referrals ({editUserTeamData.levelB?.count || 0})
+                    </h5>
+                    {editUserTeamData.levelB?.members?.length === 0 ? (
+                      <p style={{ fontSize: '12px', color: 'var(--text-dim)', fontStyle: 'italic', margin: 0 }}>No Level B members</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '150px', overflowY: 'auto' }}>
+                        {editUserTeamData.levelB.members.map((m, idx) => (
+                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}>
+                            <div>
+                              <strong>{m.name}</strong> ({m.phone})<br/>
+                              <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Email: {m.email || 'N/A'}</span>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <span className="badge" style={{ background: 'var(--gold-bg)', color: 'var(--gold-bright)', fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px' }}>{m.plan}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Level C */}
+                  <div>
+                    <h5 style={{ margin: '0 0 6px', fontSize: '12.5px', color: '#fff' }}>
+                      🔗 Level C - Downline Referrals ({editUserTeamData.levelC?.count || 0})
+                    </h5>
+                    {editUserTeamData.levelC?.members?.length === 0 ? (
+                      <p style={{ fontSize: '12px', color: 'var(--text-dim)', fontStyle: 'italic', margin: 0 }}>No Level C members</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '150px', overflowY: 'auto' }}>
+                        {editUserTeamData.levelC.members.map((m, idx) => (
+                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}>
+                            <div>
+                              <strong>{m.name}</strong> ({m.phone})<br/>
+                              <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Email: {m.email || 'N/A'}</span>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <span className="badge" style={{ background: 'var(--gold-bg)', color: 'var(--gold-bright)', fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px' }}>{m.plan}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p style={{ fontSize: '13px', color: 'var(--text-dim)', fontStyle: 'italic', marginBottom: '24px' }}>Loading referral network details...</p>
               )}
 
               {/* Action Buttons */}
@@ -4140,6 +4396,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+      {(isAppLoading || isLoading) && <Loader />}
     </AdminShell>
   )
 } 
