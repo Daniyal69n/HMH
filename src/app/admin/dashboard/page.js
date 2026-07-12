@@ -1934,6 +1934,13 @@ export default function AdminDashboard() {
         isAdmin: !!user.isAdmin
       }
       localStorage.setItem('user', JSON.stringify(userData))
+      
+      // Clear cached data of any previous session to prevent overlapping/caching bugs
+      localStorage.removeItem('hmh-profile')
+      localStorage.removeItem('hmh-active-page')
+      localStorage.removeItem('hmh-active-plan')
+      localStorage.removeItem('hmh-team-data')
+
       window.open('/', '_blank')
       showSuccess(`Impersonation session started for ${user.name}`)
     }

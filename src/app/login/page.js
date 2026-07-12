@@ -40,6 +40,10 @@ function LoginContent() {
       if (response.ok) {
         // Save user info in localStorage
         localStorage.setItem('user', JSON.stringify(data))
+        localStorage.removeItem('hmh-profile')
+        localStorage.removeItem('hmh-active-page')
+        localStorage.removeItem('hmh-active-plan')
+        localStorage.removeItem('hmh-team-data')
         router.push('/')
       } else {
         setError(data.error || 'Invalid credentials.')
