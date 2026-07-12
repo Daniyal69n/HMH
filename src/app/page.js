@@ -2003,6 +2003,7 @@ export default function Page() {
                         onClick={() => handleWatchAd(ad)}
                         disabled={isLimitReached}
                         style={{
+                          width: 'auto',
                           padding: '8px 18px',
                           fontSize: '13px',
                           fontWeight: '700',
