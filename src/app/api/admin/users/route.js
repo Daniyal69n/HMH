@@ -165,6 +165,13 @@ export async function PUT(request) {
         editUser.isBlocked = data.isBlocked;
         editUser.isAdmin = data.isAdmin;
 
+        // Custom Overrides
+        editUser.customTotalEarnings = (data.customTotalEarnings !== undefined && data.customTotalEarnings !== null && data.customTotalEarnings !== "") ? parseFloat(data.customTotalEarnings) : null;
+        editUser.customMySalary = (data.customMySalary !== undefined && data.customMySalary !== null && data.customMySalary !== "") ? parseFloat(data.customMySalary) : null;
+        editUser.customTotalWithdrawals = (data.customTotalWithdrawals !== undefined && data.customTotalWithdrawals !== null && data.customTotalWithdrawals !== "") ? parseFloat(data.customTotalWithdrawals) : null;
+        editUser.customDirectReferrals = (data.customDirectReferrals !== undefined && data.customDirectReferrals !== null && data.customDirectReferrals !== "") ? parseInt(data.customDirectReferrals) : null;
+        editUser.customIndirectReferrals = (data.customIndirectReferrals !== undefined && data.customIndirectReferrals !== null && data.customIndirectReferrals !== "") ? parseInt(data.customIndirectReferrals) : null;
+
         // Handle plans
         const oldPlans = editUser.investmentPlans || [];
         const newPlans = data.investmentPlans || [];

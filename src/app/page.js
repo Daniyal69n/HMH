@@ -1645,7 +1645,11 @@ export default function Page() {
                 <div className="stat-icon" style={{ background: 'rgba(91,127,214,.12)' }}>💼</div>
                 <div>
                   <div className="stat-label">Total earnings</div>
-                  <div className="stat-value">{formatVal((profile.earnBalance || 0) + (profile.totalCommissionEarned || 0))}</div>
+                  <div className="stat-value">
+                    {formatVal(profile.customTotalEarnings !== undefined && profile.customTotalEarnings !== null 
+                      ? profile.customTotalEarnings 
+                      : ((profile.earnBalance || 0) + (profile.totalCommissionEarned || 0)))}
+                  </div>
                 </div>
               </div>
               <div className="card stat-card">
@@ -1659,16 +1663,24 @@ export default function Page() {
                 <div className="stat-icon" style={{ background: 'rgba(196,87,74,.12)' }}>📤</div>
                 <div>
                   <div className="stat-label">Total withdrawals</div>
-                  <div className="stat-value">{formatVal((withdrawHistory || [])
-                    .filter(w => w.status !== 'rejected' && w.status !== 'cancelled')
-                    .reduce((sum, w) => sum + w.amount, 0))}</div>
+                  <div className="stat-value">
+                    {formatVal(profile.customTotalWithdrawals !== undefined && profile.customTotalWithdrawals !== null 
+                      ? profile.customTotalWithdrawals 
+                      : (withdrawHistory || [])
+                          .filter(w => w.status !== 'rejected' && w.status !== 'cancelled')
+                          .reduce((sum, w) => sum + w.amount, 0))}
+                  </div>
                 </div>
               </div>
               <div className="card stat-card">
                 <div className="stat-icon" style={{ background: 'rgba(201,160,74,.12)' }}>📈</div>
                 <div>
                   <div className="stat-label">My salary</div>
-                  <div className="stat-value">{currency === 'USD' ? `$${mySalaryUSD.toFixed(2)}` : `Rs ${(mySalaryUSD * PKR_RATE).toLocaleString()}`}</div>
+                  <div className="stat-value">
+                    {profile.customMySalary !== undefined && profile.customMySalary !== null
+                      ? (currency === 'USD' ? `$${(profile.customMySalary / PKR_RATE).toFixed(2)}` : `Rs ${profile.customMySalary.toLocaleString()}`)
+                      : (currency === 'USD' ? `$${mySalaryUSD.toFixed(2)}` : `Rs ${(mySalaryUSD * PKR_RATE).toLocaleString()}`)}
+                  </div>
                 </div>
               </div>
             </div>

@@ -99,6 +99,26 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  customTotalEarnings: {
+    type: Number,
+    default: null
+  },
+  customMySalary: {
+    type: Number,
+    default: null
+  },
+  customTotalWithdrawals: {
+    type: Number,
+    default: null
+  },
+  customDirectReferrals: {
+    type: Number,
+    default: null
+  },
+  customIndirectReferrals: {
+    type: Number,
+    default: null
+  },
   claimedStreakReward: {
     type: Boolean,
     default: false

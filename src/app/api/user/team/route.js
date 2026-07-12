@@ -63,7 +63,9 @@ export async function GET(request) {
       }
     }
 
-    const totalMembers = levelAMembers.length + levelBMembers.length + levelCMembers.length;
+    const countA = (user.customDirectReferrals !== undefined && user.customDirectReferrals !== null) ? user.customDirectReferrals : levelAMembers.length;
+    const countB = (user.customIndirectReferrals !== undefined && user.customIndirectReferrals !== null) ? user.customIndirectReferrals : levelBMembers.length;
+    const totalMembers = countA + countB + levelCMembers.length;
     const totalTeamEarnings = user.referralCommission || 0;
 
     const responseData = {
@@ -76,7 +78,7 @@ export async function GET(request) {
         total: earningsLevelA + earningsLevelB + earningsLevelC
       },
       levelA: {
-        count: levelAMembers.length,
+        count: countA,
         members: levelAMembers.map(member => {
           const activePlan = (member.investmentPlans || []).reverse().find(p => p.status === 'active');
           return {
@@ -91,7 +93,7 @@ export async function GET(request) {
         })
       },
       levelB: {
-        count: levelBMembers.length,
+        count: countB,
         members: levelBMembers.map(member => {
           const activePlan = (member.investmentPlans || []).reverse().find(p => p.status === 'active');
           return {
