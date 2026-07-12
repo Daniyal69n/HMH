@@ -111,9 +111,13 @@ export default function Page() {
     activeAds: [],
     hasActivePlan: false,
     planName: 'No Plan',
-    dailyIncome: '$0.00'
+    dailyIncome: '$0.00',
+    claimedToday: false
   })
   const [watchAdModalOpen, setWatchAdModalOpen] = useState(false)
+  const [collectSubmitting, setCollectSubmitting] = useState(false)
+  const [showCollectAnimModal, setShowCollectAnimModal] = useState(false)
+  const [collectRewardAmount, setCollectRewardAmount] = useState({ usd: 0, pkr: 0 })
 
   // Course states
   const [userCourses, setUserCourses] = useState([])
@@ -1162,8 +1166,9 @@ export default function Page() {
   }
 
   const handleWatchAd = (ad) => {
-    if (adWatchData.watchedToday >= 5) {
-      showToast('You have already watched the limit of 5 ads for today.')
+    const maxAds = adWatchData.activeAds?.length || 5
+    if (adWatchData.watchedToday >= maxAds) {
+      showToast(`You have already watched the limit of ${maxAds} ads for today.`)
       return
     }
     setCurrentWatchingAd(ad)
@@ -1224,6 +1229,49 @@ export default function Page() {
       }
     } catch (err) {
       showToast('Network error')
+    } finally {
+      setWatchSubmitting(false)
+    }
+  }
+
+  const handleCollectAdReward = async () => {
+    if (adWatchData.watchedToday < adWatchData.activeAds.length || adWatchData.claimedToday || collectSubmitting || !profile || !profile.phone) return
+    setCollectSubmitting(true)
+    try {
+      const res = await fetch('/api/user/collect-reward', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: profile.phone })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setCollectRewardAmount({ usd: data.rewardUSD, pkr: data.rewardPKR })
+        setShowCollectAnimModal(true)
+        
+        // Refresh local React profile state with updated balances
+        setProfile(prev => {
+          const next = {
+            ...prev,
+            balance: data.balance,
+            earnBalance: data.earnBalance
+          }
+          localStorage.setItem('hmh-profile', JSON.stringify(next))
+          return next
+        })
+        
+        // Refetch ad watch progress
+        const updatedRes = await fetch(`/api/user/watch-ads?phone=${encodeURIComponent(profile.phone)}&_t=${Date.now()}`)
+        if (updatedRes.ok) {
+          const updatedData = await updatedRes.json()
+          setAdWatchData(updatedData)
+        }
+      } else {
+        showToast(data.message || 'Error collecting daily reward')
+      }
+    } catch (err) {
+      showToast('Network error')
+    } finally {
+      setCollectSubmitting(false)
     }
   }
 
@@ -1860,39 +1908,42 @@ export default function Page() {
                 </span>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '13.5px', color: 'var(--text-dim)' }}>
-                <span>{adWatchData.watchedToday} / 5 ads watched</span>
-                <span style={{ fontWeight: '700', color: 'var(--gold-bright)' }}>
-                  {Math.min(100, (adWatchData.watchedToday / 5) * 100).toFixed(0)}%
-                </span>
-              </div>
+              {(() => {
+                const activeAdsLength = adWatchData.activeAds?.length || 5;
+                const progressPercent = Math.min(100, (adWatchData.watchedToday / activeAdsLength) * 100);
+                return (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '13.5px', color: 'var(--text-dim)' }}>
+                      <span>{adWatchData.watchedToday} / {activeAdsLength} ads watched</span>
+                      <span style={{ fontWeight: '700', color: 'var(--gold-bright)' }}>
+                        {progressPercent.toFixed(0)}%
+                      </span>
+                    </div>
 
-              <div className="spin-progress-bar" style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden', marginBottom: '14px' }}>
-                <div
-                  className="spin-progress-fill"
-                  style={{
-                    height: '100%',
-                    background: 'var(--gold)',
-                    borderRadius: '4px',
-                    transition: 'width 0.3s ease',
-                    width: `${Math.min(100, (adWatchData.watchedToday / 5) * 100)}%`
-                  }}
-                />
-              </div>
+                    <div className="spin-progress-bar" style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden', marginBottom: '14px' }}>
+                      <div
+                        className="spin-progress-fill"
+                        style={{
+                          height: '100%',
+                          background: 'var(--gold)',
+                          borderRadius: '4px',
+                          transition: 'width 0.3s ease',
+                          width: `${progressPercent}%`
+                        }}
+                      />
+                    </div>
+                  </>
+                );
+              })()}
 
               {(() => {
                 const parsedIncome = parseFloat(adWatchData.dailyIncome.replace(/[$,₹Rs]/g, '').replace(/,/g, '')) || 0;
                 const parsedIncomePKR = adWatchData.dailyIncome.includes('$') ? (parsedIncome * 300) : parsedIncome;
-                
-                const perAdUSD = parsedIncome / 5;
-                const perAdPKR = parsedIncomePKR / 5;
-                
-                const perAdText = currency === 'USD' ? `$${perAdUSD.toFixed(2)}` : `Rs ${perAdPKR.toLocaleString()}`;
                 const fullDailyText = currency === 'USD' ? `$${parsedIncome.toFixed(2)}` : `Rs ${parsedIncomePKR.toLocaleString()}`;
                 
                 return (
                   <div style={{ fontSize: '13px', color: 'var(--text-faint)', marginTop: '8px', borderTop: '1px solid var(--line)', paddingTop: '10px' }}>
-                    Per ad: <strong style={{ color: 'var(--text)' }}>{perAdText}</strong> (20% of daily) &nbsp;·&nbsp; Full daily earning: <strong style={{ color: 'var(--text)' }}>{fullDailyText}</strong>
+                    Full daily earning: <strong style={{ color: 'var(--text)' }}>{fullDailyText}</strong>
                   </div>
                 );
               })()}
@@ -1909,14 +1960,8 @@ export default function Page() {
                 </div>
               ) : (
                 adWatchData.activeAds.map((ad, idx) => {
-                  const parsedIncome = parseFloat(adWatchData.dailyIncome.replace(/[$,₹Rs]/g, '').replace(/,/g, '')) || 0;
-                  const parsedIncomePKR = adWatchData.dailyIncome.includes('$') ? (parsedIncome * 300) : parsedIncome;
-                  
-                  const perAdUSD = parsedIncome / 5;
-                  const perAdPKR = parsedIncomePKR / 5;
-                  const perAdText = currency === 'USD' ? `$${perAdUSD.toFixed(2)}` : `Rs ${perAdPKR.toLocaleString()}`;
-                  
-                  const isLimitReached = adWatchData.watchedToday >= 5;
+                  const activeAdsLength = adWatchData.activeAds.length;
+                  const isLimitReached = adWatchData.watchedToday >= activeAdsLength;
 
                   return (
                     <div
@@ -1950,9 +1995,6 @@ export default function Page() {
                           <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text)' }}>
                             {ad.title}
                           </div>
-                          <div style={{ fontSize: '12.5px', color: 'var(--gold-bright)' }}>
-                            +{perAdText} (20% daily)
-                          </div>
                         </div>
                       </div>
 
@@ -1976,6 +2018,35 @@ export default function Page() {
                 })
               )}
             </div>
+
+            {adWatchData.activeAds.length > 0 && (
+              <div style={{ marginTop: '20px' }}>
+                <button
+                  className="btn btn-gold"
+                  onClick={handleCollectAdReward}
+                  disabled={adWatchData.watchedToday < adWatchData.activeAds.length || adWatchData.claimedToday || collectSubmitting}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    fontSize: '15px',
+                    fontWeight: '800',
+                    borderRadius: '10px',
+                    opacity: (adWatchData.watchedToday < adWatchData.activeAds.length || adWatchData.claimedToday || collectSubmitting) ? 0.6 : 1,
+                    cursor: (adWatchData.watchedToday < adWatchData.activeAds.length || adWatchData.claimedToday || collectSubmitting) ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {adWatchData.claimedToday ? (
+                    '✅ Reward Already Collected Today'
+                  ) : adWatchData.watchedToday < adWatchData.activeAds.length ? (
+                    `🔒 Locked (Watch all ${adWatchData.activeAds.length} ads to collect)`
+                  ) : collectSubmitting ? (
+                    'Claiming reward...'
+                  ) : (
+                    '🎁 Collect Reward'
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* WATCH AD MODAL */}
             {watchAdModalOpen && currentWatchingAd && (
@@ -2122,6 +2193,129 @@ export default function Page() {
                       {watchSubmitting ? 'Submitting...' : 'Claim Reward'}
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* COLLECT AD REWARD SUCCESS MODAL */}
+            {showCollectAnimModal && (
+              <div style={{
+                position: 'fixed',
+                inset: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 99999,
+                animation: 'fadeIn 0.4s ease-out'
+              }}>
+                <style dangerouslySetInnerHTML={{ __html: `
+                  @keyframes bounceReward {
+                    0%, 100% { transform: translateY(0) scale(1); }
+                    50% { transform: translateY(-12px) scale(1.05); }
+                  }
+                  @keyframes pulseGlow {
+                    0%, 100% { transform: scale(1); opacity: 0.8; }
+                    50% { transform: scale(1.1); opacity: 1; }
+                  }
+                ` }} />
+                <div style={{
+                  position: 'absolute',
+                  width: '500px',
+                  height: '500px',
+                  background: 'radial-gradient(circle, rgba(201, 160, 74, 0.15) 0%, transparent 70%)',
+                  borderRadius: '50%',
+                  zIndex: 0,
+                  pointerEvents: 'none',
+                  animation: 'pulseGlow 3s ease-in-out infinite'
+                }} />
+
+                <div style={{
+                  background: 'linear-gradient(135deg, #1c1917 0%, #0c0a09 100%)',
+                  border: '3px solid #c9a04a',
+                  borderRadius: '24px',
+                  padding: '48px 32px',
+                  textAlign: 'center',
+                  maxWidth: '420px',
+                  width: '90%',
+                  boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8), 0 0 50px rgba(201,160,74,0.4)',
+                  animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  position: 'relative',
+                  zIndex: 1
+                }}>
+                  <div style={{ position: 'relative', height: '100px', marginBottom: '20px' }}>
+                    <div style={{ fontSize: '72px', animation: 'bounceReward 2s infinite' }}>🎁</div>
+                    <div style={{
+                      position: 'absolute',
+                      top: '10px',
+                      left: '30%',
+                      fontSize: '24px'
+                    }}>✨</div>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '10px',
+                      right: '30%',
+                      fontSize: '24px'
+                    }}>✨</div>
+                  </div>
+
+                  <h2 style={{
+                    color: '#e2b968',
+                    fontSize: '28px',
+                    fontWeight: 900,
+                    margin: '0 0 12px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1.5px',
+                    fontFamily: 'var(--font-fraunces), serif'
+                  }}>
+                    Reward Collected!
+                  </h2>
+                  
+                  <p style={{ color: 'var(--text-dim)', fontSize: '15px', margin: '0 0 28px', lineHeight: 1.5 }}>
+                    Congratulations! You have successfully completed your daily tasks and earned:
+                  </p>
+
+                  <div style={{
+                    fontSize: '32px',
+                    fontWeight: 900,
+                    color: '#ffffff',
+                    background: 'linear-gradient(135deg, rgba(201, 160, 74, 0.2) 0%, rgba(201, 160, 74, 0.04) 100%)',
+                    border: '2px dashed #c9a04a',
+                    padding: '16px 28px',
+                    borderRadius: '16px',
+                    margin: '0 auto 36px',
+                    width: 'fit-content',
+                    boxShadow: '0 0 25px rgba(201, 160, 74, 0.2)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span style={{ fontSize: '14px', textTransform: 'uppercase', color: '#e2b968', fontWeight: 700, letterSpacing: '1px' }}>
+                      Total Earned
+                    </span>
+                    <span style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}>
+                      Rs {collectRewardAmount.pkr.toLocaleString()}
+                    </span>
+                    <span style={{ fontSize: '16px', color: 'var(--text-dim)', fontWeight: 600 }}>
+                      (${collectRewardAmount.usd.toFixed(2)})
+                    </span>
+                  </div>
+
+                  <button
+                    className="btn btn-gold"
+                    onClick={() => setShowCollectAnimModal(false)}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      fontWeight: 800,
+                      fontSize: '16px',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 15px rgba(201, 160, 74, 0.3)'
+                    }}
+                  >
+                    Awesome, Thanks!
+                  </button>
                 </div>
               </div>
             )}
