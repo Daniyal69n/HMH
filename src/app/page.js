@@ -615,7 +615,7 @@ export default function Page() {
         } catch (err) {
           console.error(err)
         }
-        
+
         const seededCourses = [
           {
             id: 'course_1',
@@ -665,17 +665,17 @@ export default function Page() {
     if (!profile) return
     const updateCountdown = () => {
       const now = new Date()
-      
+
       // Calculate today at 12:00 AM (midnight)
       const todayStart = new Date(now)
       todayStart.setHours(0, 0, 0, 0)
       const currentCycleStart = todayStart.getTime()
-      
+
       // Calculate tomorrow at 12:00 AM (midnight)
       const tomorrowStart = new Date(todayStart)
       tomorrowStart.setDate(todayStart.getDate() + 1)
       const currentCycleEnd = tomorrowStart.getTime()
-      
+
       const msRemaining = Math.max(0, currentCycleEnd - now.getTime())
 
       // Format remaining time as hh:mm:ss
@@ -1082,7 +1082,7 @@ export default function Page() {
     if (spinRunning) return
     setSpinRunning(true)
     setSpinResult('Spinning...')
-    
+
     // Choose winning prize index: 60% chance for 1$ (index 0 or 9), 40% chance for 2$ (index 1 or 10)
     const rand = Math.random()
     let chosenIndex;
@@ -1092,7 +1092,7 @@ export default function Page() {
       chosenIndex = Math.random() < 0.5 ? 1 : 10
     }
     const prize = spinPrizes[chosenIndex]
-    
+
     // Rotate wheel at least 10 times (3600 deg) + offset to align pointer to winning sector
     const currentAngle = spinAngleRef.current
     const targetSectorAngle = (360 - (chosenIndex * 30 + 15) + 360) % 360
@@ -1104,7 +1104,7 @@ export default function Page() {
     setTimeout(async () => {
       setSpinRunning(false)
       setSpinResult(prize.label)
-      
+
       // Save last spun cycle to localStorage to lock it until reset
       if (profile) {
         const todayStart = new Date()
@@ -1113,7 +1113,7 @@ export default function Page() {
         const currentCycleIndex = Math.floor(localTime / (24 * 60 * 60 * 1000))
         localStorage.setItem(`hmh-last-spin-cycle-${profile.phone}`, String(currentCycleIndex))
         setHasSpunThisCycle(true)
-        
+
         // Award user balance on the database
         try {
           const rewardAmount = prize.label === '2$' ? 2 : 1
@@ -1144,7 +1144,7 @@ export default function Page() {
           console.error('Failed to credit spin reward:', err)
         }
       }
-      
+
       // Show big modal
       setWonAmount(prize.label)
       setWinModalOpen(true)
@@ -1200,7 +1200,7 @@ export default function Page() {
         showToast(data.message)
         setWatchAdModalOpen(false)
         setCurrentWatchingAd(null)
-        
+
         // Refresh local React profile state with updated balances
         setProfile(prev => {
           const next = {
@@ -1211,7 +1211,7 @@ export default function Page() {
           localStorage.setItem('hmh-profile', JSON.stringify(next))
           return next
         })
-        
+
         // Refetch ad watch progress
         const updatedRes = await fetch(`/api/user/watch-ads?phone=${encodeURIComponent(profile.phone)}&_t=${Date.now()}`)
         if (updatedRes.ok) {
@@ -1241,7 +1241,7 @@ export default function Page() {
       if (res.ok) {
         setCollectRewardAmount({ usd: data.rewardUSD, pkr: data.rewardPKR })
         setShowCollectAnimModal(true)
-        
+
         // Refresh local React profile state with updated balances
         setProfile(prev => {
           const next = {
@@ -1252,7 +1252,7 @@ export default function Page() {
           localStorage.setItem('hmh-profile', JSON.stringify(next))
           return next
         })
-        
+
         // Refetch ad watch progress
         const updatedRes = await fetch(`/api/user/watch-ads?phone=${encodeURIComponent(profile.phone)}&_t=${Date.now()}`)
         if (updatedRes.ok) {
@@ -1283,7 +1283,7 @@ export default function Page() {
       const data = await res.json()
       if (res.ok) {
         showToast(data.message)
-        
+
         // Update local profile state
         setProfile(prev => {
           const next = {
@@ -1640,8 +1640,8 @@ export default function Page() {
                 <div>
                   <div className="stat-label">Total earnings</div>
                   <div className="stat-value">
-                    {formatVal(profile.customTotalEarnings !== undefined && profile.customTotalEarnings !== null 
-                      ? profile.customTotalEarnings 
+                    {formatVal(profile.customTotalEarnings !== undefined && profile.customTotalEarnings !== null
+                      ? profile.customTotalEarnings
                       : ((profile.earnBalance || 0) + (profile.totalCommissionEarned || 0)))}
                   </div>
                 </div>
@@ -1658,11 +1658,11 @@ export default function Page() {
                 <div>
                   <div className="stat-label">Total withdrawals</div>
                   <div className="stat-value">
-                    {formatVal(profile.customTotalWithdrawals !== undefined && profile.customTotalWithdrawals !== null 
-                      ? profile.customTotalWithdrawals 
+                    {formatVal(profile.customTotalWithdrawals !== undefined && profile.customTotalWithdrawals !== null
+                      ? profile.customTotalWithdrawals
                       : (withdrawHistory || [])
-                          .filter(w => w.status !== 'rejected' && w.status !== 'cancelled')
-                          .reduce((sum, w) => sum + w.amount, 0))}
+                        .filter(w => w.status !== 'rejected' && w.status !== 'cancelled')
+                        .reduce((sum, w) => sum + w.amount, 0))}
                   </div>
                 </div>
               </div>
@@ -1959,12 +1959,6 @@ export default function Page() {
                 const parsedIncome = parseFloat(adWatchData.dailyIncome.replace(/[$,₹Rs]/g, '').replace(/,/g, '')) || 0;
                 const parsedIncomePKR = adWatchData.dailyIncome.includes('$') ? (parsedIncome * 300) : parsedIncome;
                 const fullDailyText = currency === 'USD' ? `$${parsedIncome.toFixed(2)}` : `Rs ${parsedIncomePKR.toLocaleString()}`;
-                
-                return (
-                  <div style={{ fontSize: '13px', color: 'var(--text-faint)', marginTop: '8px', borderTop: '1px solid var(--line)', paddingTop: '10px' }}>
-                    Full daily earning: <strong style={{ color: 'var(--text)' }}>{fullDailyText}</strong>
-                  </div>
-                );
               })()}
             </div>
 
@@ -2127,11 +2121,10 @@ export default function Page() {
                         <iframe
                           width="100%"
                           height="100%"
-                          src={`https://www.youtube.com/embed/${
-                            currentWatchingAd.url.includes('v=') 
-                              ? currentWatchingAd.url.split('v=')[1]?.split('&')[0] 
+                          src={`https://www.youtube.com/embed/${currentWatchingAd.url.includes('v=')
+                              ? currentWatchingAd.url.split('v=')[1]?.split('&')[0]
                               : currentWatchingAd.url.split('youtu.be/')[1]?.split('?')[0]
-                          }?autoplay=1&mute=1&controls=0&modestbranding=1`}
+                            }?autoplay=1&mute=1&controls=0&modestbranding=1`}
                           title="YouTube video player"
                           frameBorder="0"
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -2139,11 +2132,11 @@ export default function Page() {
                           style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}
                         ></iframe>
                       ) : (
-                        <video 
-                          src={currentWatchingAd.url} 
-                          autoPlay 
-                          muted 
-                          playsInline 
+                        <video
+                          src={currentWatchingAd.url}
+                          autoPlay
+                          muted
+                          playsInline
                           style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0, zIndex: 1 }}
                         />
                       )
@@ -2231,7 +2224,8 @@ export default function Page() {
                 zIndex: 99999,
                 animation: 'fadeIn 0.4s ease-out'
               }}>
-                <style dangerouslySetInnerHTML={{ __html: `
+                <style dangerouslySetInnerHTML={{
+                  __html: `
                   @keyframes bounceReward {
                     0%, 100% { transform: translateY(0) scale(1); }
                     50% { transform: translateY(-12px) scale(1.05); }
@@ -2292,7 +2286,7 @@ export default function Page() {
                   }}>
                     Reward Collected!
                   </h2>
-                  
+
                   <p style={{ color: 'var(--text-dim)', fontSize: '15px', margin: '0 0 28px', lineHeight: 1.5 }}>
                     Congratulations! You have successfully completed your daily tasks and earned:
                   </p>
@@ -3042,15 +3036,15 @@ export default function Page() {
                 {userCourses.map((c) => {
                   const storageKey = `course-started-${c.id}`;
                   const isStarted = typeof window !== 'undefined' ? localStorage.getItem(storageKey) === 'true' : false;
-                  
+
                   return (
-                    <div 
-                      key={c.id} 
-                      className="card course-card" 
-                      style={{ 
-                        padding: '0', 
-                        overflow: 'hidden', 
-                        display: 'flex', 
+                    <div
+                      key={c.id}
+                      className="card course-card"
+                      style={{
+                        padding: '0',
+                        overflow: 'hidden',
+                        display: 'flex',
                         flexDirection: 'column',
                         borderRadius: '16px',
                         background: 'linear-gradient(180deg, #12151d 0%, #0d0f15 100%)',
@@ -3058,10 +3052,10 @@ export default function Page() {
                       }}
                     >
                       <div style={{ position: 'relative', width: '100%', height: '160px' }}>
-                        <img 
-                          src={c.imageUrl} 
-                          alt={c.title} 
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        <img
+                          src={c.imageUrl}
+                          alt={c.title}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                         <div style={{
                           position: 'absolute',
@@ -3079,23 +3073,23 @@ export default function Page() {
                           LITE / PREMIUM
                         </div>
                       </div>
-                      
+
                       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                        <h3 style={{ 
-                          fontSize: '15px', 
-                          fontWeight: '800', 
-                          lineHeight: '1.4', 
-                          margin: '0 0 10px', 
+                        <h3 style={{
+                          fontSize: '15px',
+                          fontWeight: '800',
+                          lineHeight: '1.4',
+                          margin: '0 0 10px',
                           color: '#ffffff',
                           textTransform: 'uppercase'
                         }}>
                           {c.title}
                         </h3>
-                        
-                        <p style={{ 
-                          fontSize: '12.5px', 
-                          color: 'var(--text-dim)', 
-                          margin: '0 0 16px', 
+
+                        <p style={{
+                          fontSize: '12.5px',
+                          color: 'var(--text-dim)',
+                          margin: '0 0 16px',
                           lineHeight: '1.5',
                           flex: 1
                         }}>
@@ -3108,9 +3102,9 @@ export default function Page() {
                             <span>{isStarted ? '100% Completed' : '0%'}</span>
                           </div>
                           <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-                            <div style={{ 
-                              width: isStarted ? '100%' : '0%', 
-                              height: '100%', 
+                            <div style={{
+                              width: isStarted ? '100%' : '0%',
+                              height: '100%',
                               background: 'linear-gradient(90deg, #d9a94e 0%, #f3d082 100%)',
                               borderRadius: '4px',
                               transition: 'width 0.4s ease'
@@ -3126,11 +3120,11 @@ export default function Page() {
                             }
                             setActiveVideoUrl(c.videoUrl);
                           }}
-                          style={{ 
-                            width: '100%', 
-                            padding: '10px 16px', 
-                            fontSize: '13px', 
-                            fontWeight: '700', 
+                          style={{
+                            width: '100%',
+                            padding: '10px 16px',
+                            fontSize: '13px',
+                            fontWeight: '700',
                             borderRadius: '8px',
                             display: 'flex',
                             alignItems: 'center',
@@ -3166,7 +3160,7 @@ export default function Page() {
             }
 
             return (
-              <div 
+              <div
                 style={{
                   position: 'fixed',
                   top: 0,
@@ -3183,7 +3177,7 @@ export default function Page() {
                 }}
                 onClick={() => setActiveVideoUrl(null)}
               >
-                <div 
+                <div
                   style={{
                     width: 'min(100%, 800px)',
                     background: '#0d0f15',
@@ -3205,7 +3199,7 @@ export default function Page() {
                     <span style={{ fontWeight: '800', fontSize: '15px', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       🎓 Video Lesson
                     </span>
-                    <button 
+                    <button
                       onClick={() => setActiveVideoUrl(null)}
                       style={{
                         background: 'transparent',
