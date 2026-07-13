@@ -6,9 +6,13 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     await connectDB();
-    const products = await Product.collection.find().sort({ createdAt: -1 }).toArray();
+    console.log('Fetching products from database...');
+    const products = await Product.find({}).sort({ createdAt: -1 });
+    console.log(`Found ${products.length} products`);
+    console.log('Products:', JSON.stringify(products, null, 2));
     return Response.json(products);
   } catch (error) {
+    console.error('Error fetching products:', error);
     return Response.json({ message: 'Error fetching products', error: error.message }, { status: 500 });
   }
 }
@@ -17,6 +21,7 @@ export async function POST(request) {
   try {
     await connectDB();
     const body = await request.json();
+    console.log('Creating product with data:', body);
     const { name, description, price, currency, image, images, isActive } = body;
 
     if (!name || !price) {
@@ -33,8 +38,10 @@ export async function POST(request) {
       isActive: isActive !== undefined ? isActive : true
     });
 
+    console.log('Product created successfully:', product);
     return Response.json({ message: 'Product created successfully', product }, { status: 201 });
   } catch (error) {
+    console.error('Error creating product:', error);
     return Response.json({ message: 'Error creating product', error: error.message }, { status: 500 });
   }
 }

@@ -311,11 +311,15 @@ export default function AdminDashboard() {
         bRes.json()
       ])
       
+      console.log('Products API response:', pData);
+      console.log('Products response status:', pRes.status);
+      console.log('Is products array?', Array.isArray(pData));
+      
       setProducts(Array.isArray(pData) ? pData : [])
       setOrders(Array.isArray(oData) ? oData : [])
       if (bRes.ok && bData) setEcommerceBankSettings(bData)
     } catch (err) {
-      console.error(err)
+      console.error('Error fetching ecommerce data:', err)
     }
   }
 

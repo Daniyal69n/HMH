@@ -34,6 +34,11 @@ const productSchema = new mongoose.Schema({
   timestamps: true
 });
 
-const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
+// Prevent model recompilation in development
+if (mongoose.models.Product) {
+  delete mongoose.models.Product;
+}
+
+const Product = mongoose.model('Product', productSchema);
 
 export default Product;
