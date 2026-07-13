@@ -2212,14 +2212,32 @@ export default function Page() {
                           style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0, zIndex: 1 }}
                         />
                       ) : (
-                        <iframe
-                          src={currentWatchingAd.url}
-                          width="100%"
-                          height="100%"
-                          frameBorder="0"
-                          sandbox="allow-scripts allow-same-origin allow-popups"
-                          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, backgroundColor: '#fff' }}
-                        ></iframe>
+                        <div style={{
+                          position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1,
+                          backgroundColor: '#18181b', display: 'flex', flexDirection: 'column',
+                          alignItems: 'center', justifyContent: 'center', gap: '15px'
+                        }}>
+                          <div style={{ color: 'var(--gold)', fontSize: '40px' }}>🔗</div>
+                          <p style={{ color: '#fff', fontSize: '14px', textAlign: 'center', margin: '0 20px' }}>
+                            This ad from our partner requires opening in a new tab.
+                          </p>
+                          <a
+                            href={currentWatchingAd.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              background: 'var(--gold)',
+                              color: '#000',
+                              padding: '10px 20px',
+                              borderRadius: '8px',
+                              fontWeight: 'bold',
+                              textDecoration: 'none',
+                              fontSize: '14px'
+                            }}
+                          >
+                            Open Ad in New Tab
+                          </a>
+                        </div>
                       )
                     ) : (
                       <>
