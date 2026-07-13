@@ -38,9 +38,9 @@ async function connectDB() {
     const opts = {
       bufferCommands: false,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 10000, // Reduced timeout to fail fast
-      socketTimeoutMS: 10000,
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 3000, // Fail FAST - 3 second timeout instead of 10
+      socketTimeoutMS: 3000,
+      connectTimeoutMS: 3000,
     };
 
     console.log('[MongoDB] Attempting to connect...');

@@ -1370,10 +1370,17 @@ export default function AdminDashboard() {
         loadRechargeHistory()
       }
       
-      // Load settings-like data once
-      loadPaymentDetails()
-      loadCoupons()
-      loadImages()
+      // Load settings-like data ASYNCHRONOUSLY to not block page render
+      // These are not critical for initial page load
+      setTimeout(() => {
+        loadPaymentDetails()
+      }, 100)
+      
+      // Defer non-essential data loading to after page is interactive (500ms)
+      setTimeout(() => {
+        loadCoupons()
+        loadImages()
+      }, 500)
       
       // Set up periodic refresh every 15 seconds for the active tab only
       const refreshInterval = setInterval(() => {

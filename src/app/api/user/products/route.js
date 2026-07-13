@@ -24,4 +24,4 @@ export async function GET() {
   } catch (error) {
     return Response.json([], { status: 200 });
   }
-
+}
