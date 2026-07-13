@@ -150,7 +150,7 @@
 
 /* ===== Dashboard ===== */
 :global(.meridian .profile-card){
-  display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap;
+  display:flex; gap:18px; align-items:center; flex-wrap:nowrap;
   background:linear-gradient(150deg, var(--surface), var(--surface-2));
   margin-bottom:18px;
 }
