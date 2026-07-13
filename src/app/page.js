@@ -2203,7 +2203,7 @@ export default function Page() {
                           allowFullScreen
                           style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}
                         ></iframe>
-                      ) : (
+                      ) : currentWatchingAd.url.match(/\.(mp4|webm|ogg)$/i) ? (
                         <video
                           src={currentWatchingAd.url}
                           autoPlay
@@ -2211,6 +2211,15 @@ export default function Page() {
                           playsInline
                           style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0, zIndex: 1 }}
                         />
+                      ) : (
+                        <iframe
+                          src={currentWatchingAd.url}
+                          width="100%"
+                          height="100%"
+                          frameBorder="0"
+                          sandbox="allow-scripts allow-same-origin allow-popups"
+                          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, backgroundColor: '#fff' }}
+                        ></iframe>
                       )
                     ) : (
                       <>
