@@ -2693,7 +2693,7 @@ export default function Page() {
               ) : (
                 <>
                   <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-dim)' }}>
-                    <span>Progress: {purchaseProgress.totalApprovedPurchases.toLocaleString()} / {purchaseProgress.targetAmount.toLocaleString()}</span>
+                    <span>Progress: {Math.round(purchaseProgress.progressPercentage)}/100</span>
                     <span>{purchaseProgress.progressPercentage.toFixed(1)}%</span>
                   </div>
                   
@@ -2740,9 +2740,9 @@ export default function Page() {
                     ) : purchaseProgress.hasClaimedReward ? (
                       'Reward Claimed ✓'
                     ) : purchaseProgress.progressPercentage >= 100 ? (
-                      'Claim $5 Reward'
+                      'Collect 5$'
                     ) : (
-                      `🔒 Locked (Reach ${purchaseProgress.targetAmount.toLocaleString()} to unlock)`
+                      '🔒 Locked'
                     )}
                   </button>
                 </>
