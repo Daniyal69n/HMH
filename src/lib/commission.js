@@ -100,6 +100,31 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
 
   // R1 must have an active plan to receive commission
   const r1PlanPrice = await getUserActivePlanPrice(r1);
+
+  // Award Ad Watch Bonus Days
+  let extraDays = 0;
+  let r1PlanId = 'free';
+  if (r1PlanPrice === 5) r1PlanId = 'basic';
+  else if (r1PlanPrice === 10) r1PlanId = 'standard';
+  else if (r1PlanPrice === 20) r1PlanId = 'diamond';
+  else if (r1PlanPrice === 30) r1PlanId = 'pro';
+  else if (r1PlanPrice === 40) r1PlanId = 'premium';
+  else if (r1PlanPrice >= 50) r1PlanId = 'legend';
+
+  if (r1PlanId !== 'free' && purchasedPlanId !== 'free') {
+    if (r1PlanId === purchasedPlanId) {
+      extraDays = 10;
+    } else {
+      if (purchasedPlanId === 'basic') extraDays = 2;
+      else if (purchasedPlanId === 'standard') extraDays = 3;
+      else if (purchasedPlanId === 'diamond') extraDays = 4;
+      else if (purchasedPlanId === 'pro') extraDays = 6;
+      else if (purchasedPlanId === 'premium') extraDays = 8;
+      else if (purchasedPlanId === 'legend') extraDays = 10;
+    }
+    r1.adWatchDaysLeft = (r1.adWatchDaysLeft || 0) + extraDays;
+  }
+
   if (r1PlanPrice > 0) {
     // Dynamic Level A Commission
     const comm1 = purchaseAmountPKR * rateA;
@@ -215,7 +240,8 @@ export async function activateUserPlan(user, planToApprove) {
   }
   planToApprove.status = 'active';
   
-  // 2. Save the updated user object
+  // 2. Update ad watch limit and Save the updated user object
+  user.adWatchDaysLeft = (user.adWatchDaysLeft || 0) + 10;
   await user.save();
 
   // 3. Distribute the commissions based on the amount the user requested (which is what they paid)

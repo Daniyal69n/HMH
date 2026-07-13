@@ -1184,7 +1184,7 @@ export default function Page() {
   }, [watchAdModalOpen, watchCountdown])
 
   const claimAdReward = async () => {
-    if (watchSubmitting || !profile || !profile.phone || !currentWatchingAd) return
+    if (watchSubmitting || !profile || !profile.phone || !currentWatchingAd || adWatchData.limitReached) return
     setWatchSubmitting(true)
     try {
       const res = await fetch('/api/user/watch-ads', {
@@ -1229,7 +1229,7 @@ export default function Page() {
   }
 
   const handleCollectAdReward = async () => {
-    if (adWatchData.watchedToday < adWatchData.activeAds.length || adWatchData.claimedToday || collectSubmitting || !profile || !profile.phone) return
+    if (adWatchData.limitReached || adWatchData.watchedToday < adWatchData.activeAds.length || adWatchData.claimedToday || collectSubmitting || !profile || !profile.phone) return
     setCollectSubmitting(true)
     try {
       const res = await fetch('/api/user/collect-reward', {
@@ -1914,6 +1914,19 @@ export default function Page() {
                 </span>
               </div>
 
+              {adWatchData.limitReached ? (
+                <div style={{ padding: '12px', background: 'rgba(255, 50, 50, 0.1)', color: '#ff4d4d', borderRadius: '8px', marginBottom: '14px', fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>
+                  🚫 Ad Limit Reached. Invite a member to unlock more days!
+                  <div style={{ marginTop: '8px' }}>
+                    <button className="btn btn-gold" onClick={() => setPage('team')} style={{ padding: '6px 12px', fontSize: '12px' }}>Go to Team to Invite</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ padding: '8px', background: 'rgba(201,160,74,0.1)', color: 'var(--gold)', borderRadius: '8px', marginBottom: '14px', fontSize: '14px', textAlign: 'center' }}>
+                  ⏳ Days Left to Earn: <strong>{adWatchData.adWatchDaysLeft || 0}</strong>
+                </div>
+              )}
+
               {(() => {
                 const activeAdsLength = adWatchData.activeAds?.length || 5;
                 const progressPercent = Math.min(100, (adWatchData.watchedToday / activeAdsLength) * 100);
@@ -1967,7 +1980,7 @@ export default function Page() {
               ) : (
                 adWatchData.activeAds.map((ad, idx) => {
                   const activeAdsLength = adWatchData.activeAds.length;
-                  const isLimitReached = adWatchData.watchedToday >= activeAdsLength;
+                  const isLimitReached = adWatchData.watchedToday >= activeAdsLength || adWatchData.limitReached;
 
                   return (
                     <div
@@ -2031,18 +2044,20 @@ export default function Page() {
                 <button
                   className="btn btn-gold"
                   onClick={handleCollectAdReward}
-                  disabled={adWatchData.watchedToday < adWatchData.activeAds.length || adWatchData.claimedToday || collectSubmitting}
+                  disabled={adWatchData.limitReached || adWatchData.watchedToday < adWatchData.activeAds.length || adWatchData.claimedToday || collectSubmitting}
                   style={{
                     width: '100%',
                     padding: '14px',
                     fontSize: '15px',
                     fontWeight: '800',
                     borderRadius: '10px',
-                    opacity: (adWatchData.watchedToday < adWatchData.activeAds.length || adWatchData.claimedToday || collectSubmitting) ? 0.6 : 1,
-                    cursor: (adWatchData.watchedToday < adWatchData.activeAds.length || adWatchData.claimedToday || collectSubmitting) ? 'not-allowed' : 'pointer'
+                    opacity: (adWatchData.limitReached || adWatchData.watchedToday < adWatchData.activeAds.length || adWatchData.claimedToday || collectSubmitting) ? 0.6 : 1,
+                    cursor: (adWatchData.limitReached || adWatchData.watchedToday < adWatchData.activeAds.length || adWatchData.claimedToday || collectSubmitting) ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  {adWatchData.claimedToday ? (
+                  {adWatchData.limitReached ? (
+                    '🚫 Ad Limit Reached'
+                  ) : adWatchData.claimedToday ? (
                     '✅ Reward Already Collected Today'
                   ) : adWatchData.watchedToday < adWatchData.activeAds.length ? (
                     `🔒 Locked (Watch all ${adWatchData.activeAds.length} ads to collect)`

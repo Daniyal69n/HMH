@@ -73,6 +73,7 @@ export async function POST(request) {
     
     // Deduct investment amount from user balance
     user.balance -= investAmount;
+    user.adWatchDaysLeft = (user.adWatchDaysLeft || 0) + 10;
     await user.save();
     
     // Create investment

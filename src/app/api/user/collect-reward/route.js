@@ -62,6 +62,21 @@ export async function POST(request) {
       userId: phone,
       isActive: true
     });
+
+    let adWatchDaysLeft = user.adWatchDaysLeft;
+
+    if (activeInvestment) {
+      if (adWatchDaysLeft === undefined || adWatchDaysLeft === null) {
+        adWatchDaysLeft = 10;
+        user.adWatchDaysLeft = 10;
+        await user.save();
+      }
+      if (adWatchDaysLeft <= 0) {
+        return Response.json({ message: 'Ad limit reached. Please invite a member to unlock more days.' }, { status: 403 });
+      }
+    } else {
+      return Response.json({ message: 'Please purchase a plan to collect ad rewards.' }, { status: 403 });
+    }
     
     // Fetch earnings plans config
     const earningsSetting = await SystemSettings.findOne({ key: 'earnings_plans' }).lean();
@@ -95,6 +110,7 @@ export async function POST(request) {
       user.balance = (user.balance || 0) + rewardPKR;
       user.earnBalance = (user.earnBalance || 0) + rewardPKR;
       user.lastAdRewardClaimDate = currentDate;
+      user.adWatchDaysLeft -= 1;
       await user.save();
       
       // Create transaction log
@@ -120,6 +136,7 @@ export async function POST(request) {
     } else {
       // If reward is 0, still mark as claimed
       user.lastAdRewardClaimDate = currentDate;
+      user.adWatchDaysLeft -= 1;
       await user.save();
     }
     

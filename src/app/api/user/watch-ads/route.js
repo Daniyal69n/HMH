@@ -77,6 +77,22 @@ export async function GET(request) {
 
     const planConfig = earningsPlans.find(p => p.id === planId) || earningsPlans[0];
     const fullDailyUSD = planConfig.perAd * activeAds.length;
+    let adWatchDaysLeft = user.adWatchDaysLeft;
+    let limitReached = false;
+
+    if (activeInvestment) {
+      if (adWatchDaysLeft === undefined || adWatchDaysLeft === null) {
+        adWatchDaysLeft = 10;
+        await User.findByIdAndUpdate(user._id, { adWatchDaysLeft: 10 });
+      }
+      if (adWatchDaysLeft <= 0) {
+        limitReached = true;
+      }
+    } else {
+      adWatchDaysLeft = 0;
+      limitReached = true;
+    }
+
     const claimedToday = user.lastAdRewardClaimDate === currentDate;
     console.timeEnd("processing");
 
@@ -87,7 +103,9 @@ export async function GET(request) {
       hasActivePlan: !!activeInvestment,
       planName: activeInvestment ? activeInvestment.planName : 'No Plan',
       dailyIncome: `$${fullDailyUSD.toFixed(2)}`,
-      claimedToday
+      claimedToday,
+      adWatchDaysLeft,
+      limitReached
     });
     console.timeEnd("response");
     return res;
@@ -110,6 +128,22 @@ export async function POST(request) {
     const user = await User.findOne({ phone }).select('-profilePicture');
     if (!user) {
       return Response.json({ message: 'User not found' }, { status: 404 });
+    }
+
+    const activeInvestment = await UserInvestment.findOne({ userId: phone, isActive: true }).lean();
+    let adWatchDaysLeft = user.adWatchDaysLeft;
+
+    if (activeInvestment) {
+      if (adWatchDaysLeft === undefined || adWatchDaysLeft === null) {
+        adWatchDaysLeft = 10;
+        user.adWatchDaysLeft = 10;
+        await user.save();
+      }
+      if (adWatchDaysLeft <= 0) {
+        return Response.json({ message: 'Ad limit reached. Please invite a member to unlock more days.' }, { status: 403 });
+      }
+    } else {
+      return Response.json({ message: 'Please purchase a plan to watch ads.' }, { status: 403 });
     }
     
     // Calculate current PKT date

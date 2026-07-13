@@ -99,6 +99,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  adWatchDaysLeft: {
+    type: Number,
+    default: 0
+  },
   customTotalEarnings: {
     type: Number,
     default: null
