@@ -1918,7 +1918,7 @@ export default function Page() {
                 <div style={{ padding: '12px', background: 'rgba(255, 50, 50, 0.1)', color: '#ff4d4d', borderRadius: '8px', marginBottom: '14px', fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>
                   🚫 Ad Limit Reached. Invite a member to unlock more days!
                   <div style={{ marginTop: '8px' }}>
-                    <button className="btn btn-gold" onClick={() => setPage('team')} style={{ padding: '6px 12px', fontSize: '12px' }}>Go to Team to Invite</button>
+                    <button className="btn btn-gold" onClick={() => setPage('network')} style={{ padding: '6px 12px', fontSize: '12px' }}>Go to Team to Invite</button>
                   </div>
                 </div>
               ) : (
