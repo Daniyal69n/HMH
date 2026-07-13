@@ -21,9 +21,9 @@ async function connectDB() {
     const opts = {
       bufferCommands: false,
       maxPoolSize: 20,
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 60000,
+      connectTimeoutMS: 30000,
     };
 
     console.log('Attempting to connect to MongoDB...');

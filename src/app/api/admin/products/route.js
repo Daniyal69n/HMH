@@ -4,17 +4,31 @@ import Product from '@/models/Product';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  try {
-    await connectDB();
-    console.log('Fetching products from database...');
-    const products = await Product.find({}).sort({ createdAt: -1 });
-    console.log(`Found ${products.length} products`);
-    console.log('Products:', JSON.stringify(products, null, 2));
-    return Response.json(products);
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    return Response.json({ message: 'Error fetching products', error: error.message }, { status: 500 });
+  let retries = 3;
+  let lastError;
+  
+  while (retries > 0) {
+    try {
+      await connectDB();
+      console.log('Fetching products from database...');
+      const products = await Product.find({}).sort({ createdAt: -1 }).lean().maxTimeMS(10000);
+      console.log(`Found ${products.length} products`);
+      return Response.json(products);
+    } catch (error) {
+      lastError = error;
+      console.error(`Error fetching products (retries left: ${retries - 1}):`, error.message);
+      retries--;
+      if (retries > 0) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
   }
+  
+  console.error('Failed to fetch products after retries:', lastError);
+  return Response.json({ 
+    message: 'Error fetching products', 
+    error: lastError?.message || 'Database connection failed' 
+  }, { status: 500 });
 }
 
 export async function POST(request) {
