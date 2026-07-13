@@ -1369,7 +1369,7 @@ export default function Page() {
 
   const handleClaimPurchaseReward = async () => {
     if (!profile?.phone || claimRewardSubmitting) return
-    
+
     setClaimRewardSubmitting(true)
     try {
       const res = await fetch('/api/user/claim-purchase-reward', {
@@ -1377,13 +1377,13 @@ export default function Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: profile.phone })
       })
-      
+
       const data = await res.json()
-      
+
       if (res.ok) {
         showToast(`$${data.rewardAmount} reward claimed successfully!`)
         setPurchaseProgress(prev => ({ ...prev, hasClaimedReward: true }))
-        
+
         // Refresh profile to update balance
         const ts = Date.now()
         fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone)}&_t=${ts}`)
@@ -2194,8 +2194,8 @@ export default function Page() {
                           width="100%"
                           height="100%"
                           src={`https://www.youtube.com/embed/${currentWatchingAd.url.includes('v=')
-                              ? currentWatchingAd.url.split('v=')[1]?.split('&')[0]
-                              : currentWatchingAd.url.split('youtu.be/')[1]?.split('?')[0]
+                            ? currentWatchingAd.url.split('v=')[1]?.split('&')[0]
+                            : currentWatchingAd.url.split('youtu.be/')[1]?.split('?')[0]
                             }?autoplay=1&mute=1&controls=0&modestbranding=1`}
                           title="YouTube video player"
                           frameBorder="0"
@@ -2685,7 +2685,7 @@ export default function Page() {
               <div style={{ marginBottom: 12, fontWeight: 700, fontSize: 14, color: 'var(--gold-bright)' }}>
                 Earn reward by selling product
               </div>
-              
+
               {purchaseProgressLoading ? (
                 <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-dim)' }}>
                   Loading progress...
@@ -2696,24 +2696,24 @@ export default function Page() {
                     <span>Progress: {Math.round(purchaseProgress.progressPercentage)}/100</span>
                     <span>{purchaseProgress.progressPercentage.toFixed(1)}%</span>
                   </div>
-                  
-                  <div style={{ 
-                    width: '100%', 
-                    height: 12, 
-                    background: 'rgba(201, 160, 74, 0.2)', 
-                    borderRadius: 6, 
+
+                  <div style={{
+                    width: '100%',
+                    height: 12,
+                    background: 'rgba(201, 160, 74, 0.2)',
+                    borderRadius: 6,
                     overflow: 'hidden',
                     marginBottom: 16
                   }}>
-                    <div style={{ 
-                      width: `${purchaseProgress.progressPercentage}%`, 
-                      height: '100%', 
-                      background: 'linear-gradient(90deg, #c9a04a, #e2b968)', 
+                    <div style={{
+                      width: `${purchaseProgress.progressPercentage}%`,
+                      height: '100%',
+                      background: 'linear-gradient(90deg, #c9a04a, #e2b968)',
                       borderRadius: 6,
                       transition: 'width 0.5s ease-in-out'
                     }} />
                   </div>
-                  
+
                   <button
                     onClick={handleClaimPurchaseReward}
                     disabled={purchaseProgress.progressPercentage < 100 || purchaseProgress.hasClaimedReward || claimRewardSubmitting}
@@ -2724,11 +2724,11 @@ export default function Page() {
                       fontWeight: 700,
                       fontSize: 14,
                       cursor: purchaseProgress.progressPercentage >= 100 && !purchaseProgress.hasClaimedReward ? 'pointer' : 'not-allowed',
-                      background: purchaseProgress.progressPercentage >= 100 && !purchaseProgress.hasClaimedReward 
-                        ? 'var(--gold)' 
+                      background: purchaseProgress.progressPercentage >= 100 && !purchaseProgress.hasClaimedReward
+                        ? 'var(--gold)'
                         : 'rgba(201, 160, 74, 0.3)',
-                      color: purchaseProgress.progressPercentage >= 100 && !purchaseProgress.hasClaimedReward 
-                        ? '#181205' 
+                      color: purchaseProgress.progressPercentage >= 100 && !purchaseProgress.hasClaimedReward
+                        ? '#181205'
                         : 'var(--text-dim)',
                       border: 'none',
                       transition: 'all 0.3s',
@@ -2742,7 +2742,7 @@ export default function Page() {
                     ) : purchaseProgress.progressPercentage >= 100 ? (
                       'Collect 5$'
                     ) : (
-                      '🔒 Locked'
+                      '🔒 Locked*Collect 5$ Reward'
                     )}
                   </button>
                 </>
