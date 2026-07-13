@@ -42,13 +42,19 @@ export async function POST(request) {
       return Response.json({ message: 'Name and price are required' }, { status: 400 });
     }
 
+    // Store only URLs, not Base64 strings - this keeps MongoDB fast
+    const imageUrl = (image && typeof image === 'string' && image.startsWith('http')) ? image : '';
+    const imageUrls = Array.isArray(images) 
+      ? images.filter(img => typeof img === 'string' && img.startsWith('http'))
+      : [];
+
     const product = await Product.create({
       name,
       description,
       price,
       currency: currency || 'Rs',
-      image: image || '',
-      images: images || (image ? [image] : []),
+      image: imageUrl,
+      images: imageUrls.length > 0 ? imageUrls : (imageUrl ? [imageUrl] : []),
       isActive: isActive !== undefined ? isActive : true
     });
 

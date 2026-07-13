@@ -388,20 +388,55 @@ export default function AdminDashboard() {
     })
   }
 
-  function handleProductImageUpload(e) {
+  async function handleProductImageUpload(e) {
     const files = Array.from(e.target.files)
-    if (files.length > 0) {
-      files.forEach(file => {
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          setProductForm(prev => {
-            if (!prev || !prev.imgs) return prev;
-            if (prev.imgs.length >= 5) return prev;
-            return { ...prev, imgs: [...prev.imgs, reader.result] }
-          })
-        }
-        reader.readAsDataURL(file)
-      })
+    if (files.length === 0) return;
+
+    if (!productForm.imgs) {
+      productForm.imgs = [];
+    }
+
+    if (productForm.imgs.length >= 5) {
+      showWarning('Maximum 5 images allowed');
+      return;
+    }
+
+    // Upload each image to Cloudinary via API endpoint
+    for (const file of files) {
+      if (productForm.imgs.length >= 5) break;
+
+      try {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          try {
+            showInfo('Uploading image...');
+            const uploadRes = await fetch('/api/admin/images-upload', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ imageBase64: reader.result })
+            });
+
+            if (uploadRes.ok) {
+              const { imageUrl } = await uploadRes.json();
+              setProductForm(prev => {
+                if (!prev || !prev.imgs) return prev;
+                if (prev.imgs.length >= 5) return prev;
+                return { ...prev, imgs: [...prev.imgs, imageUrl] };
+              });
+              showSuccess('Image uploaded!');
+            } else {
+              showError('Image upload failed. Try with Cloudinary setup.');
+            }
+          } catch (err) {
+            console.error('Upload error:', err);
+            showError('Image upload error');
+          }
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        console.error('File read error:', err);
+        showError('Error reading file');
+      }
     }
   }
 
@@ -414,58 +449,53 @@ export default function AdminDashboard() {
   }
 
   async function saveProductForm() {
-    if (!productForm) return
+    if (!productForm) return;
     if (!productForm.name.trim()) {
-      showError('Product name is required')
-      return
+      showError('Product name is required');
+      return;
     }
 
     try {
-      if (productForm.mode === 'add') {
-        const res = await fetch('/api/admin/products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: productForm.name,
-            description: productForm.desc,
-            price: parseFloat(productForm.price) || 0,
-            currency: 'Rs',
-            isActive: true,
-            image: (productForm.imgs && productForm.imgs[0]) ? productForm.imgs[0] : '',
-            images: productForm.imgs || []
-          })
-        })
-        if (res.ok) {
-          showSuccess('Product added successfully!')
-          fetchEcommerceData()
-        } else {
-          showError('Failed to add product')
-        }
+      const payload = {
+        name: productForm.name,
+        description: productForm.desc,
+        price: parseFloat(productForm.price) || 0,
+        currency: 'Rs',
+        isActive: true,
+        image: (productForm.imgs && productForm.imgs[0]) ? productForm.imgs[0] : '',
+        images: productForm.imgs || []
+      };
+
+      const url = productForm.mode === 'add' 
+        ? '/api/admin/products' 
+        : '/api/admin/products';
+      
+      const method = productForm.mode === 'add' ? 'POST' : 'PUT';
+
+      if (productForm.mode === 'edit') {
+        payload.id = productForm.id;
+      }
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        showSuccess(productForm.mode === 'add' 
+          ? 'Product added successfully!' 
+          : 'Product updated successfully!');
+        setProductForm(null);
+        fetchEcommerceData();
       } else {
-        const res = await fetch('/api/admin/products', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: productForm.id,
-            name: productForm.name,
-            description: productForm.desc,
-            price: parseFloat(productForm.price) || 0,
-            image: (productForm.imgs && productForm.imgs[0]) ? productForm.imgs[0] : '',
-            images: productForm.imgs || []
-          })
-        })
-        if (res.ok) {
-          showSuccess('Product updated successfully!')
-          fetchEcommerceData()
-        } else {
-          showError('Failed to update product')
-        }
+        const error = await res.json();
+        showError(error.message || 'Failed to save product');
       }
     } catch (err) {
-      console.error(err)
-      showError('An error occurred')
+      console.error('Save error:', err);
+      showError('An error occurred while saving product');
     }
-    setProductForm(null)
   }
 
   async function deleteProduct(id) {
