@@ -135,6 +135,14 @@ const userSchema = new mongoose.Schema({
     type: [Number],
     default: []
   },
+  totalApprovedPurchases: {
+    type: Number,
+    default: 0
+  },
+  hasClaimedPurchaseReward: {
+    type: Boolean,
+    default: false
+  },
   investmentPlans: {
     type: [{
       planId: String,

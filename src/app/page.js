@@ -98,6 +98,16 @@ export default function Page() {
   const [ecommerceBankDetails, setEcommerceBankDetails] = useState({ bankName: '', accountName: '', accountNumber: '' })
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false)
 
+  // Purchase progress and reward states
+  const [purchaseProgress, setPurchaseProgress] = useState({
+    totalApprovedPurchases: 0,
+    progressPercentage: 0,
+    targetAmount: 15000,
+    hasClaimedReward: false
+  })
+  const [purchaseProgressLoading, setPurchaseProgressLoading] = useState(false)
+  const [claimRewardSubmitting, setClaimRewardSubmitting] = useState(false)
+
   const [spinAngle, setSpinAngle] = useState(0)
   const [spinRunning, setSpinRunning] = useState(false)
   const [spinResult, setSpinResult] = useState('Locked')
@@ -346,6 +356,27 @@ export default function Page() {
               return next
             })
           }
+        })
+
+      // Fetch purchase progress
+      setPurchaseProgressLoading(true)
+      fetch(`/api/user/purchase-progress?phone=${encodeURIComponent(profile.phone)}&_t=${ts}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && !data.error) {
+            setPurchaseProgress({
+              totalApprovedPurchases: data.totalApprovedPurchases || 0,
+              progressPercentage: data.progressPercentage || 0,
+              targetAmount: data.targetAmount || 15000,
+              hasClaimedReward: data.hasClaimedReward || false
+            })
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching purchase progress:', err)
+        })
+        .finally(() => {
+          setPurchaseProgressLoading(false)
         })
         .catch(console.error)
     }
@@ -1333,6 +1364,47 @@ export default function Page() {
     } catch (err) {
       console.error(err)
       showToast('Error claiming reward')
+    }
+  }
+
+  const handleClaimPurchaseReward = async () => {
+    if (!profile?.phone || claimRewardSubmitting) return
+    
+    setClaimRewardSubmitting(true)
+    try {
+      const res = await fetch('/api/user/claim-purchase-reward', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: profile.phone })
+      })
+      
+      const data = await res.json()
+      
+      if (res.ok) {
+        showToast(`$${data.rewardAmount} reward claimed successfully!`)
+        setPurchaseProgress(prev => ({ ...prev, hasClaimedReward: true }))
+        
+        // Refresh profile to update balance
+        const ts = Date.now()
+        fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone)}&_t=${ts}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && !data.error) {
+              setProfile(prev => {
+                const next = { ...prev, ...data }
+                localStorage.setItem('hmh-profile', JSON.stringify(next))
+                return next
+              })
+            }
+          })
+      } else {
+        showToast(data.message || 'Failed to claim reward')
+      }
+    } catch (err) {
+      console.error(err)
+      showToast('Error claiming reward')
+    } finally {
+      setClaimRewardSubmitting(false)
     }
   }
 
@@ -2606,6 +2678,75 @@ export default function Page() {
             <div className="page-head">
               <h1>E-commerce</h1>
               <p>Browse and purchase products with your HMHPro balance or direct transfer.</p>
+            </div>
+
+            {/* Purchase Progress Bar */}
+            <div className="card" style={{ marginBottom: 20, padding: 20 }}>
+              <div style={{ marginBottom: 12, fontWeight: 700, fontSize: 14, color: 'var(--gold-bright)' }}>
+                Earn reward by selling product
+              </div>
+              
+              {purchaseProgressLoading ? (
+                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-dim)' }}>
+                  Loading progress...
+                </div>
+              ) : (
+                <>
+                  <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-dim)' }}>
+                    <span>Progress: {purchaseProgress.totalApprovedPurchases.toLocaleString()} / {purchaseProgress.targetAmount.toLocaleString()}</span>
+                    <span>{purchaseProgress.progressPercentage.toFixed(1)}%</span>
+                  </div>
+                  
+                  <div style={{ 
+                    width: '100%', 
+                    height: 12, 
+                    background: 'rgba(201, 160, 74, 0.2)', 
+                    borderRadius: 6, 
+                    overflow: 'hidden',
+                    marginBottom: 16
+                  }}>
+                    <div style={{ 
+                      width: `${purchaseProgress.progressPercentage}%`, 
+                      height: '100%', 
+                      background: 'linear-gradient(90deg, #c9a04a, #e2b968)', 
+                      borderRadius: 6,
+                      transition: 'width 0.5s ease-in-out'
+                    }} />
+                  </div>
+                  
+                  <button
+                    onClick={handleClaimPurchaseReward}
+                    disabled={purchaseProgress.progressPercentage < 100 || purchaseProgress.hasClaimedReward || claimRewardSubmitting}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: 8,
+                      fontWeight: 700,
+                      fontSize: 14,
+                      cursor: purchaseProgress.progressPercentage >= 100 && !purchaseProgress.hasClaimedReward ? 'pointer' : 'not-allowed',
+                      background: purchaseProgress.progressPercentage >= 100 && !purchaseProgress.hasClaimedReward 
+                        ? 'var(--gold)' 
+                        : 'rgba(201, 160, 74, 0.3)',
+                      color: purchaseProgress.progressPercentage >= 100 && !purchaseProgress.hasClaimedReward 
+                        ? '#181205' 
+                        : 'var(--text-dim)',
+                      border: 'none',
+                      transition: 'all 0.3s',
+                      opacity: claimRewardSubmitting ? 0.7 : 1
+                    }}
+                  >
+                    {claimRewardSubmitting ? (
+                      'Processing...'
+                    ) : purchaseProgress.hasClaimedReward ? (
+                      'Reward Claimed ✓'
+                    ) : purchaseProgress.progressPercentage >= 100 ? (
+                      'Claim $5 Reward'
+                    ) : (
+                      `🔒 Locked (Reach ${purchaseProgress.targetAmount.toLocaleString()} to unlock)`
+                    )}
+                  </button>
+                </>
+              )}
             </div>
 
             {productsLoading ? (

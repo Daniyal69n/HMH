@@ -81,6 +81,13 @@ export async function PUT(request) {
           createdAt: new Date()
         });
       }
+
+      // Update user's total approved purchases for reward tracking
+      if (!user.totalApprovedPurchases) {
+        user.totalApprovedPurchases = 0;
+      }
+      user.totalApprovedPurchases += order.amount;
+      await user.save();
     }
 
     order.status = status;
