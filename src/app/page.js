@@ -977,43 +977,70 @@ export default function Page() {
       const newPlanPKR = selectedPlanData.price * PKR_RATE
       const currentPlanPKR = currentPlanPrice * PKR_RATE
       const amountToPay = activePlanName === 'Free' ? newPlanPKR : Math.max(0, newPlanPKR - currentPlanPKR)
-      const formData = new FormData()
-      formData.append('userId', user._id || user.phone || '')
-      formData.append('userPhone', user.phone || '')
-      formData.append('planName', selectedPlanData.name)
-      formData.append('previousPlan', activePlanName)
-      formData.append('amount', amountToPay)
-      formData.append('fullPlanPKR', newPlanPKR)
-      formData.append('paymentMethod', planPaymentMethod === 'jazzcash' ? 'JazzCash' : 'EasyPaisa')
-      formData.append('screenshot', planScreenshot)
-      const res = await fetch('/api/user/plan-request', {
-        method: 'POST',
-        body: formData
-      })
-      if (res.ok) {
-        setPlanModalOpen(false)
-        showToast('Plan request submitted! Admin will activate your plan shortly.')
-
-        // Fetch fresh profile data to update pending plan state immediately
+      
+      const reader = new FileReader()
+      reader.readAsDataURL(planScreenshot)
+      reader.onload = async () => {
         try {
-          const profileRes = await fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone || user.phone)}&_t=${Date.now()}`)
-          if (profileRes.ok) {
-            const profileData = await profileRes.json()
-            setProfile(prev => ({
-              ...prev,
-              ...profileData
-            }))
+          const imageBase64 = reader.result
+          
+          const uploadRes = await fetch('/api/user/plan-screenshot-upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageBase64 })
+          })
+          
+          if (!uploadRes.ok) throw new Error('Failed to upload screenshot')
+          
+          const uploadData = await uploadRes.json()
+          const screenshotUrl = uploadData.screenshotUrl
+
+          const res = await fetch('/api/user/plan-request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user._id || user.phone || '',
+              userPhone: user.phone || '',
+              planName: selectedPlanData.name,
+              previousPlan: activePlanName,
+              amount: amountToPay,
+              fullPlanPKR: newPlanPKR,
+              paymentMethod: planPaymentMethod === 'jazzcash' ? 'JazzCash' : 'EasyPaisa',
+              screenshotUrl: screenshotUrl
+            })
+          })
+
+          if (res.ok) {
+            setPlanModalOpen(false)
+            showToast('Plan request submitted! Admin will activate your plan shortly.')
+            try {
+              const profileRes = await fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone || user.phone)}&_t=${Date.now()}`)
+              if (profileRes.ok) {
+                const profileData = await profileRes.json()
+                setProfile(prev => ({ ...prev, ...profileData }))
+                localStorage.setItem('user', JSON.stringify({ ...user, ...profileData }))
+              }
+            } catch (err) {
+              console.error('Error fetching fresh profile:', err)
+            }
+          } else {
+            const err = await res.json()
+            showToast(err.message || 'Error submitting request')
           }
-        } catch (profileErr) {
-          console.warn('Error reloading profile after plan request:', profileErr)
+        } catch (err) {
+          console.error(err)
+          showToast('Failed to submit plan request')
+        } finally {
+          setPlanSubmitting(false)
         }
-      } else {
-        const err = await res.json().catch(() => ({}))
-        showToast(err.message || 'Submission failed. Please try again.')
       }
-    } catch {
-      showToast('Submission failed. Please try again.')
-    } finally {
+      reader.onerror = () => {
+        showToast('Error reading screenshot image')
+        setPlanSubmitting(false)
+      }
+    } catch (error) {
+      console.error(error)
+      showToast('Error preparing request')
       setPlanSubmitting(false)
     }
   }
