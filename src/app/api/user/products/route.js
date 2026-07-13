@@ -13,14 +13,7 @@ export async function GET() {
       .lean()
       .limit(50);
     
-    // Filter out any base64 images (legacy data cleanup)
-    const cleanedProducts = products.map(p => ({
-      ...p,
-      image: (p.image && p.image.startsWith('http')) ? p.image : '',
-      images: Array.isArray(p.images) ? p.images.filter(img => typeof img === 'string' && img.startsWith('http')) : []
-    }));
-    
-    return Response.json(cleanedProducts);
+    return Response.json(products);
   } catch (error) {
     return Response.json([], { status: 200 });
   }

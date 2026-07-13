@@ -27,13 +27,7 @@ export async function GET(request) {
       .maxTimeMS(3000)
       .exec();
     
-    // Filter base64 - keep only HTTP URLs
-    const cleanProducts = products.map(p => ({
-      ...p,
-      image: (p.image && p.image.startsWith('http')) ? p.image : ''
-    }));
-    
-    return Response.json(cleanProducts);
+    return Response.json(products);
   } catch (error) {
     console.error('Error fetching products:', error.message);
     return Response.json([], { status: 200 });
@@ -69,16 +63,15 @@ export async function POST(request) {
       return Response.json({ message: 'Name and price are required' }, { status: 400 });
     }
 
-    // Store ONLY HTTP URLs, reject base64 completely
     let imageUrl = '';
     if (image && typeof image === 'string') {
-      imageUrl = image.startsWith('http') ? image : '';
+      imageUrl = image;
     }
     
     let imageUrls = [];
     if (Array.isArray(images)) {
       imageUrls = images
-        .filter(img => typeof img === 'string' && img.startsWith('http'))
+        .filter(img => typeof img === 'string')
         .slice(0, 5);
     }
 
