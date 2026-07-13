@@ -34,6 +34,10 @@ const productSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Add indexes for faster queries
+productSchema.index({ isActive: 1, createdAt: -1 });
+productSchema.index({ name: 'text' });
+
 // Prevent model recompilation in development
 if (mongoose.models.Product) {
   delete mongoose.models.Product;

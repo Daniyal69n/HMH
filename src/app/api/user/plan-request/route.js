@@ -2,20 +2,22 @@ import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 
-// POST — submit a plan purchase request with screenshot
+// POST — submit a plan purchase request with screenshot URL
+// Note: Frontend MUST upload screenshot to Cloudinary first via /api/user/plan-screenshot-upload/
 export async function POST(request) {
   try {
     await connectDB()
 
-    const formData = await request.formData()
-    const userPhone = formData.get('userPhone')
-    const planName = formData.get('planName')
-    const amount = formData.get('amount')
-    const paymentMethod = formData.get('paymentMethod')
-    const screenshot = formData.get('screenshot')
+    const body = await request.json()
+    const { userPhone, planName, amount, paymentMethod, screenshotUrl } = body
 
     if (!userPhone || !planName) {
       return NextResponse.json({ message: 'User phone and plan name are required' }, { status: 400 })
+    }
+
+    // screenshotUrl must be a Cloudinary URL (not base64)
+    if (screenshotUrl && !screenshotUrl.startsWith('http')) {
+      return NextResponse.json({ message: 'Screenshot must be a valid URL (uploaded to Cloudinary)' }, { status: 400 })
     }
 
     // Find user
@@ -24,16 +26,7 @@ export async function POST(request) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 })
     }
 
-    // Convert screenshot to base64 if provided
-    let screenshotData = null
-    if (screenshot && typeof screenshot === 'object' && screenshot.arrayBuffer) {
-      const buffer = await screenshot.arrayBuffer()
-      const base64 = Buffer.from(buffer).toString('base64')
-      const mimeType = screenshot.type || 'image/jpeg'
-      screenshotData = `data:${mimeType};base64,${base64}`
-    }
-
-    // Add a pending investment plan record to the user
+    // Add a pending investment plan record to the user (NO base64, only URLs)
     user.investmentPlans = user.investmentPlans || []
     user.investmentPlans.push({
       planName: planName,
@@ -41,7 +34,7 @@ export async function POST(request) {
       status: 'pending',
       startDate: new Date(),
       paymentMethod: paymentMethod,
-      screenshotData: screenshotData
+      screenshotUrl: screenshotUrl || null  // Store ONLY Cloudinary URL, never base64
     })
 
     await user.save()

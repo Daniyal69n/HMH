@@ -3,6 +3,8 @@ import Order from '@/models/Order';
 import User from '@/models/User';
 import Product from '@/models/Product';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
   try {
     await connectDB();
@@ -32,6 +34,11 @@ export async function POST(request) {
       }
     }
 
+    // Validate receiptImage is a URL only (not base64)
+    if (receiptImage && !receiptImage.startsWith('http')) {
+      return Response.json({ message: 'Receipt image must be a Cloudinary URL (not base64)' }, { status: 400 });
+    }
+
     // Determine active plan
     const activePlan = (user.investmentPlans || []).reverse().find(p => p.status === 'active');
     const planName = activePlan ? activePlan.planName : 'Free';
@@ -48,7 +55,7 @@ export async function POST(request) {
       deliveryAddress,
       phoneNumber,
       paymentMethod: orderPaymentMethod,
-      receiptImage: receiptImage || ''
+      receiptImage: receiptImage || ''  // MUST be a Cloudinary URL, never base64
     });
 
     return Response.json({ message: 'Order placed successfully. Awaiting admin approval.', order }, { status: 201 });

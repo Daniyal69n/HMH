@@ -1,10 +1,9 @@
-export const dynamic = 'force-dynamic';
-
 /**
- * Image Upload Endpoint
- * Accepts base64 images and uploads to Cloudinary
- * Returns the secure URL for storing in database
+ * User Plan Request Screenshot Upload
+ * Upload screenshot directly to Cloudinary, returns URL
+ * Frontend should call this BEFORE calling /api/user/plan-request/
  */
+
 export async function POST(request) {
   try {
     const { imageBase64 } = await request.json();
@@ -20,17 +19,18 @@ export async function POST(request) {
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
     if (!cloudName || !uploadPreset) {
-      console.error('Missing Cloudinary config:', { cloudName, uploadPreset });
+      console.error('Missing Cloudinary config');
       return Response.json(
         { message: 'Cloudinary not configured' },
         { status: 500 }
       );
     }
 
-    // Upload base64 to Cloudinary
+    // Upload to Cloudinary
     const formData = new FormData();
     formData.append('file', imageBase64);
     formData.append('upload_preset', uploadPreset);
+    formData.append('folder', 'plan-requests');  // Organize in folder
 
     const uploadRes = await fetch(
       `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
@@ -44,7 +44,7 @@ export async function POST(request) {
       const errorData = await uploadRes.json();
       console.error('Cloudinary upload failed:', errorData);
       return Response.json(
-        { message: 'Cloudinary upload failed', error: errorData },
+        { message: 'Upload failed' },
         { status: 500 }
       );
     }
@@ -52,14 +52,13 @@ export async function POST(request) {
     const data = await uploadRes.json();
     
     return Response.json({
-      message: 'Image uploaded successfully',
-      imageUrl: data.secure_url,
+      screenshotUrl: data.secure_url,
       success: true
     }, { status: 200 });
   } catch (error) {
-    console.error('Image upload error:', error);
+    console.error('Screenshot upload error:', error);
     return Response.json(
-      { message: 'Failed to upload image', error: error.message },
+      { message: 'Failed to upload screenshot' },
       { status: 500 }
     );
   }

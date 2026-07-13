@@ -26,24 +26,31 @@ export async function POST(request) {
   try {
     await connectDB();
     
-    const { imageName, imageData, imageType } = await request.json();
+    const { imageName, imageUrl } = await request.json();
     
-    if (!imageName || !imageData) {
+    if (!imageName || !imageUrl) {
       return NextResponse.json({ 
         success: false, 
-        error: 'Image name and data are required' 
+        error: 'Image name and Cloudinary URL are required' 
+      }, { status: 400 });
+    }
+
+    // Validate it's a URL (not base64)
+    if (!imageUrl.startsWith('http')) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Image must be a Cloudinary URL (not base64)' 
       }, { status: 400 });
     }
     
     // Get existing images
     const existingImages = await SystemSettings.getSetting('carouselImages') || {};
     
-    // Update the specific image
+    // Update the specific image - STORE ONLY URL, NOT BASE64
     const updatedImages = {
       ...existingImages,
       [imageName]: {
-        data: imageData,
-        type: imageType || 'image/jpeg',
+        url: imageUrl,
         uploadedAt: new Date().toISOString()
       }
     };
@@ -53,14 +60,15 @@ export async function POST(request) {
     
     return NextResponse.json({
       success: true,
-      message: 'Image uploaded successfully',
-      imageName
+      message: 'Image URL saved successfully',
+      imageName,
+      imageUrl
     });
   } catch (error) {
-    console.error('Error uploading image:', error);
+    console.error('Error saving image URL:', error);
     return NextResponse.json({ 
       success: false, 
-      error: 'Failed to upload image' 
+      error: 'Failed to save image URL' 
     }, { status: 500 });
   }
 }

@@ -5,20 +5,39 @@ import Transaction from '@/models/Transaction';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request) {
   try {
     await connectDB();
-    const orders = await Order.collection.find().sort({ createdAt: -1 }).toArray();
     
-    // Enriched orders payload (avoiding slow base64 userProfilePicture queries)
-    const enrichedOrders = orders.map(o => ({
-      ...o,
-      userProfilePicture: ''
-    }));
-
-    return Response.json(enrichedOrders);
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
+    const skip = parseInt(searchParams.get('skip') || '0');
+    
+    // Use aggregation for faster queries with projection
+    const orders = await Order.collection
+      .aggregate([
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $project: {
+            userId: 1,
+            userName: 1,
+            productName: 1,
+            amount: 1,
+            currency: 1,
+            status: 1,
+            createdAt: 1,
+            _id: 1
+          }
+        }
+      ])
+      .toArray();
+    
+    return Response.json(orders);
   } catch (error) {
-    return Response.json({ message: 'Error fetching orders', error: error.message }, { status: 500 });
+    console.error('Order fetch error:', error);
+    return Response.json([], { status: 200 });
   }
 }
 

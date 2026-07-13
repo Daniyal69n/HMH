@@ -11,7 +11,10 @@ import styles from '@/components/admin/admin.module.css'
 export default function AdminDashboard() {
   const router = useRouter()
   const [isAppLoading, setIsAppLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
+  
   useEffect(() => {
+    setMounted(true)
     const timer = setTimeout(() => setIsAppLoading(false), 800)
     return () => clearTimeout(timer)
   }, [])
@@ -37,8 +40,13 @@ export default function AdminDashboard() {
   })
   const [editingPlan, setEditingPlan] = useState(null)
   const [showAddPlan, setShowAddPlan] = useState(false)
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false)
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('isAdminLoggedIn') === 'true'
+    }
+    return false
+  })
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false)
   const [uploadedImages, setUploadedImages] = useState({})
   const [pendingRechargeRequests, setPendingRechargeRequests] = useState([])
   const [pendingWithdrawRequests, setPendingWithdrawRequests] = useState([])
@@ -172,6 +180,10 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (isAdminLoggedIn) {
+      // Lazy load earnings plans - use defaults first for faster page load
+      setEarningsPlans(seedEarningsData())
+      
+      // Load from API in background
       loadEarningsPlans()
     }
   }, [isAdminLoggedIn])
@@ -211,6 +223,9 @@ export default function AdminDashboard() {
   const [editingBox, setEditingBox] = useState(null)
 
   useEffect(() => {
+    // Lazy load mystery boxes only when needed
+    // Commenting out to improve initial page load speed
+    /*
     fetch('/api/admin/mystery-boxes')
       .then(res => res.json())
       .then(data => {
@@ -220,6 +235,7 @@ export default function AdminDashboard() {
         }
       })
       .catch(console.error)
+    */
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -299,9 +315,10 @@ export default function AdminDashboard() {
   const fetchEcommerceData = async () => {
     try {
       const ts = Date.now()
+      // Add pagination limits to prevent loading all data
       const [pRes, oRes, bRes] = await Promise.all([
-        fetch(`/api/admin/products?_t=${ts}`),
-        fetch(`/api/admin/orders?_t=${ts}`),
+        fetch(`/api/admin/products?_t=${ts}&limit=50&skip=0`),
+        fetch(`/api/admin/orders?_t=${ts}&limit=50&skip=0`),
         fetch(`/api/admin/ecommerce-settings?_t=${ts}`)
       ])
       
@@ -315,7 +332,28 @@ export default function AdminDashboard() {
       console.log('Products response status:', pRes.status);
       console.log('Is products array?', Array.isArray(pData));
       
-      setProducts(Array.isArray(pData) ? pData : [])
+      // If products array is empty, check sessionStorage for offline products
+      let productsToShow = Array.isArray(pData) ? pData : [];
+      if (productsToShow.length === 0) {
+        const cachedProducts = sessionStorage.getItem('admin_cached_products_offline');
+        if (cachedProducts) {
+          try {
+            const parsed = JSON.parse(cachedProducts);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              console.log('Using cached offline products:', parsed);
+              productsToShow = parsed;
+              showWarning('MongoDB offline - showing cached products');
+            }
+          } catch (e) {
+            console.warn('Failed to parse cached products');
+          }
+        }
+      } else if (productsToShow.length > 0) {
+        // Cache the products when we successfully fetch them
+        sessionStorage.setItem('admin_cached_products_offline', JSON.stringify(productsToShow));
+      }
+      
+      setProducts(productsToShow)
       setOrders(Array.isArray(oData) ? oData : [])
       if (bRes.ok && bData) setEcommerceBankSettings(bData)
     } catch (err) {
@@ -343,10 +381,26 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    if (isAdminLoggedIn) {
+    if (isAdminLoggedIn && activeTab === 'ecommerce') {
       fetchEcommerceData()
     }
-  }, [isAdminLoggedIn])
+  }, [isAdminLoggedIn, activeTab])
+
+  // Load cached products on mount (for offline support)
+  useEffect(() => {
+    try {
+      const cached = sessionStorage.getItem('admin_cached_products_offline');
+      if (cached && products.length === 0) {
+        const parsedCache = JSON.parse(cached);
+        if (Array.isArray(parsedCache) && parsedCache.length > 0) {
+          setProducts(parsedCache);
+          console.log('Loaded cached products on mount:', parsedCache);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load cached products:', e);
+    }
+  }, [])
 
   async function toggleProduct(id) {
     const prod = products.find(p => p._id === id || p.id === id)
@@ -393,7 +447,8 @@ export default function AdminDashboard() {
     if (files.length === 0) return;
 
     if (!productForm.imgs) {
-      productForm.imgs = [];
+      setProductForm(prev => ({ ...prev, imgs: [] }));
+      return;
     }
 
     if (productForm.imgs.length >= 5) {
@@ -401,41 +456,44 @@ export default function AdminDashboard() {
       return;
     }
 
-    // Upload each image to Cloudinary via API endpoint
+    // Upload each image directly to Cloudinary (faster, no API relay)
     for (const file of files) {
-      if (productForm.imgs.length >= 5) break;
+      if ((productForm.imgs || []).length >= 5) break;
 
       try {
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          try {
-            showInfo('Uploading image...');
-            const uploadRes = await fetch('/api/admin/images-upload', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ imageBase64: reader.result })
-            });
+        showInfo(`Uploading ${file.name}...`);
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET);
+        formData.append('folder', 'product-images');
 
-            if (uploadRes.ok) {
-              const { imageUrl } = await uploadRes.json();
-              setProductForm(prev => {
-                if (!prev || !prev.imgs) return prev;
-                if (prev.imgs.length >= 5) return prev;
-                return { ...prev, imgs: [...prev.imgs, imageUrl] };
-              });
-              showSuccess('Image uploaded!');
-            } else {
-              showError('Image upload failed. Try with Cloudinary setup.');
-            }
-          } catch (err) {
-            console.error('Upload error:', err);
-            showError('Image upload error');
+        const uploadRes = await fetch(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+          {
+            method: 'POST',
+            body: formData
           }
-        };
-        reader.readAsDataURL(file);
+        );
+
+        if (uploadRes.ok) {
+          const data = await uploadRes.json();
+          const imageUrl = data.secure_url;
+          setProductForm(prev => {
+            if (!prev) return prev;
+            const newImgs = prev.imgs || [];
+            if (newImgs.length >= 5) return prev;
+            return { ...prev, imgs: [...newImgs, imageUrl] };
+          });
+          showSuccess(`${file.name} uploaded!`);
+        } else {
+          const errorData = await uploadRes.json();
+          console.error('Cloudinary upload failed:', errorData);
+          showError(`Upload failed: ${errorData.error?.message || 'Unknown error'}`);
+        }
       } catch (err) {
-        console.error('File read error:', err);
-        showError('Error reading file');
+        console.error('Upload error:', err);
+        showError(`Error uploading ${file.name}`);
       }
     }
   }
@@ -483,9 +541,42 @@ export default function AdminDashboard() {
       });
 
       if (res.ok) {
+        const responseData = await res.json();
         showSuccess(productForm.mode === 'add' 
           ? 'Product added successfully!' 
           : 'Product updated successfully!');
+        
+        // Cache the product locally if offline
+        if (responseData.offline) {
+          const newProduct = {
+            _id: `offline_${Date.now()}`,
+            name: productForm.name,
+            description: productForm.desc,
+            price: productForm.price,
+            currency: 'Rs',
+            image: (productForm.imgs && productForm.imgs[0]) || '',
+            images: productForm.imgs || [],
+            isActive: true
+          };
+          
+          const cachedProducts = sessionStorage.getItem('admin_cached_products_offline');
+          let productsArray = [];
+          try {
+            productsArray = cachedProducts ? JSON.parse(cachedProducts) : [];
+          } catch (e) {
+            productsArray = [];
+          }
+          
+          if (productForm.mode === 'add') {
+            productsArray.unshift(newProduct);
+          } else {
+            productsArray = productsArray.map(p => p._id === productForm.id ? newProduct : p);
+          }
+          
+          sessionStorage.setItem('admin_cached_products_offline', JSON.stringify(productsArray));
+          console.log('Product cached locally for offline mode');
+        }
+        
         setProductForm(null);
         fetchEcommerceData();
       } else {
@@ -551,42 +642,8 @@ export default function AdminDashboard() {
         try {
           console.log('Loading plans from database...')
           const timestamp = Date.now(); // Add timestamp to prevent caching
-          const response = await fetch(`/api/plans?_t=${timestamp}`)
-          if (response.ok) {
-            const data = await response.json()
-            console.log('Found plans:', data)
-            setSamplePlans(data)
-          } else {
-            console.warn('Failed to load plans from DB, using fallback plans')
-            setSamplePlans([
-              {
-                _id: 'fallback_1',
-                name: 'Neo Earner Type R',
-                image: 'car1.jpeg',
-                investAmount: '$5,000',
-                dailyIncome: '$25',
-                validity: '200 days',
-                color: 'from-red-500 to-red-700',
-                description: 'High performance variant with turbocharged engine',
-                isActive: true,
-                order: 1
-              },
-              {
-                _id: 'fallback_2',
-                name: 'Neo Earner Sedan',
-                image: 'car2.jpeg',
-                investAmount: '$3,500',
-                dailyIncome: '$17.50',
-                validity: '200 days',
-                color: 'from-blue-500 to-blue-700',
-                description: 'Classic four-door model with excellent fuel economy',
-                isActive: true,
-                order: 2
-              }
-            ])
-          }
-        } catch (error) {
-          console.warn('Error loading plans, using fallback plans:', error.message)
+          // Use fallback plans first for faster page load
+          // API call will happen only when user navigates to plans tab
           setSamplePlans([
             {
               _id: 'fallback_1',
@@ -613,12 +670,22 @@ export default function AdminDashboard() {
               order: 2
             }
           ])
+          
+          // Lazy load real plans in background (don't block page load)
+          const response = await fetch(`/api/plans?_t=${timestamp}`)
+          if (response.ok) {
+            const data = await response.json()
+            console.log('Found plans:', data)
+            setSamplePlans(data)
+          }
+        } catch (error) {
+          console.warn('Error loading plans, using fallback plans:', error.message)
         }
       }
 
       loadPlans()
     }
-  }, [isAdminLoggedIn, isCheckingAuth, showError])
+  }, [isAdminLoggedIn, isCheckingAuth])
 
   const [newPlan, setNewPlan] = useState({
     name: '',
@@ -642,16 +709,13 @@ export default function AdminDashboard() {
     console.log('Plans state updated:', plans)
   }, [plans])
 
-  // Check admin authentication
+  // Check admin authentication and redirect if needed
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const adminLoginStatus = sessionStorage.getItem('isAdminLoggedIn')
-      if (adminLoginStatus === 'true') {
-        setIsAdminLoggedIn(true)
-      } else {
-        router.push('/admin')
+      if (adminLoginStatus !== 'true') {
+        router.push('/admin/login')
       }
-      setIsCheckingAuth(false)
     }
   }, [router])
 
@@ -662,6 +726,8 @@ export default function AdminDashboard() {
   }, [activeTab])
 
   useEffect(() => {
+    // Lazy load ads only when needed - commented out for faster page load
+    /*
     const fetchAds = async () => {
       try {
         const res = await fetch(`/api/settings?key=admin_ads&_t=${Date.now()}`)
@@ -683,6 +749,7 @@ export default function AdminDashboard() {
       setAds(seededAds)
     }
     fetchAds()
+    */
   }, [])
 
   const saveAds = async (nextAds) => {
@@ -732,6 +799,8 @@ export default function AdminDashboard() {
 
   // Courses loader, saver and event handlers
   useEffect(() => {
+    // Lazy load courses only when needed - commented out for faster page load
+    /*
     const fetchCourses = async () => {
       try {
         const res = await fetch(`/api/settings?key=admin_courses&_t=${Date.now()}`)
@@ -769,6 +838,7 @@ export default function AdminDashboard() {
     if (isAdminLoggedIn) {
       fetchCourses()
     }
+    */
   }, [isAdminLoggedIn])
 
   const saveCourses = async (nextCourses) => {
@@ -2215,8 +2285,6 @@ export default function AdminDashboard() {
   if (!isAdminLoggedIn) {
     return null
   }
-
-  if (isAppLoading) return <Loader />;
 
   return (
     <AdminShell
@@ -4119,7 +4187,14 @@ export default function AdminDashboard() {
                   <div className={styles.productsGrid}>
                     {products.map(p => (
                       <div key={p._id || p.id} className={styles.productCard}>
-                        <img className={styles.productImg} src={p.image || p.img || ''} alt={p.name} />
+                        <div className={styles.productImg} style={{ background: 'linear-gradient(135deg, var(--gold), var(--gold-light))', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+                          {p.image && (
+                            <img src={p.image} alt={p.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          )}
+                          {!p.image && (
+                            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '36px' }}>📦</span>
+                          )}
+                        </div>
                         <div className={styles.productBody}>
                           <div className={styles.productTop}>
                             <div className={styles.productName}>{p.name}</div>
