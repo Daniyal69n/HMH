@@ -2024,7 +2024,7 @@ export default function AdminDashboard() {
     const q = userSearchQuery.trim().toLowerCase()
     if (!q) return true
 
-    return [user.name, user.phone, user.referralCode, user._id]
+    return [user.name, user.email, user.phone, user.referralCode, user._id]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(q))
   })
