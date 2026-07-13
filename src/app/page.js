@@ -2742,7 +2742,7 @@ export default function Page() {
                     ) : purchaseProgress.progressPercentage >= 100 ? (
                       'Collect 5$'
                     ) : (
-                      '🔒 Locked*Collect 5$ Reward'
+                      '🔒 Locked(Collect 5$ Reward)'
                     )}
                   </button>
                 </>
