@@ -58,10 +58,17 @@ export async function POST(request) {
     }
     
     // Find active investment
-    const activeInvestment = await UserInvestment.findOne({
+    let activeInvestment = await UserInvestment.findOne({
       userId: phone,
       isActive: true
     });
+
+    if (!activeInvestment && user.investmentPlans && user.investmentPlans.length > 0) {
+      const activeUserPlan = [...user.investmentPlans].reverse().find(p => p.status === 'active');
+      if (activeUserPlan) {
+        activeInvestment = activeUserPlan;
+      }
+    }
 
     let adWatchDaysLeft = user.adWatchDaysLeft;
 

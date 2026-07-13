@@ -123,6 +123,7 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
       else if (purchasedPlanId === 'legend') extraDays = 10;
     }
     r1.adWatchDaysLeft = (r1.adWatchDaysLeft || 0) + extraDays;
+    await r1.save();
   }
 
   if (r1PlanPrice > 0) {

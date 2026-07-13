@@ -19,7 +19,7 @@ export async function GET(request) {
     
     console.time("query1");
     // Run all database queries concurrently
-    const [user, activeInvestment, adSetting, earningsSetting] = await Promise.all([
+    let [user, activeInvestment, adSetting, earningsSetting] = await Promise.all([
       User.findOne({ phone }).select('-profilePicture').lean(),
       UserInvestment.findOne({ userId: phone, isActive: true }).lean(),
       SystemSettings.findOne({ key: 'admin_ads' }).lean(),
@@ -31,6 +31,13 @@ export async function GET(request) {
     if (!user) {
       console.timeEnd("processing");
       return Response.json({ message: 'User not found' }, { status: 404 });
+    }
+
+    if (!activeInvestment && user.investmentPlans && user.investmentPlans.length > 0) {
+      const activeUserPlan = [...user.investmentPlans].reverse().find(p => p.status === 'active');
+      if (activeUserPlan) {
+        activeInvestment = activeUserPlan;
+      }
     }
     
     // Calculate current PKT date
@@ -130,7 +137,15 @@ export async function POST(request) {
       return Response.json({ message: 'User not found' }, { status: 404 });
     }
 
-    const activeInvestment = await UserInvestment.findOne({ userId: phone, isActive: true }).lean();
+    let activeInvestment = await UserInvestment.findOne({ userId: phone, isActive: true }).lean();
+
+    if (!activeInvestment && user.investmentPlans && user.investmentPlans.length > 0) {
+      const activeUserPlan = [...user.investmentPlans].reverse().find(p => p.status === 'active');
+      if (activeUserPlan) {
+        activeInvestment = activeUserPlan;
+      }
+    }
+
     let adWatchDaysLeft = user.adWatchDaysLeft;
 
     if (activeInvestment) {
