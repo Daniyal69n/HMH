@@ -71,19 +71,23 @@ export async function PUT(request) {
     if (action === 'approve') {
       // Find the plan request to approve
       const planToApprove = user.investmentPlans.find(p => p._id.toString() === planId.toString());
-      if (planToApprove) {
-        const { activateUserPlan } = await import('@/lib/commission');
-        await activateUserPlan(user, planToApprove);
+      if (!planToApprove) {
+        return NextResponse.json({ error: 'Plan request not found' }, { status: 404 });
       }
+      if (planToApprove.status === 'active') {
+        return NextResponse.json({ error: 'Plan is already active. Cannot approve again.' }, { status: 400 });
+      }
+      const { activateUserPlan } = await import('@/lib/commission');
+      // activateUserPlan calls user.save() internally, no need to save again
+      await activateUserPlan(user, planToApprove);
     } else {
       // Reject
       const planToReject = user.investmentPlans.find(p => p._id.toString() === planId.toString());
       if (planToReject) {
         planToReject.status = 'cancelled';
       }
+      await user.save();
     }
-
-    await user.save();
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });

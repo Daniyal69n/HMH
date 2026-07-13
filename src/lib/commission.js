@@ -241,8 +241,11 @@ export async function activateUserPlan(user, planToApprove) {
   }
   planToApprove.status = 'active';
   
-  // 2. Update ad watch limit and Save the updated user object
-  user.adWatchDaysLeft = (user.adWatchDaysLeft || 0) + 10;
+  // 2. Update ad watch limit — give 10 days only if user doesn't already have days
+  // This prevents double-crediting if plan approval is somehow triggered twice
+  if (!user.adWatchDaysLeft || user.adWatchDaysLeft <= 0) {
+    user.adWatchDaysLeft = 10;
+  }
   await user.save();
 
   // 3. Distribute the commissions based on the amount the user requested (which is what they paid)

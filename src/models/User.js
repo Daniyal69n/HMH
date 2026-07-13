@@ -123,6 +123,10 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: null
   },
+  customAdEarning: {
+    type: Number,
+    default: null  // null = use plan-based earnings. A number = override daily ad reward in USD
+  },
   claimedStreakReward: {
     type: Boolean,
     default: false

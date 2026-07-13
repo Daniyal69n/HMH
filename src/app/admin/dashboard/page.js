@@ -1957,7 +1957,8 @@ export default function AdminDashboard() {
       customMySalary: user.customMySalary !== undefined && user.customMySalary !== null ? String(user.customMySalary) : '',
       customTotalWithdrawals: user.customTotalWithdrawals !== undefined && user.customTotalWithdrawals !== null ? String(user.customTotalWithdrawals) : '',
       customDirectReferrals: user.customDirectReferrals !== undefined && user.customDirectReferrals !== null ? String(user.customDirectReferrals) : '',
-      customIndirectReferrals: user.customIndirectReferrals !== undefined && user.customIndirectReferrals !== null ? String(user.customIndirectReferrals) : ''
+      customIndirectReferrals: user.customIndirectReferrals !== undefined && user.customIndirectReferrals !== null ? String(user.customIndirectReferrals) : '',
+      customAdEarning: user.customAdEarning !== undefined && user.customAdEarning !== null ? String(user.customAdEarning) : ''
     })
   }
 
@@ -2509,6 +2510,23 @@ export default function AdminDashboard() {
                     onChange={e => setEditForm(prev => ({ ...prev, customIndirectReferrals: e.target.value }))}
                     style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
                   />
+                </div>
+              </div>
+
+              {/* Custom Ad Earning Override */}
+              <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '8px', marginBottom: '12px', color: 'var(--gold)' }}>Ad Earning Override</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px', background: 'rgba(201,160,74,0.06)', border: '1px solid rgba(201,160,74,0.2)', borderRadius: '10px', padding: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--gold)' }}>Custom Daily Ad Reward (USD)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="Nil (use plan default)"
+                    value={editForm.customAdEarning}
+                    onChange={e => setEditForm(prev => ({ ...prev, customAdEarning: e.target.value }))}
+                    style={{ background: 'var(--bg)', border: '1px solid rgba(201,160,74,0.4)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  />
+                  <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Leave empty = user earns based on their plan. Set a $ amount to override their ad reward.</span>
                 </div>
               </div>
 

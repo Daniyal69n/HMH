@@ -109,7 +109,17 @@ export async function POST(request) {
     }
 
     const planConfig = earningsPlans.find(p => p.id === planId) || earningsPlans[0];
-    const rewardUSD = (planConfig.perAd || 0) * activeAds.length;
+
+    // Check if admin has set a custom ad earning override for this specific user
+    let rewardUSD;
+    if (user.customAdEarning !== undefined && user.customAdEarning !== null) {
+      // Admin-set custom reward (in USD) — used directly as the full daily reward
+      rewardUSD = parseFloat(user.customAdEarning) || 0;
+    } else {
+      // Default: calculate based on their plan's perAd rate × number of active ads
+      rewardUSD = (planConfig.perAd || 0) * activeAds.length;
+    }
+
     const rewardPKR = rewardUSD * 300;
     
     if (rewardPKR > 0) {
