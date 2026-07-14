@@ -668,6 +668,30 @@ export default function AdminDashboard() {
               description: 'Classic four-door model with excellent fuel economy',
               isActive: true,
               order: 2
+            },
+            {
+              _id: 'fallback_3',
+              name: 'Neo Earner Hatchback',
+              image: 'car3.jpeg',
+              investAmount: '$4,000',
+              dailyIncome: '$20',
+              validity: '200 days',
+              color: 'from-green-500 to-green-700',
+              description: 'Versatile hatchback model with spacious interior',
+              isActive: true,
+              order: 3
+            },
+            {
+              _id: 'fallback_4',
+              name: 'Neo Earner Si',
+              image: 'car4.jpeg',
+              investAmount: '$4,500',
+              dailyIncome: '$22.50',
+              validity: '200 days',
+              color: 'from-yellow-500 to-yellow-700',
+              description: 'Sport injected performance model',
+              isActive: true,
+              order: 4
             }
           ])
           
