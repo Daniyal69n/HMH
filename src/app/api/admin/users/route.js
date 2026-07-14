@@ -22,7 +22,7 @@ export async function GET(request) {
         $or: [
           { name: { $regex: search, $options: 'i' } },
           { phone: { $regex: search, $options: 'i' } },
-          { name: { $regex: search, $options: 'i' } }
+          { email: { $regex: search, $options: 'i' } }
         ]
       };
     }
