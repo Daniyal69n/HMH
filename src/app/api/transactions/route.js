@@ -12,6 +12,7 @@ export async function GET(request) {
     const userId = searchParams.get('userId');
     const type = searchParams.get('type');
     const status = searchParams.get('status');
+    const limit = parseInt(searchParams.get('limit')) || 100;
     
     let query = {};
     
@@ -30,19 +31,20 @@ export async function GET(request) {
     console.time("query1");
     const transactions = await Transaction.find(query)
       .sort({ createdAt: -1 })
-      .limit(100)
+      .limit(limit)
       .lean();
     console.timeEnd("query1");
 
-    // Enrich transactions with userProfilePicture
+    // Enrich transactions with userProfilePicture (skip fetching massive profilePicture to prevent OOM)
     const userIds = [...new Set(transactions.map(t => t.userId))];
     console.time("query2");
-    const users = await User.find({ phone: { $in: userIds } }).select('phone profilePicture').lean();
+    const users = await User.find({ phone: { $in: userIds } }).select('phone').lean();
     console.timeEnd("query2");
     console.time("processing");
     const userPicMap = {};
     users.forEach(u => {
-      userPicMap[u.phone] = u.profilePicture || '';
+      userPicMap[u.phone] = ''; // We removed profilePicture to fix crashes
+
     });
 
     const enrichedTransactions = transactions.map(t => ({

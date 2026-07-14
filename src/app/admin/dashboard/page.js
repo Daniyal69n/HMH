@@ -1641,7 +1641,7 @@ export default function AdminDashboard() {
   const refreshWithdrawHistory = async () => {
     try {
       setHistoryLoading(true)
-      const response = await fetch('/api/transactions?type=withdraw&status=all')
+      const response = await fetch('/api/transactions?type=withdraw&status=all&limit=2000')
       if (response.ok) {
         const data = await response.json()
         setWithdrawHistory(data)
