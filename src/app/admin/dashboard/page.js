@@ -4537,6 +4537,25 @@ export default function AdminDashboard() {
                 border: '2px solid rgba(255,255,255,0.2)'
               }}
             />
+            <a
+              href={previewReceiptUrl}
+              download="payment_receipt.png"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                marginTop: '16px',
+                padding: '10px 24px',
+                background: '#c9a04a',
+                color: '#181205',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                display: 'inline-block'
+              }}
+            >
+              📥 Save Receipt
+            </a>
           </div>
         </div>
       )}
@@ -4550,6 +4569,25 @@ export default function AdminDashboard() {
               <button onClick={() => setReceiptModalUrl('')} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--text)' }}>×</button>
             </div>
             <img src={receiptModalUrl} alt="Receipt" style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '8px' }} />
+            <a
+              href={receiptModalUrl}
+              download="ecommerce_receipt.png"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-block',
+                marginTop: '16px',
+                padding: '10px 24px',
+                background: '#c9a04a',
+                color: '#181205',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              📥 Save Receipt
+            </a>
           </div>
         </div>
       )}

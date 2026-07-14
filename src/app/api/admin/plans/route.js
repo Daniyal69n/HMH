@@ -36,7 +36,7 @@ export async function GET(request) {
           status: plan.status,
           startDate: plan.startDate,
           paymentMethod: plan.paymentMethod,
-          screenshotData: plan.screenshotData || null
+          screenshotData: plan.screenshotData || plan.screenshotUrl || null
         });
       }
     }

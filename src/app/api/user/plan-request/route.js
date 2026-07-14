@@ -34,7 +34,7 @@ export async function POST(request) {
       status: 'pending',
       startDate: new Date(),
       paymentMethod: paymentMethod,
-      screenshotUrl: screenshotUrl || null  // Store ONLY Cloudinary URL, never base64
+      screenshotData: screenshotUrl || null  // Store ONLY Cloudinary URL, never base64
     })
 
     await user.save()
