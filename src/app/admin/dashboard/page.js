@@ -12,7 +12,7 @@ export default function AdminDashboard() {
   const router = useRouter()
   const [isAppLoading, setIsAppLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
-  
+
   useEffect(() => {
     setMounted(true)
     const timer = setTimeout(() => setIsAppLoading(false), 800)
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
   const [newWdToAdd, setNewWdToAdd] = useState({ amount: 0, status: 'approved', date: '' })
   const [ads, setAds] = useState([])
   const [newAd, setNewAd] = useState({ title: '', url: '' })
-  
+
   // Courses states
   const [courses, setCourses] = useState([])
   const [newCourse, setNewCourse] = useState({ title: '', videoUrl: '', imageUrl: '', description: '' })
@@ -113,7 +113,7 @@ export default function AdminDashboard() {
     easypaisa: { number: '', accountName: '' },
     jazzcash: { number: '', accountName: '' }
   })
-  
+
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     title: '',
@@ -149,13 +149,13 @@ export default function AdminDashboard() {
   const EARNINGS_STORAGE_KEY = 'admin_earnings_plans'
   function seedEarningsData() {
     return [
-      { id: 'free',     name: 'Free Plan',     perAd: 0.02, refA: 0,  refB: 0, refC: 0 },
-      { id: 'basic',    name: 'Basic Plan',    perAd: 0.20, refA: 20, refB: 5, refC: 5 },
+      { id: 'free', name: 'Free Plan', perAd: 0.02, refA: 0, refB: 0, refC: 0 },
+      { id: 'basic', name: 'Basic Plan', perAd: 0.20, refA: 20, refB: 5, refC: 5 },
       { id: 'standard', name: 'Standard Plan', perAd: 0.40, refA: 20, refB: 5, refC: 5 },
-      { id: 'diamond',  name: 'Diamond Plan',  perAd: 0.80, refA: 20, refB: 5, refC: 5 },
-      { id: 'pro',      name: 'Pro Plan',      perAd: 1.20, refA: 20, refB: 5, refC: 5 },
-      { id: 'premium',  name: 'Premium Plan',  perAd: 1.60, refA: 20, refB: 5, refC: 5 },
-      { id: 'legend',   name: 'Legend Plan',   perAd: 2.00, refA: 20, refB: 5, refC: 5 }
+      { id: 'diamond', name: 'Diamond Plan', perAd: 0.80, refA: 20, refB: 5, refC: 5 },
+      { id: 'pro', name: 'Pro Plan', perAd: 1.20, refA: 20, refB: 5, refC: 5 },
+      { id: 'premium', name: 'Premium Plan', perAd: 1.60, refA: 20, refB: 5, refC: 5 },
+      { id: 'legend', name: 'Legend Plan', perAd: 2.00, refA: 20, refB: 5, refC: 5 }
     ]
   }
 
@@ -182,7 +182,7 @@ export default function AdminDashboard() {
     if (isAdminLoggedIn) {
       // Lazy load earnings plans - use defaults first for faster page load
       setEarningsPlans(seedEarningsData())
-      
+
       // Load from API in background
       loadEarningsPlans()
     }
@@ -236,7 +236,7 @@ export default function AdminDashboard() {
       })
       .catch(console.error)
     */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function saveMysteryBoxes() {
@@ -245,15 +245,15 @@ export default function AdminDashboard() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ enabled: mysteryBoxesEnabled, boxes: mysteryBoxes })
     })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        showSuccess('Mystery Boxes saved!')
-      } else {
-        showError('Failed to save mystery boxes.')
-      }
-    })
-    .catch(console.error)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showSuccess('Mystery Boxes saved!')
+        } else {
+          showError('Failed to save mystery boxes.')
+        }
+      })
+      .catch(console.error)
   }
 
   function openEditBox(box) {
@@ -290,16 +290,18 @@ export default function AdminDashboard() {
 
   function seedProducts() {
     return [
-      { id:'p_1', name:"Women's loafer (cherry red color)", desc:'Premium edition of loafers', price:3000, currency:'Rs', active:true,
-        img:'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&auto=format&fit=crop&q=60' },
+      {
+        id: 'p_1', name: "Women's loafer (cherry red color)", desc: 'Premium edition of loafers', price: 3000, currency: 'Rs', active: true,
+        img: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&auto=format&fit=crop&q=60'
+      },
     ]
   }
 
   function seedOrders() {
     return [
-      { id:'o_1', product:"Women's loafer (cherry red color)", customer:'Ayesha Khan', amount:3000, currency:'Rs', status:'pending' },
-      { id:'o_2', product:"Women's loafer (cherry red color)", customer:'Sara Malik',  amount:3000, currency:'Rs', status:'approved' },
-      { id:'o_3', product:"Women's loafer (cherry red color)", customer:'Bilal Ahmed', amount:3000, currency:'Rs', status:'approved' },
+      { id: 'o_1', product: "Women's loafer (cherry red color)", customer: 'Ayesha Khan', amount: 3000, currency: 'Rs', status: 'pending' },
+      { id: 'o_2', product: "Women's loafer (cherry red color)", customer: 'Sara Malik', amount: 3000, currency: 'Rs', status: 'approved' },
+      { id: 'o_3', product: "Women's loafer (cherry red color)", customer: 'Bilal Ahmed', amount: 3000, currency: 'Rs', status: 'approved' },
     ]
   }
 
@@ -307,7 +309,7 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([])
   const [ecommerceTab, setEcommerceTab] = useState('products')
   const [productForm, setProductForm] = useState(null)
-  
+
   const [ecommerceBankSettings, setEcommerceBankSettings] = useState({ bankName: '', accountName: '', accountNumber: '' })
   const [bankSettingsSaving, setBankSettingsSaving] = useState(false)
   const [receiptModalUrl, setReceiptModalUrl] = useState('')
@@ -321,17 +323,17 @@ export default function AdminDashboard() {
         fetch(`/api/admin/orders?_t=${ts}&limit=50&skip=0`),
         fetch(`/api/admin/ecommerce-settings?_t=${ts}`)
       ])
-      
+
       const [pData, oData, bData] = await Promise.all([
         pRes.json(),
         oRes.json(),
         bRes.json()
       ])
-      
+
       console.log('Products API response:', pData);
       console.log('Products response status:', pRes.status);
       console.log('Is products array?', Array.isArray(pData));
-      
+
       // If products array is empty, check sessionStorage for offline products
       let productsToShow = Array.isArray(pData) ? pData : [];
       if (productsToShow.length === 0) {
@@ -352,7 +354,7 @@ export default function AdminDashboard() {
         // Cache the products when we successfully fetch them
         sessionStorage.setItem('admin_cached_products_offline', JSON.stringify(productsToShow));
       }
-      
+
       setProducts(productsToShow)
       setOrders(Array.isArray(oData) ? oData : [])
       if (bRes.ok && bData) setEcommerceBankSettings(bData)
@@ -462,7 +464,7 @@ export default function AdminDashboard() {
 
       try {
         showInfo(`Uploading ${file.name}...`);
-        
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET);
@@ -524,10 +526,10 @@ export default function AdminDashboard() {
         images: productForm.imgs || []
       };
 
-      const url = productForm.mode === 'add' 
-        ? '/api/admin/products' 
+      const url = productForm.mode === 'add'
+        ? '/api/admin/products'
         : '/api/admin/products';
-      
+
       const method = productForm.mode === 'add' ? 'POST' : 'PUT';
 
       if (productForm.mode === 'edit') {
@@ -542,10 +544,10 @@ export default function AdminDashboard() {
 
       if (res.ok) {
         const responseData = await res.json();
-        showSuccess(productForm.mode === 'add' 
-          ? 'Product added successfully!' 
+        showSuccess(productForm.mode === 'add'
+          ? 'Product added successfully!'
           : 'Product updated successfully!');
-        
+
         // Cache the product locally if offline
         if (responseData.offline) {
           const newProduct = {
@@ -558,7 +560,7 @@ export default function AdminDashboard() {
             images: productForm.imgs || [],
             isActive: true
           };
-          
+
           const cachedProducts = sessionStorage.getItem('admin_cached_products_offline');
           let productsArray = [];
           try {
@@ -566,17 +568,17 @@ export default function AdminDashboard() {
           } catch (e) {
             productsArray = [];
           }
-          
+
           if (productForm.mode === 'add') {
             productsArray.unshift(newProduct);
           } else {
             productsArray = productsArray.map(p => p._id === productForm.id ? newProduct : p);
           }
-          
+
           sessionStorage.setItem('admin_cached_products_offline', JSON.stringify(productsArray));
           console.log('Product cached locally for offline mode');
         }
-        
+
         setProductForm(null);
         fetchEcommerceData();
       } else {
@@ -730,7 +732,7 @@ export default function AdminDashboard() {
               order: 6
             }
           ])
-          
+
           // Lazy load real plans in background (don't block page load)
           const response = await fetch(`/api/plans?_t=${timestamp}`)
           if (response.ok) {
@@ -921,7 +923,7 @@ export default function AdminDashboard() {
   const handleAddCourse = () => {
     const title = newCourse.title.trim()
     const videoUrl = newCourse.videoUrl.trim()
-    
+
     if (!title || !videoUrl) {
       showError('Please enter both a title and a video URL.')
       return
@@ -969,7 +971,7 @@ export default function AdminDashboard() {
     try {
       // Get the next order number
       const nextOrder = plans.length > 0 ? Math.max(...plans.map(p => p.order || 0)) + 1 : 1;
-      
+
       const response = await fetch('/api/plans', {
         method: 'POST',
         headers: {
@@ -987,7 +989,7 @@ export default function AdminDashboard() {
         console.log('Plan created:', data.plan)
         setSamplePlans(prevPlans => Array.isArray(prevPlans) ? [...prevPlans, data.plan] : [data.plan])
         showSuccess('Plan created successfully!')
-        
+
         setNewPlan({
           name: '',
           image: '',
@@ -1046,12 +1048,12 @@ export default function AdminDashboard() {
         console.log('Plan updated:', data.plan)
         setSamplePlans(prevPlans => {
           if (!Array.isArray(prevPlans)) return [data.plan];
-          return prevPlans.map(plan => 
+          return prevPlans.map(plan =>
             plan._id === editingPlan._id ? data.plan : plan
           );
         })
         showSuccess('Plan updated successfully!')
-        
+
         setEditingPlan(null)
         setNewPlan({
           name: '',
@@ -1122,7 +1124,7 @@ export default function AdminDashboard() {
         const data = await response.json()
         setSamplePlans(prevPlans => {
           if (!Array.isArray(prevPlans)) return [data.plan];
-          return prevPlans.map(p => 
+          return prevPlans.map(p =>
             p._id === planId ? data.plan : p
           );
         })
@@ -1159,7 +1161,7 @@ export default function AdminDashboard() {
       const reader = new FileReader()
       reader.onload = async (e) => {
         const imageData = e.target.result
-        
+
         try {
           // Upload to database
           const response = await fetch('/api/admin/images', {
@@ -1180,7 +1182,7 @@ export default function AdminDashboard() {
               ...prev,
               [imageName]: imageData
             }))
-            
+
             // Update the plan if it's being edited
             if (editingPlan && editingPlan.image === imageName) {
               setEditingPlan(prev => ({ ...prev, image: imageData }))
@@ -1188,16 +1190,16 @@ export default function AdminDashboard() {
             if (newPlan.image === imageName) {
               setNewPlan(prev => ({ ...prev, image: imageData }))
             }
-            
+
             // Update the plans array
-            setPlans(prevPlans => 
-              prevPlans.map(plan => 
-                plan.image === imageName 
+            setPlans(prevPlans =>
+              prevPlans.map(plan =>
+                plan.image === imageName
                   ? { ...plan, image: imageData }
                   : plan
               )
             )
-            
+
             showSuccess('Image uploaded successfully!')
           } else {
             const error = await response.json()
@@ -1249,7 +1251,7 @@ export default function AdminDashboard() {
           setIsUsersLoading(false)
         }
       }
-      
+
       // Load payment details from database
       const loadPaymentDetails = async () => {
         try {
@@ -1328,12 +1330,12 @@ export default function AdminDashboard() {
         try {
           const rechargeResponse = await fetch('/api/transactions?type=recharge&status=pending')
           const withdrawResponse = await fetch('/api/transactions?type=withdraw&status=pending')
-          
+
           if (rechargeResponse.ok) {
             const rechargeData = await rechargeResponse.json()
             setPendingRechargeRequests(rechargeData)
           }
-          
+
           if (withdrawResponse.ok) {
             const withdrawData = await withdrawResponse.json()
             setPendingWithdrawRequests(withdrawData)
@@ -1415,7 +1417,7 @@ export default function AdminDashboard() {
           setActivityLoading(false)
         }
       }
-      
+
       // Load only active tab data to prevent parallel query storms
       if (activeTab === 'dashboard') {
         loadDashboardStats()
@@ -1429,19 +1431,19 @@ export default function AdminDashboard() {
         loadPendingRequests()
         loadRechargeHistory()
       }
-      
+
       // Load settings-like data ASYNCHRONOUSLY to not block page render
       // These are not critical for initial page load
       setTimeout(() => {
         loadPaymentDetails()
       }, 100)
-      
+
       // Defer non-essential data loading to after page is interactive (500ms)
       setTimeout(() => {
         loadCoupons()
         loadImages()
       }, 500)
-      
+
       // Set up periodic refresh every 15 seconds for the active tab only
       const refreshInterval = setInterval(() => {
         if (activeTab === 'dashboard') {
@@ -1457,7 +1459,7 @@ export default function AdminDashboard() {
           loadRechargeHistory()
         }
       }, 15000)
-      
+
       return () => {
         clearInterval(refreshInterval)
       }
@@ -1711,8 +1713,8 @@ export default function AdminDashboard() {
     try {
       const date = new Date(dateString)
       if (isNaN(date.getTime())) return 'Invalid Date'
-      
-      return date.toLocaleDateString('en-PK', { 
+
+      return date.toLocaleDateString('en-PK', {
         timeZone: 'Asia/Karachi',
         year: 'numeric',
         month: '2-digit',
@@ -1728,8 +1730,8 @@ export default function AdminDashboard() {
     try {
       const date = new Date(dateString)
       if (isNaN(date.getTime())) return 'Invalid Time'
-      
-      return date.toLocaleTimeString('en-PK', { 
+
+      return date.toLocaleTimeString('en-PK', {
         timeZone: 'Asia/Karachi',
         hour12: true,
         hour: '2-digit',
@@ -1764,12 +1766,12 @@ export default function AdminDashboard() {
             const rechargeResponse = await fetch('/api/transactions?type=recharge&status=pending')
             const withdrawResponse = await fetch('/api/transactions?type=withdraw&status=pending')
             const rechargeHistoryResponse = await fetch('/api/transactions?type=recharge&status=all')
-            
+
             if (rechargeResponse.ok) {
               const rechargeData = await rechargeResponse.json()
               setPendingRechargeRequests(rechargeData)
             }
-            
+
             if (withdrawResponse.ok) {
               const withdrawData = await withdrawResponse.json()
               setPendingWithdrawRequests(withdrawData)
@@ -1817,12 +1819,12 @@ export default function AdminDashboard() {
             const rechargeResponse = await fetch('/api/transactions?type=recharge&status=pending')
             const withdrawResponse = await fetch('/api/transactions?type=withdraw&status=pending')
             const withdrawHistoryResponse = await fetch('/api/transactions?type=withdraw&status=all')
-            
+
             if (rechargeResponse.ok) {
               const rechargeData = await rechargeResponse.json()
               setPendingRechargeRequests(rechargeData)
             }
-            
+
             if (withdrawResponse.ok) {
               const withdrawData = await withdrawResponse.json()
               setPendingWithdrawRequests(withdrawData)
@@ -1876,7 +1878,7 @@ export default function AdminDashboard() {
             }
           }
           loadUsers()
-          
+
           const user = users.find(u => u.phone === userId)
           const action = user?.isBlocked ? 'unblocked' : 'blocked'
           showSuccess(`User ${userId} has been ${action}`)
@@ -1990,7 +1992,7 @@ export default function AdminDashboard() {
             }
           }
           loadUsers()
-          
+
           showSuccess(`User ${userId} has been deleted successfully`)
         } else {
           showError('Failed to delete user')
@@ -2004,8 +2006,8 @@ export default function AdminDashboard() {
 
   const handleResetUserPassword = (userId) => {
     if (confirm('Reset password for this user? They will need to set a new password on next login.')) {
-      const updatedUsers = users.map(user => 
-        user.phone === userId 
+      const updatedUsers = users.map(user =>
+        user.phone === userId
           ? { ...user, passwordReset: true }
           : user
       )
@@ -2138,7 +2140,7 @@ export default function AdminDashboard() {
       showError('Name and phone are required')
       return
     }
-    
+
     try {
       setIsLoading(true)
       const response = await fetch('/api/admin/users', {
@@ -2179,7 +2181,7 @@ export default function AdminDashboard() {
         isAdmin: !!user.isAdmin
       }
       localStorage.setItem('user', JSON.stringify(userData))
-      
+
       // Clear cached data of any previous session to prevent overlapping/caching bugs
       localStorage.removeItem('hmh-profile')
       localStorage.removeItem('hmh-active-page')
@@ -2265,7 +2267,7 @@ export default function AdminDashboard() {
       if (response.ok) {
         const coupon = await response.json()
         setCoupons(prev => [...prev, coupon])
-        
+
         // Reset form
         setNewCoupon({
           code: '',
@@ -2301,7 +2303,7 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         const updatedCoupon = await response.json()
-        setCoupons(prev => prev.map(coupon => 
+        setCoupons(prev => prev.map(coupon =>
           coupon._id === couponId ? updatedCoupon : coupon
         ))
         showSuccess('Coupon status updated successfully!')
@@ -2364,1096 +2366,1235 @@ export default function AdminDashboard() {
           to { transform: rotate(360deg); }
         }
       `}</style>
-        {activeTab === 'users' && (
-          <div className={styles.usersPage}>
-            <div className={styles.pageHeadRow}>
-              <div>
-                <h2 className={styles.pageTitle}>All Users</h2>
-                <p className={styles.pageSub}>
-                  {users.length} registered user{users.length === 1 ? '' : 's'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={refreshUsers}
-                className={`${styles.btn} ${styles.btnOutline}`}
-                disabled={isUsersLoading}
+      {activeTab === 'users' && (
+        <div className={styles.usersPage}>
+          <div className={styles.pageHeadRow}>
+            <div>
+              <h2 className={styles.pageTitle}>All Users</h2>
+              <p className={styles.pageSub}>
+                {users.length} registered user{users.length === 1 ? '' : 's'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={refreshUsers}
+              className={`${styles.btn} ${styles.btnOutline}`}
+              disabled={isUsersLoading}
+            >
+              <svg
+                className={styles.btnIcon}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                style={{ animation: isUsersLoading ? 'spin 1s linear infinite' : 'none' }}
               >
-                <svg 
-                  className={styles.btnIcon} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                  style={{ animation: isUsersLoading ? 'spin 1s linear infinite' : 'none' }}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span>{isUsersLoading ? 'Refreshing...' : 'Refresh'}</span>
-              </button>
-            </div>
-
-            <div className={styles.searchBox}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <input
-                type="text"
-                value={userSearchQuery}
-                onChange={(event) => setUserSearchQuery(event.target.value)}
-                placeholder="Search by name or email..."
-              />
+              <span>{isUsersLoading ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
+          </div>
+
+          <div className={styles.searchBox}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              value={userSearchQuery}
+              onChange={(event) => setUserSearchQuery(event.target.value)}
+              placeholder="Search by name or email..."
+            />
+          </div>
+
+          {isUsersLoading && users.length === 0 ? (
+            <div className={styles.empty}>
+              <svg
+                className={styles.btnIcon}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                style={{ animation: 'spin 1.5s linear infinite', width: '36px', height: '36px', margin: '0 auto 12px auto' }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <p>Loading users...</p>
             </div>
-            
-            {isUsersLoading && users.length === 0 ? (
-              <div className={styles.empty}>
-                <svg 
-                  className={styles.btnIcon} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                  style={{ animation: 'spin 1.5s linear infinite', width: '36px', height: '36px', margin: '0 auto 12px auto' }}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <p>Loading users...</p>
-              </div>
-            ) : filteredUsers.length === 0 ? (
-              <div className={styles.empty}>
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-                <p>No users found</p>
-              </div>
-            ) : (
-              filteredUsers.map((user) => (
-                <div className={styles.card} key={getUserKey(user)}>
-                  <div className={styles.cardTop}>
-                    <div className={styles.userBlock}>
-                      {user.profilePicture ? (
-                        <img 
-                          src={user.profilePicture} 
-                          alt="avatar" 
-                          className={styles.avatar} 
-                          style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
-                        />
-                      ) : (
-                        <div className={styles.avatar}>{getUserInitials(user.name)}</div>
-                      )}
-                      <div>
-                        <div className={styles.userName}>{user.name || 'Unknown User'}</div>
-                        <div className={styles.userEmail}>{user.email || user.phone || 'No email provided'}</div>
-                      </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className={styles.empty}>
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              <p>No users found</p>
+            </div>
+          ) : (
+            filteredUsers.map((user) => (
+              <div className={styles.card} key={getUserKey(user)}>
+                <div className={styles.cardTop}>
+                  <div className={styles.userBlock}>
+                    {user.profilePicture ? (
+                      <img
+                        src={user.profilePicture}
+                        alt="avatar"
+                        className={styles.avatar}
+                        style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <div className={styles.avatar}>{getUserInitials(user.name)}</div>
+                    )}
+                    <div>
+                      <div className={styles.userName}>{user.name || 'Unknown User'}</div>
+                      <div className={styles.userEmail}>{user.email || user.phone || 'No email provided'}</div>
                     </div>
-                    <span className={`${styles.status} ${user.isBlocked ? styles.suspended : styles.active}`}>
-                      {user.isBlocked ? 'suspended' : 'active'}
-                    </span>
-                    <span className={`${styles.status} ${
-                      user.status === 'approved' ? styles.approved :
-                      user.status === 'rejected' ? styles.rejected :
+                  </div>
+                  <span className={`${styles.status} ${user.isBlocked ? styles.suspended : styles.active}`}>
+                    {user.isBlocked ? 'suspended' : 'active'}
+                  </span>
+                  <span className={`${styles.status} ${user.status === 'approved' ? styles.approved :
+                    user.status === 'rejected' ? styles.rejected :
                       styles.pending
                     }`} style={{ marginLeft: '8px' }}>
-                      {user.status || 'pending'}
-                    </span>
-                  </div>
-                  <div className={styles.detailGrid}>
-                    <div>
-                      <div className={styles.detailLabel}>Plan</div>
-                      <div className={styles.detailValue}>
-                        {[...(user.investmentPlans || [])].reverse().find((plan) => plan.status === 'active')?.planName || 'Free'}
-                      </div>
-                    </div>
-                    <div>
-                      <div className={styles.detailLabel}>Balance</div>
-                      <div className={`${styles.detailValue} ${styles.amount}`}>
-                        Rs{Number(user.balance || 0).toFixed(2)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className={styles.detailLabel}>Joined</div>
-                      <div className={styles.detailValue}>
-                        {user.createdAt ? formatPakistanDate(user.createdAt) : 'N/A'}
-                      </div>
-                    </div>
-                    <div>
-                      <div className={styles.detailLabel}>User ID</div>
-                      <div className={styles.detailValue}>{user.phone || user._id}</div>
+                    {user.status || 'pending'}
+                  </span>
+                </div>
+                <div className={styles.detailGrid}>
+                  <div>
+                    <div className={styles.detailLabel}>Plan</div>
+                    <div className={styles.detailValue}>
+                      {[...(user.investmentPlans || [])].reverse().find((plan) => plan.status === 'active')?.planName || 'Free'}
                     </div>
                   </div>
-                  <div className={styles.cardActions}>
+                  <div>
+                    <div className={styles.detailLabel}>Balance</div>
+                    <div className={`${styles.detailValue} ${styles.amount}`}>
+                      Rs{Number(user.balance || 0).toFixed(2)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className={styles.detailLabel}>Joined</div>
+                    <div className={styles.detailValue}>
+                      {user.createdAt ? formatPakistanDate(user.createdAt) : 'N/A'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className={styles.detailLabel}>User ID</div>
+                    <div className={styles.detailValue}>{user.phone || user._id}</div>
+                  </div>
+                </div>
+                <div className={styles.cardActions}>
+                  <button
+                    type="button"
+                    className={`${styles.btn}`}
+                    style={{ backgroundColor: 'var(--gold)', color: '#fff', borderColor: 'var(--gold)' }}
+                    onClick={() => handleStartEditUser(user)}
+                  >
+                    Edit User
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.btn}`}
+                    style={{ backgroundColor: '#3490dc', color: '#fff', borderColor: '#3490dc' }}
+                    onClick={() => handleImpersonateUser(user)}
+                  >
+                    Access Dashboard
+                  </button>
+                  {user.status !== 'approved' && (
                     <button
                       type="button"
                       className={`${styles.btn}`}
-                      style={{ backgroundColor: 'var(--gold)', color: '#fff', borderColor: 'var(--gold)' }}
-                      onClick={() => handleStartEditUser(user)}
+                      style={{ backgroundColor: 'var(--green)', color: '#fff', borderColor: 'var(--green)' }}
+                      onClick={() => handleApproveUser(getUserKey(user))}
                     >
-                      Edit User
+                      Approve Registration
                     </button>
-                    <button
-                      type="button"
-                      className={`${styles.btn}`}
-                      style={{ backgroundColor: '#3490dc', color: '#fff', borderColor: '#3490dc' }}
-                      onClick={() => handleImpersonateUser(user)}
-                    >
-                      Access Dashboard
-                    </button>
-                    {user.status !== 'approved' && (
-                      <button
-                        type="button"
-                        className={`${styles.btn}`}
-                        style={{ backgroundColor: 'var(--green)', color: '#fff', borderColor: 'var(--green)' }}
-                        onClick={() => handleApproveUser(getUserKey(user))}
-                      >
-                        Approve Registration
-                      </button>
-                    )}
-                    {user.status !== 'rejected' && user.status !== 'approved' && (
-                      <button
-                        type="button"
-                        className={`${styles.btn} ${styles.btnDangerOutline}`}
-                        onClick={() => handleRejectUser(getUserKey(user))}
-                      >
-                        Reject
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className={`${styles.btn} ${styles.btnOutline}`}
-                      onClick={() => handleBlockUser(getUserKey(user))}
-                    >
-                      {user.isBlocked ? 'Reactivate' : 'Suspend'}
-                    </button>
+                  )}
+                  {user.status !== 'rejected' && user.status !== 'approved' && (
                     <button
                       type="button"
                       className={`${styles.btn} ${styles.btnDangerOutline}`}
-                      onClick={() => handleDeleteUser(getUserKey(user))}
+                      onClick={() => handleRejectUser(getUserKey(user))}
                     >
-                      Delete
+                      Reject
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className={`${styles.btn} ${styles.btnOutline}`}
+                    onClick={() => handleBlockUser(getUserKey(user))}
+                  >
+                    {user.isBlocked ? 'Reactivate' : 'Suspend'}
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.btn} ${styles.btnDangerOutline}`}
+                    onClick={() => handleDeleteUser(getUserKey(user))}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {editingUserData && (
+        <div className={styles.editModal}>
+          <div className={styles.editModalBox} style={{ maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className={styles.editModalTitle}>Edit User Profile: {editingUserData.name || editingUserData.phone}</div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              {/* Basic Fields */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Full Name</label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Phone (User ID)</label>
+                <input
+                  type="text"
+                  value={editForm.phone}
+                  onChange={e => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Email Address</label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={e => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>New Password (leave empty to keep current)</label>
+                <input
+                  type="password"
+                  placeholder="Set new password..."
+                  value={editForm.password}
+                  onChange={e => setEditForm(prev => ({ ...prev, password: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+            </div>
+
+            {/* Financial Fields */}
+            <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Financial Balances</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Current Balance (Rs)</label>
+                <input
+                  type="number"
+                  value={editForm.balance}
+                  onChange={e => setEditForm(prev => ({ ...prev, balance: parseFloat(e.target.value) || 0 }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Earning Balance (Rs)</label>
+                <input
+                  type="number"
+                  value={editForm.earnBalance}
+                  onChange={e => setEditForm(prev => ({ ...prev, earnBalance: parseFloat(e.target.value) || 0 }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Recharge (Rs)</label>
+                <input
+                  type="number"
+                  value={editForm.totalRecharge}
+                  onChange={e => setEditForm(prev => ({ ...prev, totalRecharge: parseFloat(e.target.value) || 0 }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Commission Earned (Rs)</label>
+                <input
+                  type="number"
+                  value={editForm.totalCommissionEarned}
+                  onChange={e => setEditForm(prev => ({ ...prev, totalCommissionEarned: parseFloat(e.target.value) || 0 }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+            </div>
+
+            {/* Custom Overrides */}
+            <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Dashboard Display Overrides (Leave empty to use actual data)</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Earnings Override (Rs)</label>
+                <input
+                  type="number"
+                  placeholder="Use actual..."
+                  value={editForm.customTotalEarnings}
+                  onChange={e => setEditForm(prev => ({ ...prev, customTotalEarnings: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>My Salary Override (Rs)</label>
+                <input
+                  type="number"
+                  placeholder="Use actual..."
+                  value={editForm.customMySalary}
+                  onChange={e => setEditForm(prev => ({ ...prev, customMySalary: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Withdrawals Override (Rs)</label>
+                <input
+                  type="number"
+                  placeholder="Use actual..."
+                  value={editForm.customTotalWithdrawals}
+                  onChange={e => setEditForm(prev => ({ ...prev, customTotalWithdrawals: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Direct Referrals Count Override</label>
+                <input
+                  type="number"
+                  placeholder="Use actual..."
+                  value={editForm.customDirectReferrals}
+                  onChange={e => setEditForm(prev => ({ ...prev, customDirectReferrals: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Indirect Referrals Count Override</label>
+                <input
+                  type="number"
+                  placeholder="Use actual..."
+                  value={editForm.customIndirectReferrals}
+                  onChange={e => setEditForm(prev => ({ ...prev, customIndirectReferrals: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+            </div>
+
+            {/* Custom Ad Earning Override */}
+            <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '8px', marginBottom: '12px', color: 'var(--gold)' }}>Ad Earning Override</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px', background: 'rgba(201,160,74,0.06)', border: '1px solid rgba(201,160,74,0.2)', borderRadius: '10px', padding: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--gold)' }}>Custom Daily Ad Reward (USD)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Nil (use plan default)"
+                  value={editForm.customAdEarning}
+                  onChange={e => setEditForm(prev => ({ ...prev, customAdEarning: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid rgba(201,160,74,0.4)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+                <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Leave empty = user earns based on their plan. Set a $ amount to override their ad reward.</span>
+              </div>
+            </div>
+
+            {/* Status and Access Toggles */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px', background: 'var(--surface-2)', padding: '12px', borderRadius: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Status</label>
+                <select
+                  value={editForm.status}
+                  onChange={e => setEditForm(prev => ({ ...prev, status: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '6px', color: '#fff' }}
+                >
+                  <option value="approved">Approved</option>
+                  <option value="pending">Pending</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '100%', paddingTop: '16px' }}>
+                <input
+                  type="checkbox"
+                  id="edit_isBlocked"
+                  checked={editForm.isBlocked}
+                  onChange={e => setEditForm(prev => ({ ...prev, isBlocked: e.target.checked }))}
+                  style={{ width: '16px', height: '16px' }}
+                />
+                <label htmlFor="edit_isBlocked" style={{ fontSize: '13px', color: '#fff', cursor: 'pointer' }}>Suspended</label>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '100%', paddingTop: '16px' }}>
+                <input
+                  type="checkbox"
+                  id="edit_isAdmin"
+                  checked={editForm.isAdmin}
+                  onChange={e => setEditForm(prev => ({ ...prev, isAdmin: e.target.checked }))}
+                  style={{ width: '16px', height: '16px' }}
+                />
+                <label htmlFor="edit_isAdmin" style={{ fontSize: '13px', color: '#fff', cursor: 'pointer' }}>Is Admin</label>
+              </div>
+            </div>
+
+            {/* User Investment Plans Section */}
+            <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Investment Plans ({editForm.investmentPlans.length})</div>
+
+            <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: 'var(--gold-bright)' }}>Add Custom Investment Plan</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr auto', gap: '8px', alignItems: 'end' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Select Plan</label>
+                  <select
+                    value={newPlanToAdd.planName}
+                    onChange={e => {
+                      const planName = e.target.value
+                      const matchedPlan = samplePlans.find(p => p.name === planName)
+                      setNewPlanToAdd(prev => ({
+                        ...prev,
+                        planName,
+                        amount: matchedPlan ? parseFloat(matchedPlan.investAmount.replace(/[^0-9.]/g, '')) || 0 : 0
+                      }))
+                    }}
+                    style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
+                  >
+                    <option value="">-- Choose Plan --</option>
+                    {samplePlans.map(p => (
+                      <option key={p._id} value={p.name}>{p.name} ({p.investAmount})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Amount (Rs)</label>
+                  <input
+                    type="number"
+                    value={newPlanToAdd.amount}
+                    onChange={e => setNewPlanToAdd(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                    style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Status</label>
+                  <select
+                    value={newPlanToAdd.status}
+                    onChange={e => setNewPlanToAdd(prev => ({ ...prev, status: e.target.value }))}
+                    style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
+                  >
+                    <option value="active">Active</option>
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Start Date</label>
+                  <input
+                    type="date"
+                    value={newPlanToAdd.startDate}
+                    onChange={e => setNewPlanToAdd(prev => ({ ...prev, startDate: e.target.value }))}
+                    style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '5px', borderRadius: '4px', color: '#fff' }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className={styles.btn}
+                  onClick={() => {
+                    if (!newPlanToAdd.planName) {
+                      showError('Please select a plan')
+                      return
+                    }
+                    const dateObj = newPlanToAdd.startDate ? new Date(newPlanToAdd.startDate) : new Date()
+                    const updatedPlans = [...editForm.investmentPlans, {
+                      _id: 'new_' + Date.now(),
+                      planName: newPlanToAdd.planName,
+                      amount: newPlanToAdd.amount,
+                      status: newPlanToAdd.status,
+                      startDate: dateObj,
+                      paymentMethod: 'admin_manual',
+                      createdAt: new Date()
+                    }]
+                    setEditForm(prev => ({ ...prev, investmentPlans: updatedPlans }))
+                    setNewPlanToAdd({ planName: '', amount: 0, status: 'active', startDate: '' })
+                    showSuccess('Plan added to list')
+                  }}
+                  style={{ height: '34px', padding: '0 12px' }}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+
+            {editForm.investmentPlans.length === 0 ? (
+              <p style={{ fontSize: '13px', color: 'var(--text-dim)', fontStyle: 'italic', marginBottom: '24px' }}>No investment plans found for this user.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', maxHeight: '180px', overflowY: 'auto' }}>
+                {editForm.investmentPlans.map((plan, index) => (
+                  <div key={plan._id || index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-2)', padding: '8px 12px', borderRadius: '6px', gap: '12px' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{plan.planName}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
+                        Rs{plan.amount} · Start: {plan.startDate ? formatPakistanDate(plan.startDate) : 'N/A'}
+                      </div>
+                    </div>
+                    <select
+                      value={plan.status}
+                      onChange={e => {
+                        const updated = [...editForm.investmentPlans]
+                        updated[index].status = e.target.value
+                        setEditForm(prev => ({ ...prev, investmentPlans: updated }))
+                      }}
+                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="active">Active</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = editForm.investmentPlans.filter((_, idx) => idx !== index)
+                        setEditForm(prev => ({ ...prev, investmentPlans: updated }))
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer', fontSize: '16px' }}
+                    >
+                      ✕
                     </button>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
-          </div>
-        )}
 
-        {editingUserData && (
-          <div className={styles.editModal}>
-            <div className={styles.editModalBox} style={{ maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto' }}>
-              <div className={styles.editModalTitle}>Edit User Profile: {editingUserData.name || editingUserData.phone}</div>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                {/* Basic Fields */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Full Name</label>
-                  <input
-                    type="text"
-                    value={editForm.name}
-                    onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Phone (User ID)</label>
-                  <input
-                    type="text"
-                    value={editForm.phone}
-                    onChange={e => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Email Address</label>
-                  <input
-                    type="email"
-                    value={editForm.email}
-                    onChange={e => setEditForm(prev => ({ ...prev, email: e.target.value }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>New Password (leave empty to keep current)</label>
-                  <input
-                    type="password"
-                    placeholder="Set new password..."
-                    value={editForm.password}
-                    onChange={e => setEditForm(prev => ({ ...prev, password: e.target.value }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
-              </div>
+            {/* User Withdrawal History Section */}
+            <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Withdrawals ({editForm.withdrawHistory.length})</div>
 
-              {/* Financial Fields */}
-              <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Financial Balances</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Deposit Balance (Rs)</label>
+            <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: 'var(--gold-bright)' }}>Add Manual Withdrawal Record</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '8px', alignItems: 'end' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Amount (Rs)</label>
                   <input
                     type="number"
-                    value={editForm.balance}
-                    onChange={e => setEditForm(prev => ({ ...prev, balance: parseFloat(e.target.value) || 0 }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                    value={newWdToAdd.amount}
+                    onChange={e => setNewWdToAdd(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                    style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
                   />
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Earning Balance (Rs)</label>
-                  <input
-                    type="number"
-                    value={editForm.earnBalance}
-                    onChange={e => setEditForm(prev => ({ ...prev, earnBalance: parseFloat(e.target.value) || 0 }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Recharge (Rs)</label>
-                  <input
-                    type="number"
-                    value={editForm.totalRecharge}
-                    onChange={e => setEditForm(prev => ({ ...prev, totalRecharge: parseFloat(e.target.value) || 0 }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Commission Earned (Rs)</label>
-                  <input
-                    type="number"
-                    value={editForm.totalCommissionEarned}
-                    onChange={e => setEditForm(prev => ({ ...prev, totalCommissionEarned: parseFloat(e.target.value) || 0 }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
-              </div>
-
-              {/* Custom Overrides */}
-              <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Dashboard Display Overrides (Leave empty to use actual data)</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Earnings Override (Rs)</label>
-                  <input
-                    type="number"
-                    placeholder="Use actual..."
-                    value={editForm.customTotalEarnings}
-                    onChange={e => setEditForm(prev => ({ ...prev, customTotalEarnings: e.target.value }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>My Salary Override (Rs)</label>
-                  <input
-                    type="number"
-                    placeholder="Use actual..."
-                    value={editForm.customMySalary}
-                    onChange={e => setEditForm(prev => ({ ...prev, customMySalary: e.target.value }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Withdrawals Override (Rs)</label>
-                  <input
-                    type="number"
-                    placeholder="Use actual..."
-                    value={editForm.customTotalWithdrawals}
-                    onChange={e => setEditForm(prev => ({ ...prev, customTotalWithdrawals: e.target.value }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Direct Referrals Count Override</label>
-                  <input
-                    type="number"
-                    placeholder="Use actual..."
-                    value={editForm.customDirectReferrals}
-                    onChange={e => setEditForm(prev => ({ ...prev, customDirectReferrals: e.target.value }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Indirect Referrals Count Override</label>
-                  <input
-                    type="number"
-                    placeholder="Use actual..."
-                    value={editForm.customIndirectReferrals}
-                    onChange={e => setEditForm(prev => ({ ...prev, customIndirectReferrals: e.target.value }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
-              </div>
-
-              {/* Custom Ad Earning Override */}
-              <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '8px', marginBottom: '12px', color: 'var(--gold)' }}>Ad Earning Override</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px', background: 'rgba(201,160,74,0.06)', border: '1px solid rgba(201,160,74,0.2)', borderRadius: '10px', padding: '16px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--gold)' }}>Custom Daily Ad Reward (USD)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    placeholder="Nil (use plan default)"
-                    value={editForm.customAdEarning}
-                    onChange={e => setEditForm(prev => ({ ...prev, customAdEarning: e.target.value }))}
-                    style={{ background: 'var(--bg)', border: '1px solid rgba(201,160,74,0.4)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                  />
-                  <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Leave empty = user earns based on their plan. Set a $ amount to override their ad reward.</span>
-                </div>
-              </div>
-
-              {/* Status and Access Toggles */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px', background: 'var(--surface-2)', padding: '12px', borderRadius: '8px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Status</label>
+                <div>
+                  <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Status</label>
                   <select
-                    value={editForm.status}
-                    onChange={e => setEditForm(prev => ({ ...prev, status: e.target.value }))}
-                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '6px', color: '#fff' }}
+                    value={newWdToAdd.status}
+                    onChange={e => setNewWdToAdd(prev => ({ ...prev, status: e.target.value }))}
+                    style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
                   >
                     <option value="approved">Approved</option>
                     <option value="pending">Pending</option>
                     <option value="rejected">Rejected</option>
                   </select>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '100%', paddingTop: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Date</label>
                   <input
-                    type="checkbox"
-                    id="edit_isBlocked"
-                    checked={editForm.isBlocked}
-                    onChange={e => setEditForm(prev => ({ ...prev, isBlocked: e.target.checked }))}
-                    style={{ width: '16px', height: '16px' }}
+                    type="date"
+                    value={newWdToAdd.date}
+                    onChange={e => setNewWdToAdd(prev => ({ ...prev, date: e.target.value }))}
+                    style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '5px', borderRadius: '4px', color: '#fff' }}
                   />
-                  <label htmlFor="edit_isBlocked" style={{ fontSize: '13px', color: '#fff', cursor: 'pointer' }}>Suspended</label>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '100%', paddingTop: '16px' }}>
-                  <input
-                    type="checkbox"
-                    id="edit_isAdmin"
-                    checked={editForm.isAdmin}
-                    onChange={e => setEditForm(prev => ({ ...prev, isAdmin: e.target.checked }))}
-                    style={{ width: '16px', height: '16px' }}
-                  />
-                  <label htmlFor="edit_isAdmin" style={{ fontSize: '13px', color: '#fff', cursor: 'pointer' }}>Is Admin</label>
-                </div>
-              </div>
-
-              {/* User Investment Plans Section */}
-              <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Investment Plans ({editForm.investmentPlans.length})</div>
-              
-              <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: 'var(--gold-bright)' }}>Add Custom Investment Plan</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr auto', gap: '8px', alignItems: 'end' }}>
-                  <div>
-                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Select Plan</label>
-                    <select
-                      value={newPlanToAdd.planName}
-                      onChange={e => {
-                        const planName = e.target.value
-                        const matchedPlan = samplePlans.find(p => p.name === planName)
-                        setNewPlanToAdd(prev => ({
-                          ...prev,
-                          planName,
-                          amount: matchedPlan ? parseFloat(matchedPlan.investAmount.replace(/[^0-9.]/g, '')) || 0 : 0
-                        }))
-                      }}
-                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
-                    >
-                      <option value="">-- Choose Plan --</option>
-                      {samplePlans.map(p => (
-                        <option key={p._id} value={p.name}>{p.name} ({p.investAmount})</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Amount (Rs)</label>
-                    <input
-                      type="number"
-                      value={newPlanToAdd.amount}
-                      onChange={e => setNewPlanToAdd(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
-                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Status</label>
-                    <select
-                      value={newPlanToAdd.status}
-                      onChange={e => setNewPlanToAdd(prev => ({ ...prev, status: e.target.value }))}
-                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
-                    >
-                      <option value="active">Active</option>
-                      <option value="pending">Pending</option>
-                      <option value="completed">Completed</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Start Date</label>
-                    <input
-                      type="date"
-                      value={newPlanToAdd.startDate}
-                      onChange={e => setNewPlanToAdd(prev => ({ ...prev, startDate: e.target.value }))}
-                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '5px', borderRadius: '4px', color: '#fff' }}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    className={styles.btn}
-                    onClick={() => {
-                      if (!newPlanToAdd.planName) {
-                        showError('Please select a plan')
-                        return
-                      }
-                      const dateObj = newPlanToAdd.startDate ? new Date(newPlanToAdd.startDate) : new Date()
-                      const updatedPlans = [...editForm.investmentPlans, {
-                        _id: 'new_' + Date.now(),
-                        planName: newPlanToAdd.planName,
-                        amount: newPlanToAdd.amount,
-                        status: newPlanToAdd.status,
-                        startDate: dateObj,
-                        paymentMethod: 'admin_manual',
-                        createdAt: new Date()
-                      }]
-                      setEditForm(prev => ({ ...prev, investmentPlans: updatedPlans }))
-                      setNewPlanToAdd({ planName: '', amount: 0, status: 'active', startDate: '' })
-                      showSuccess('Plan added to list')
-                    }}
-                    style={{ height: '34px', padding: '0 12px' }}
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
-
-              {editForm.investmentPlans.length === 0 ? (
-                <p style={{ fontSize: '13px', color: 'var(--text-dim)', fontStyle: 'italic', marginBottom: '24px' }}>No investment plans found for this user.</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', maxHeight: '180px', overflowY: 'auto' }}>
-                  {editForm.investmentPlans.map((plan, index) => (
-                    <div key={plan._id || index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-2)', padding: '8px 12px', borderRadius: '6px', gap: '12px' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{plan.planName}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
-                          Rs{plan.amount} · Start: {plan.startDate ? formatPakistanDate(plan.startDate) : 'N/A'}
-                        </div>
-                      </div>
-                      <select
-                        value={plan.status}
-                        onChange={e => {
-                          const updated = [...editForm.investmentPlans]
-                          updated[index].status = e.target.value
-                          setEditForm(prev => ({ ...prev, investmentPlans: updated }))
-                        }}
-                        style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="active">Active</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = editForm.investmentPlans.filter((_, idx) => idx !== index)
-                          setEditForm(prev => ({ ...prev, investmentPlans: updated }))
-                        }}
-                        style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer', fontSize: '16px' }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* User Withdrawal History Section */}
-              <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Withdrawals ({editForm.withdrawHistory.length})</div>
-              
-              <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: 'var(--gold-bright)' }}>Add Manual Withdrawal Record</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '8px', alignItems: 'end' }}>
-                  <div>
-                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Amount (Rs)</label>
-                    <input
-                      type="number"
-                      value={newWdToAdd.amount}
-                      onChange={e => setNewWdToAdd(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
-                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Status</label>
-                    <select
-                      value={newWdToAdd.status}
-                      onChange={e => setNewWdToAdd(prev => ({ ...prev, status: e.target.value }))}
-                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px', borderRadius: '4px', color: '#fff' }}
-                    >
-                      <option value="approved">Approved</option>
-                      <option value="pending">Pending</option>
-                      <option value="rejected">Rejected</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Date</label>
-                    <input
-                      type="date"
-                      value={newWdToAdd.date}
-                      onChange={e => setNewWdToAdd(prev => ({ ...prev, date: e.target.value }))}
-                      style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', padding: '5px', borderRadius: '4px', color: '#fff' }}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    className={styles.btn}
-                    onClick={() => {
-                      if (newWdToAdd.amount <= 0) {
-                        showError('Please enter a valid amount')
-                        return
-                      }
-                      const dateObj = newWdToAdd.date ? new Date(newWdToAdd.date) : new Date()
-                      const updatedWd = [...editForm.withdrawHistory, {
-                        _id: 'new_wd_' + Date.now(),
-                        amount: newWdToAdd.amount,
-                        status: newWdToAdd.status,
-                        date: dateObj
-                      }]
-                      setEditForm(prev => ({ ...prev, withdrawHistory: updatedWd }))
-                      setNewWdToAdd({ amount: 0, status: 'approved', date: '' })
-                      showSuccess('Withdrawal added to list')
-                    }}
-                    style={{ height: '34px', padding: '0 12px' }}
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
-
-              {editForm.withdrawHistory.length === 0 ? (
-                <p style={{ fontSize: '13px', color: 'var(--text-dim)', fontStyle: 'italic', marginBottom: '24px' }}>No withdrawals found for this user.</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', maxHeight: '180px', overflowY: 'auto' }}>
-                  {editForm.withdrawHistory.map((wd, index) => (
-                    <div key={wd._id || index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-2)', padding: '8px 12px', borderRadius: '6px', gap: '12px' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '13px', fontWeight: 'bold' }}>Rs{wd.amount}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
-                          Date: {wd.date ? formatPakistanDate(wd.date) : 'N/A'}
-                        </div>
-                      </div>
-                      <select
-                        value={wd.status}
-                        onChange={e => {
-                          const updated = [...editForm.withdrawHistory]
-                          updated[index].status = e.target.value
-                          setEditForm(prev => ({ ...prev, withdrawHistory: updated }))
-                        }}
-                        style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                      </select>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = editForm.withdrawHistory.filter((_, idx) => idx !== index)
-                          setEditForm(prev => ({ ...prev, withdrawHistory: updated }))
-                        }}
-                        style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer', fontSize: '16px' }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Referral Network Section */}
-              <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Referral Network</div>
-              
-              {/* Add Network Member Form */}
-              <div style={{ background: 'var(--surface-2)', padding: '16px', borderRadius: '10px', marginBottom: '20px' }}>
-                <h4 style={{ margin: '0 0 12px', fontSize: '13px', color: 'var(--gold)' }}>Add Member to Network</h4>
-                <form onSubmit={handleAddNetworkMember} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Name</label>
-                    <input
-                      type="text"
-                      placeholder="Member's full name"
-                      value={networkMemberForm.name}
-                      onChange={e => setNetworkMemberForm(prev => ({ ...prev, name: e.target.value }))}
-                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Email</label>
-                    <input
-                      type="email"
-                      placeholder="Member's email"
-                      value={networkMemberForm.email}
-                      onChange={e => setNetworkMemberForm(prev => ({ ...prev, email: e.target.value }))}
-                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Phone (User ID)</label>
-                    <input
-                      type="text"
-                      placeholder="03*********"
-                      value={networkMemberForm.phone}
-                      onChange={e => setNetworkMemberForm(prev => ({ ...prev, phone: e.target.value }))}
-                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Password</label>
-                    <input
-                      type="text"
-                      placeholder="Password"
-                      value={networkMemberForm.password}
-                      onChange={e => setNetworkMemberForm(prev => ({ ...prev, password: e.target.value }))}
-                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Referral Level</label>
-                    <select
-                      value={networkMemberForm.level}
-                      onChange={e => setNetworkMemberForm(prev => ({ ...prev, level: e.target.value }))}
-                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
-                    >
-                      <option value="A">Level A (Direct Referral)</option>
-                      <option value="B">Level B (Indirect Referral)</option>
-                      <option value="C">Level C (Downline Referral)</option>
-                    </select>
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Plan</label>
-                      <select
-                        value={networkMemberForm.planName}
-                        onChange={e => {
-                          const name = e.target.value;
-                          let amount = '0';
-                          if (name === 'Basic') amount = '1000';
-                          else if (name === 'Standard') amount = '3000';
-                          else if (name === 'Diamond') amount = '6000';
-                          else if (name === 'Pro') amount = '12000';
-                          else if (name === 'Premium') amount = '25000';
-                          else if (name === 'Legend') amount = '50000';
-                          setNetworkMemberForm(prev => ({ ...prev, planName: name, planAmount: amount }));
-                        }}
-                        style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
-                      >
-                        <option value="Free">Free Plan (Rs0)</option>
-                        <option value="Basic">Basic Plan (Rs1,000)</option>
-                        <option value="Standard">Standard Plan (Rs3,000)</option>
-                        <option value="Diamond">Diamond Plan (Rs6,000)</option>
-                        <option value="Pro">Pro Plan (Rs12,000)</option>
-                        <option value="Premium">Premium Plan (Rs25,000)</option>
-                        <option value="Legend">Legend Plan (Rs50,000)</option>
-                      </select>
-                    </div>
-                    <div style={{ width: '80px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Amount</label>
-                      <input
-                        type="number"
-                        value={networkMemberForm.planAmount}
-                        onChange={e => setNetworkMemberForm(prev => ({ ...prev, planAmount: e.target.value }))}
-                        style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
-                      />
-                    </div>
-                  </div>
-                  <div style={{ gridColumn: 'span 2', marginTop: '6px' }}>
-                    <button
-                      type="submit"
-                      disabled={isAddingNetworkMember}
-                      className={styles.btn}
-                      style={{ width: '100%', backgroundColor: 'var(--gold)', color: '#000', fontWeight: 'bold' }}
-                    >
-                      {isAddingNetworkMember ? 'Adding member...' : 'Add Member to Network'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              {/* Network Members Lists */}
-              {editUserTeamData ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-                  {/* Level A */}
-                  <div>
-                    <h5 style={{ margin: '0 0 6px', fontSize: '12.5px', color: '#fff' }}>
-                      👤 Level A - Direct Referrals ({editUserTeamData.levelA?.count || 0})
-                    </h5>
-                    {editUserTeamData.levelA?.members?.length === 0 ? (
-                      <p style={{ fontSize: '12px', color: 'var(--text-dim)', fontStyle: 'italic', margin: 0 }}>No Level A members</p>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '150px', overflowY: 'auto' }}>
-                        {editUserTeamData.levelA.members.map((m, idx) => (
-                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}>
-                            <div>
-                              <strong>{m.name}</strong> ({m.phone})<br/>
-                              <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Email: {m.email || 'N/A'}</span>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                              <span className="badge" style={{ background: 'var(--gold-bg)', color: 'var(--gold-bright)', fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px' }}>{m.plan}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Level B */}
-                  <div>
-                    <h5 style={{ margin: '0 0 6px', fontSize: '12.5px', color: '#fff' }}>
-                      🔗 Level B - Indirect Referrals ({editUserTeamData.levelB?.count || 0})
-                    </h5>
-                    {editUserTeamData.levelB?.members?.length === 0 ? (
-                      <p style={{ fontSize: '12px', color: 'var(--text-dim)', fontStyle: 'italic', margin: 0 }}>No Level B members</p>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '150px', overflowY: 'auto' }}>
-                        {editUserTeamData.levelB.members.map((m, idx) => (
-                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}>
-                            <div>
-                              <strong>{m.name}</strong> ({m.phone})<br/>
-                              <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Email: {m.email || 'N/A'}</span>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                              <span className="badge" style={{ background: 'var(--gold-bg)', color: 'var(--gold-bright)', fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px' }}>{m.plan}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Level C */}
-                  <div>
-                    <h5 style={{ margin: '0 0 6px', fontSize: '12.5px', color: '#fff' }}>
-                      🔗 Level C - Downline Referrals ({editUserTeamData.levelC?.count || 0})
-                    </h5>
-                    {editUserTeamData.levelC?.members?.length === 0 ? (
-                      <p style={{ fontSize: '12px', color: 'var(--text-dim)', fontStyle: 'italic', margin: 0 }}>No Level C members</p>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '150px', overflowY: 'auto' }}>
-                        {editUserTeamData.levelC.members.map((m, idx) => (
-                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}>
-                            <div>
-                              <strong>{m.name}</strong> ({m.phone})<br/>
-                              <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Email: {m.email || 'N/A'}</span>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                              <span className="badge" style={{ background: 'var(--gold-bg)', color: 'var(--gold-bright)', fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px' }}>{m.plan}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <p style={{ fontSize: '13px', color: 'var(--text-dim)', fontStyle: 'italic', marginBottom: '24px' }}>Loading referral network details...</p>
-              )}
-
-              {/* Action Buttons */}
-              <div className={styles.editModalActions}>
                 <button
                   type="button"
                   className={styles.btn}
-                  style={{ backgroundColor: 'var(--green)', color: '#fff', borderColor: 'var(--green)' }}
-                  onClick={handleSaveEditUser}
+                  onClick={() => {
+                    if (newWdToAdd.amount <= 0) {
+                      showError('Please enter a valid amount')
+                      return
+                    }
+                    const dateObj = newWdToAdd.date ? new Date(newWdToAdd.date) : new Date()
+                    const updatedWd = [...editForm.withdrawHistory, {
+                      _id: 'new_wd_' + Date.now(),
+                      amount: newWdToAdd.amount,
+                      status: newWdToAdd.status,
+                      date: dateObj
+                    }]
+                    setEditForm(prev => ({ ...prev, withdrawHistory: updatedWd }))
+                    setNewWdToAdd({ amount: 0, status: 'approved', date: '' })
+                    showSuccess('Withdrawal added to list')
+                  }}
+                  style={{ height: '34px', padding: '0 12px' }}
                 >
-                  Save Changes
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnOutline}`}
-                  onClick={() => setEditingUserData(null)}
-                >
-                  Cancel
+                  Add
                 </button>
               </div>
             </div>
-          </div>
-        )}
 
-        {activeTab === 'dashboard' && (
-          <div className="space-y-6">
-            {/* Key Metrics Cards */}
-            <div className={styles.statsGrid}>
-              {/* Total Users */}
-              <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: 'rgba(111, 168, 220, 0.15)', color: '#6fa8dc' }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </div>
-                <div>
-                  <div className={styles.statLabel}>Total Users</div>
-                  <div className={styles.statValue}>{dashboardStats.totalUsers}</div>
-                </div>
-              </div>
-
-              {/* Pending Withdrawals */}
-              <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: 'rgba(217, 169, 78, 0.15)', color: '#d9a94e' }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
-                </div>
-                <div>
-                  <div className={styles.statLabel}>Pending Withdrawals</div>
-                  <div className={styles.statValue}>{dashboardStats.pendingWithdrawals}</div>
-                </div>
-              </div>
-
-              {/* Pending Plan Requests */}
-              <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: 'rgba(62, 207, 142, 0.15)', color: '#3ecf8e' }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12l4-4 4 4"/></svg>
-                </div>
-                <div>
-                  <div className={styles.statLabel}>Pending Plan Requests</div>
-                  <div className={styles.statValue}>{dashboardStats.pendingPlanRequests}</div>
-                </div>
-              </div>
-
-              {/* Active Ads */}
-              <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: 'rgba(164, 140, 224, 0.15)', color: '#a48ce0' }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                </div>
-                <div>
-                  <div className={styles.statLabel}>Active Ads</div>
-                  <div className={styles.statValue}>
-                    {(() => {
-                      if (typeof window !== 'undefined') {
-                        try {
-                          const ads = JSON.parse(localStorage.getItem('admin_ads') || '[]');
-                          return ads.filter(a => a.active).length;
-                        } catch (e) {
-                          return 0;
-                        }
-                      }
-                      return 0;
-                    })()}
-                  </div>
-                </div>
-              </div>
-
-              {/* Total Earnings Distributed */}
-              <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: 'rgba(217, 169, 78, 0.15)', color: '#d9a94e' }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                </div>
-                <div>
-                  <div className={styles.statLabel}>Total Earnings Distributed</div>
-                  <div className={styles.statValue}>
-                    Rs{Number(dashboardStats.totalEarningsDistributed || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Total Withdrawals Paid */}
-              <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: 'rgba(226, 88, 77, 0.15)', color: '#e2584d' }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                </div>
-                <div>
-                  <div className={styles.statLabel}>Total Withdrawals Paid</div>
-                  <div className={styles.statValue}>
-                    Rs{Number(dashboardStats.totalWithdrawalsPaid || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {false && activeTab === 'manageAds' && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Image Management</h3>
-            <p className="text-gray-600 mb-6">Manage car images for your investment plans.</p>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {['car1.jpeg', 'car2.jpeg', 'car3.jpeg', 'car4.jpeg', 'car5.jpeg'].map((imageName, index) => (
-                <div key={imageName} className="border border-gray-200 rounded-lg p-4 text-center">
-                  <div className="w-full h-32 bg-gray-200 rounded-lg overflow-hidden mb-3">
-                    <img 
-                      src={getImageSrc(imageName)} 
-                      alt={`Car ${index + 1}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm" style={{display: 'none'}}>
-                      Image Not Found
+            {editForm.withdrawHistory.length === 0 ? (
+              <p style={{ fontSize: '13px', color: 'var(--text-dim)', fontStyle: 'italic', marginBottom: '24px' }}>No withdrawals found for this user.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', maxHeight: '180px', overflowY: 'auto' }}>
+                {editForm.withdrawHistory.map((wd, index) => (
+                  <div key={wd._id || index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-2)', padding: '8px 12px', borderRadius: '6px', gap: '12px' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '13px', fontWeight: 'bold' }}>Rs{wd.amount}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
+                        Date: {wd.date ? formatPakistanDate(wd.date) : 'N/A'}
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-sm font-medium text-gray-800">{imageName}</p>
-                  <p className="text-xs text-gray-500">Car {index + 1}</p>
-                  <div className="mt-2 space-y-1">
-                    <button
-                      onClick={() => {
-                        const input = document.createElement('input');
-                        input.type = 'file';
-                        input.accept = 'image/*';
-                        input.onchange = (e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            // Check file size (5MB limit)
-                            if (file.size > 5 * 1024 * 1024) {
-                              showError('File size must be less than 5MB');
-                              return;
-                            }
-                            // Check file type
-                            if (!file.type.startsWith('image/')) {
-                              showError('Please select an image file');
-                              return;
-                            }
-                            handleFileUpload(file, imageName);
-                          }
-                        };
-                        input.click();
+                    <select
+                      value={wd.status}
+                      onChange={e => {
+                        const updated = [...editForm.withdrawHistory]
+                        updated[index].status = e.target.value
+                        setEditForm(prev => ({ ...prev, withdrawHistory: updated }))
                       }}
-                      className="w-full px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
                     >
-                      Upload Image
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = editForm.withdrawHistory.filter((_, idx) => idx !== index)
+                        setEditForm(prev => ({ ...prev, withdrawHistory: updated }))
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer', fontSize: '16px' }}
+                    >
+                      ✕
                     </button>
-                    {uploadedImages[imageName] && (
-                      <button
-                        onClick={async () => {
-                          if (confirm('Are you sure you want to delete this image?')) {
-                            try {
-                              const response = await fetch(`/api/admin/images?imageName=${imageName}`, {
-                                method: 'DELETE'
-                              });
-                              
-                              if (response.ok) {
-                                setUploadedImages(prev => {
-                                  const newImages = { ...prev };
-                                  delete newImages[imageName];
-                                  return newImages;
-                                });
-                                showSuccess('Image deleted successfully!');
-                              } else {
-                                showError('Failed to delete image');
-                              }
-                            } catch (error) {
-                              console.warn('Error deleting image:', error);
-                              showError('Failed to delete image');
-                            }
-                          }
-                        }}
-                        className="w-full px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                      >
-                        Delete Image
-                      </button>
-                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Referral Network Section */}
+            <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Referral Network</div>
+
+            {/* Add Network Member Form */}
+            <div style={{ background: 'var(--surface-2)', padding: '16px', borderRadius: '10px', marginBottom: '20px' }}>
+              <h4 style={{ margin: '0 0 12px', fontSize: '13px', color: 'var(--gold)' }}>Add Member to Network</h4>
+              <form onSubmit={handleAddNetworkMember} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Name</label>
+                  <input
+                    type="text"
+                    placeholder="Member's full name"
+                    value={networkMemberForm.name}
+                    onChange={e => setNetworkMemberForm(prev => ({ ...prev, name: e.target.value }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Email</label>
+                  <input
+                    type="email"
+                    placeholder="Member's email"
+                    value={networkMemberForm.email}
+                    onChange={e => setNetworkMemberForm(prev => ({ ...prev, email: e.target.value }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Phone (User ID)</label>
+                  <input
+                    type="text"
+                    placeholder="03*********"
+                    value={networkMemberForm.phone}
+                    onChange={e => setNetworkMemberForm(prev => ({ ...prev, phone: e.target.value }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Password</label>
+                  <input
+                    type="text"
+                    placeholder="Password"
+                    value={networkMemberForm.password}
+                    onChange={e => setNetworkMemberForm(prev => ({ ...prev, password: e.target.value }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Referral Level</label>
+                  <select
+                    value={networkMemberForm.level}
+                    onChange={e => setNetworkMemberForm(prev => ({ ...prev, level: e.target.value }))}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                  >
+                    <option value="A">Level A (Direct Referral)</option>
+                    <option value="B">Level B (Indirect Referral)</option>
+                    <option value="C">Level C (Downline Referral)</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Plan</label>
+                    <select
+                      value={networkMemberForm.planName}
+                      onChange={e => {
+                        const name = e.target.value;
+                        let amount = '0';
+                        if (name === 'Basic') amount = '1000';
+                        else if (name === 'Standard') amount = '3000';
+                        else if (name === 'Diamond') amount = '6000';
+                        else if (name === 'Pro') amount = '12000';
+                        else if (name === 'Premium') amount = '25000';
+                        else if (name === 'Legend') amount = '50000';
+                        setNetworkMemberForm(prev => ({ ...prev, planName: name, planAmount: amount }));
+                      }}
+                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                    >
+                      <option value="Free">Free Plan (Rs0)</option>
+                      <option value="Basic">Basic Plan (Rs1,000)</option>
+                      <option value="Standard">Standard Plan (Rs3,000)</option>
+                      <option value="Diamond">Diamond Plan (Rs6,000)</option>
+                      <option value="Pro">Pro Plan (Rs12,000)</option>
+                      <option value="Premium">Premium Plan (Rs25,000)</option>
+                      <option value="Legend">Legend Plan (Rs50,000)</option>
+                    </select>
+                  </div>
+                  <div style={{ width: '80px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Amount</label>
+                    <input
+                      type="number"
+                      value={networkMemberForm.planAmount}
+                      onChange={e => setNetworkMemberForm(prev => ({ ...prev, planAmount: e.target.value }))}
+                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-            
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="text-sm font-medium text-blue-800 mb-2">Image Upload Instructions:</h4>
-              <ul className="text-sm text-blue-700 space-y-1">
-                <li>â€¢ Supported formats: JPEG, PNG, GIF</li>
-                <li>â€¢ Recommended size: 800x600 pixels or larger</li>
-                <li>â€¢ File size: Maximum 5MB per image</li>
-                <li>â€¢ Images should be placed in the public folder of your project</li>
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'manageAds' && (
-          <div className={styles.usersPage}>
-            <h2 className={styles.pageTitle}>Manage Ads</h2>
-            <p className={styles.pageSub}>Add and manage video ads for users</p>
-
-            <div className={styles.card}>
-              <div className={styles.formTitle}>
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Add New Ad
-              </div>
-
-              <div className={styles.field}>
-                <label htmlFor="adTitle">Title</label>
-                <input
-                  type="text"
-                  id="adTitle"
-                  value={newAd.title}
-                  onChange={(event) => setNewAd({ ...newAd, title: event.target.value })}
-                  placeholder="Ad title"
-                />
-              </div>
-
-              <div className={styles.field}>
-                <label htmlFor="adUrl">Video URL</label>
-                <input
-                  type="url"
-                  id="adUrl"
-                  value={newAd.url}
-                  onChange={(event) => setNewAd({ ...newAd, url: event.target.value })}
-                  placeholder="https://youtube.com/..."
-                />
-              </div>
-
-              <div className={styles.note}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="16" x2="12" y2="12" />
-                  <line x1="12" y1="8" x2="12.01" y2="8" />
-                </svg>
-                Reward amounts are automatically set based on each user's plan - no manual setting needed.
-              </div>
-
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnGold} ${styles.btnFull}`}
-                onClick={handleAddAd}
-              >
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Add Ad
-              </button>
+                <div style={{ gridColumn: 'span 2', marginTop: '6px' }}>
+                  <button
+                    type="submit"
+                    disabled={isAddingNetworkMember}
+                    className={styles.btn}
+                    style={{ width: '100%', backgroundColor: 'var(--gold)', color: '#000', fontWeight: 'bold' }}
+                  >
+                    {isAddingNetworkMember ? 'Adding member...' : 'Add Member to Network'}
+                  </button>
+                </div>
+              </form>
             </div>
 
-            {ads.length === 0 ? (
-              <div className={styles.empty}>
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
-                  <polygon points="5 3 19 12 5 21 5 3" />
-                </svg>
-                <p>No ads yet. Add one above.</p>
+            {/* Network Members Lists */}
+            {editUserTeamData ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                {/* Level A */}
+                <div>
+                  <h5 style={{ margin: '0 0 6px', fontSize: '12.5px', color: '#fff' }}>
+                    👤 Level A - Direct Referrals ({editUserTeamData.levelA?.count || 0})
+                  </h5>
+                  {editUserTeamData.levelA?.members?.length === 0 ? (
+                    <p style={{ fontSize: '12px', color: 'var(--text-dim)', fontStyle: 'italic', margin: 0 }}>No Level A members</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '150px', overflowY: 'auto' }}>
+                      {editUserTeamData.levelA.members.map((m, idx) => (
+                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}>
+                          <div>
+                            <strong>{m.name}</strong> ({m.phone})<br />
+                            <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Email: {m.email || 'N/A'}</span>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <span className="badge" style={{ background: 'var(--gold-bg)', color: 'var(--gold-bright)', fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px' }}>{m.plan}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Level B */}
+                <div>
+                  <h5 style={{ margin: '0 0 6px', fontSize: '12.5px', color: '#fff' }}>
+                    🔗 Level B - Indirect Referrals ({editUserTeamData.levelB?.count || 0})
+                  </h5>
+                  {editUserTeamData.levelB?.members?.length === 0 ? (
+                    <p style={{ fontSize: '12px', color: 'var(--text-dim)', fontStyle: 'italic', margin: 0 }}>No Level B members</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '150px', overflowY: 'auto' }}>
+                      {editUserTeamData.levelB.members.map((m, idx) => (
+                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}>
+                          <div>
+                            <strong>{m.name}</strong> ({m.phone})<br />
+                            <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Email: {m.email || 'N/A'}</span>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <span className="badge" style={{ background: 'var(--gold-bg)', color: 'var(--gold-bright)', fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px' }}>{m.plan}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Level C */}
+                <div>
+                  <h5 style={{ margin: '0 0 6px', fontSize: '12.5px', color: '#fff' }}>
+                    🔗 Level C - Downline Referrals ({editUserTeamData.levelC?.count || 0})
+                  </h5>
+                  {editUserTeamData.levelC?.members?.length === 0 ? (
+                    <p style={{ fontSize: '12px', color: 'var(--text-dim)', fontStyle: 'italic', margin: 0 }}>No Level C members</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '150px', overflowY: 'auto' }}>
+                      {editUserTeamData.levelC.members.map((m, idx) => (
+                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}>
+                          <div>
+                            <strong>{m.name}</strong> ({m.phone})<br />
+                            <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Email: {m.email || 'N/A'}</span>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <span className="badge" style={{ background: 'var(--gold-bg)', color: 'var(--gold-bright)', fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px' }}>{m.plan}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
-              ads.map((ad) => (
-                <div className={styles.rowCard} key={ad.id}>
-                  <div className={styles.rowIcon}>
+              <p style={{ fontSize: '13px', color: 'var(--text-dim)', fontStyle: 'italic', marginBottom: '24px' }}>Loading referral network details...</p>
+            )}
+
+            {/* Action Buttons */}
+            <div className={styles.editModalActions}>
+              <button
+                type="button"
+                className={styles.btn}
+                style={{ backgroundColor: 'var(--green)', color: '#fff', borderColor: 'var(--green)' }}
+                onClick={handleSaveEditUser}
+              >
+                Save Changes
+              </button>
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnOutline}`}
+                onClick={() => setEditingUserData(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'dashboard' && (
+        <div className="space-y-6">
+          {/* Key Metrics Cards */}
+          <div className={styles.statsGrid}>
+            {/* Total Users */}
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} style={{ background: 'rgba(111, 168, 220, 0.15)', color: '#6fa8dc' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+              </div>
+              <div>
+                <div className={styles.statLabel}>Total Users</div>
+                <div className={styles.statValue}>{dashboardStats.totalUsers}</div>
+              </div>
+            </div>
+
+            {/* Pending Withdrawals */}
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} style={{ background: 'rgba(217, 169, 78, 0.15)', color: '#d9a94e' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" /><path d="M3 5v14a2 2 0 0 0 2 2h16v-5" /><path d="M18 12a2 2 0 0 0 0 4h4v-4Z" /></svg>
+              </div>
+              <div>
+                <div className={styles.statLabel}>Pending Withdrawals</div>
+                <div className={styles.statValue}>{dashboardStats.pendingWithdrawals}</div>
+              </div>
+            </div>
+
+            {/* Pending Plan Requests */}
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} style={{ background: 'rgba(62, 207, 142, 0.15)', color: '#3ecf8e' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 8v8M8 12l4-4 4 4" /></svg>
+              </div>
+              <div>
+                <div className={styles.statLabel}>Pending Plan Requests</div>
+                <div className={styles.statValue}>{dashboardStats.pendingPlanRequests}</div>
+              </div>
+            </div>
+
+            {/* Active Ads */}
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} style={{ background: 'rgba(164, 140, 224, 0.15)', color: '#a48ce0' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+              </div>
+              <div>
+                <div className={styles.statLabel}>Active Ads</div>
+                <div className={styles.statValue}>
+                  {(() => {
+                    if (typeof window !== 'undefined') {
+                      try {
+                        const ads = JSON.parse(localStorage.getItem('admin_ads') || '[]');
+                        return ads.filter(a => a.active).length;
+                      } catch (e) {
+                        return 0;
+                      }
+                    }
+                    return 0;
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* Total Earnings Distributed */}
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} style={{ background: 'rgba(217, 169, 78, 0.15)', color: '#d9a94e' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+              </div>
+              <div>
+                <div className={styles.statLabel}>Total Earnings Distributed</div>
+                <div className={styles.statValue}>
+                  Rs{Number(dashboardStats.totalEarningsDistributed || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+              </div>
+            </div>
+
+            {/* Total Withdrawals Paid */}
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} style={{ background: 'rgba(226, 88, 77, 0.15)', color: '#e2584d' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
+              </div>
+              <div>
+                <div className={styles.statLabel}>Total Withdrawals Paid</div>
+                <div className={styles.statValue}>
+                  Rs{Number(dashboardStats.totalWithdrawalsPaid || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {false && activeTab === 'manageAds' && (
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Image Management</h3>
+          <p className="text-gray-600 mb-6">Manage car images for your investment plans.</p>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {['car1.jpeg', 'car2.jpeg', 'car3.jpeg', 'car4.jpeg', 'car5.jpeg'].map((imageName, index) => (
+              <div key={imageName} className="border border-gray-200 rounded-lg p-4 text-center">
+                <div className="w-full h-32 bg-gray-200 rounded-lg overflow-hidden mb-3">
+                  <img
+                    src={getImageSrc(imageName)}
+                    alt={`Car ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm" style={{ display: 'none' }}>
+                    Image Not Found
+                  </div>
+                </div>
+                <p className="text-sm font-medium text-gray-800">{imageName}</p>
+                <p className="text-xs text-gray-500">Car {index + 1}</p>
+                <div className="mt-2 space-y-1">
+                  <button
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'image/*';
+                      input.onchange = (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          // Check file size (5MB limit)
+                          if (file.size > 5 * 1024 * 1024) {
+                            showError('File size must be less than 5MB');
+                            return;
+                          }
+                          // Check file type
+                          if (!file.type.startsWith('image/')) {
+                            showError('Please select an image file');
+                            return;
+                          }
+                          handleFileUpload(file, imageName);
+                        }
+                      };
+                      input.click();
+                    }}
+                    className="w-full px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                  >
+                    Upload Image
+                  </button>
+                  {uploadedImages[imageName] && (
+                    <button
+                      onClick={async () => {
+                        if (confirm('Are you sure you want to delete this image?')) {
+                          try {
+                            const response = await fetch(`/api/admin/images?imageName=${imageName}`, {
+                              method: 'DELETE'
+                            });
+
+                            if (response.ok) {
+                              setUploadedImages(prev => {
+                                const newImages = { ...prev };
+                                delete newImages[imageName];
+                                return newImages;
+                              });
+                              showSuccess('Image deleted successfully!');
+                            } else {
+                              showError('Failed to delete image');
+                            }
+                          } catch (error) {
+                            console.warn('Error deleting image:', error);
+                            showError('Failed to delete image');
+                          }
+                        }
+                      }}
+                      className="w-full px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                    >
+                      Delete Image
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h4 className="text-sm font-medium text-blue-800 mb-2">Image Upload Instructions:</h4>
+            <ul className="text-sm text-blue-700 space-y-1">
+              <li>â€¢ Supported formats: JPEG, PNG, GIF</li>
+              <li>â€¢ Recommended size: 800x600 pixels or larger</li>
+              <li>â€¢ File size: Maximum 5MB per image</li>
+              <li>â€¢ Images should be placed in the public folder of your project</li>
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'manageAds' && (
+        <div className={styles.usersPage}>
+          <h2 className={styles.pageTitle}>Manage Ads</h2>
+          <p className={styles.pageSub}>Add and manage video ads for users</p>
+
+          <div className={styles.card}>
+            <div className={styles.formTitle}>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add New Ad
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="adTitle">Title</label>
+              <input
+                type="text"
+                id="adTitle"
+                value={newAd.title}
+                onChange={(event) => setNewAd({ ...newAd, title: event.target.value })}
+                placeholder="Ad title"
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="adUrl">Video URL</label>
+              <input
+                type="url"
+                id="adUrl"
+                value={newAd.url}
+                onChange={(event) => setNewAd({ ...newAd, url: event.target.value })}
+                placeholder="https://youtube.com/..."
+              />
+            </div>
+
+            <div className={styles.note}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+              </svg>
+              Reward amounts are automatically set based on each user's plan - no manual setting needed.
+            </div>
+
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnGold} ${styles.btnFull}`}
+              onClick={handleAddAd}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add Ad
+            </button>
+          </div>
+
+          {ads.length === 0 ? (
+            <div className={styles.empty}>
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              <p>No ads yet. Add one above.</p>
+            </div>
+          ) : (
+            ads.map((ad) => (
+              <div className={styles.rowCard} key={ad.id}>
+                <div className={styles.rowIcon}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                </div>
+                <div>
+                  <div className={styles.rowTitle}>{ad.title}</div>
+                  <div className={styles.rowSub}>Reward based on user plan</div>
+                </div>
+                <div className={styles.rowActions}>
+                  <label className={styles.switch}>
+                    <input
+                      type="checkbox"
+                      checked={ad.active}
+                      onChange={() => handleToggleAd(ad.id)}
+                    />
+                    <span className={styles.slider}></span>
+                  </label>
+                  <button
+                    type="button"
+                    className={styles.iconBtn}
+                    onClick={() => handleDeleteAd(ad.id)}
+                    aria-label="Delete ad"
+                  >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polygon points="5 3 19 12 5 21 5 3" />
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
                     </svg>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {activeTab === 'manageCourses' && (
+        <div className={styles.usersPage}>
+          <h2 className={styles.pageTitle}>Manage Courses</h2>
+          <p className={styles.pageSub}>Add and manage digital learning courses for users</p>
+
+          <div className={styles.card}>
+            <div className={styles.formTitle}>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add New Course
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="courseTitle">Course Title</label>
+              <input
+                type="text"
+                id="courseTitle"
+                value={newCourse.title}
+                onChange={(event) => setNewCourse({ ...newCourse, title: event.target.value })}
+                placeholder="e.g. CAPCUT MOBILE VIDEO EDITING"
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="courseUrl">YouTube Video URL</label>
+              <input
+                type="url"
+                id="courseUrl"
+                value={newCourse.videoUrl}
+                onChange={(event) => setNewCourse({ ...newCourse, videoUrl: event.target.value })}
+                placeholder="e.g. https://youtube.com/watch?v=..."
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="courseImage">Image/Thumbnail URL (Optional)</label>
+              <input
+                type="url"
+                id="courseImage"
+                value={newCourse.imageUrl}
+                onChange={(event) => setNewCourse({ ...newCourse, imageUrl: event.target.value })}
+                placeholder="Leave empty for fallback thumbnail"
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="courseDesc">Description (Optional)</label>
+              <textarea
+                id="courseDesc"
+                value={newCourse.description}
+                onChange={(event) => setNewCourse({ ...newCourse, description: event.target.value })}
+                placeholder="Brief summary of what this course covers..."
+                style={{
+                  width: '100%',
+                  background: 'var(--panel-2, #161d2e)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '8px',
+                  padding: '10px',
+                  color: 'var(--text, #f2eee4)',
+                  fontSize: '14px',
+                  minHeight: '80px',
+                  outline: 'none',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnGold} ${styles.btnFull}`}
+              onClick={handleAddCourse}
+              style={{ marginTop: '16px' }}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add Course
+            </button>
+          </div>
+
+          {courses.length === 0 ? (
+            <div className={styles.empty}>
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" stroke="currentColor">
+                <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              <p>No courses yet. Add one above.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+              {courses.map((c) => (
+                <div className={styles.rowCard} key={c.id} style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                  <img
+                    src={c.imageUrl}
+                    alt={c.title}
+                    style={{
+                      width: '80px',
+                      height: '50px',
+                      objectFit: 'cover',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(255,255,255,0.08)'
+                    }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div className={styles.rowTitle} style={{ fontSize: '15px', fontWeight: '700' }}>{c.title}</div>
+                    <div className={styles.rowSub} style={{ fontSize: '12px', marginTop: '2px', color: 'var(--muted)' }}>
+                      {c.videoUrl.length > 40 ? c.videoUrl.slice(0, 40) + '...' : c.videoUrl}
+                    </div>
                   </div>
-                  <div>
-                    <div className={styles.rowTitle}>{ad.title}</div>
-                    <div className={styles.rowSub}>Reward based on user plan</div>
-                  </div>
-                  <div className={styles.rowActions}>
+                  <div className={styles.rowActions} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <label className={styles.switch}>
                       <input
                         type="checkbox"
-                        checked={ad.active}
-                        onChange={() => handleToggleAd(ad.id)}
+                        checked={c.active}
+                        onChange={() => handleToggleCourse(c.id)}
                       />
                       <span className={styles.slider}></span>
                     </label>
                     <button
                       type="button"
                       className={styles.iconBtn}
-                      onClick={() => handleDeleteAd(ad.id)}
-                      aria-label="Delete ad"
+                      onClick={() => handleDeleteCourse(c.id)}
+                      aria-label="Delete course"
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <polyline points="3 6 5 6 21 6" />
@@ -3464,1040 +3605,898 @@ export default function AdminDashboard() {
                     </button>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === 'manageCourses' && (
-          <div className={styles.usersPage}>
-            <h2 className={styles.pageTitle}>Manage Courses</h2>
-            <p className={styles.pageSub}>Add and manage digital learning courses for users</p>
-
-            <div className={styles.card}>
-              <div className={styles.formTitle}>
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Add New Course
-              </div>
-
-              <div className={styles.field}>
-                <label htmlFor="courseTitle">Course Title</label>
-                <input
-                  type="text"
-                  id="courseTitle"
-                  value={newCourse.title}
-                  onChange={(event) => setNewCourse({ ...newCourse, title: event.target.value })}
-                  placeholder="e.g. CAPCUT MOBILE VIDEO EDITING"
-                />
-              </div>
-
-              <div className={styles.field}>
-                <label htmlFor="courseUrl">YouTube Video URL</label>
-                <input
-                  type="url"
-                  id="courseUrl"
-                  value={newCourse.videoUrl}
-                  onChange={(event) => setNewCourse({ ...newCourse, videoUrl: event.target.value })}
-                  placeholder="e.g. https://youtube.com/watch?v=..."
-                />
-              </div>
-
-              <div className={styles.field}>
-                <label htmlFor="courseImage">Image/Thumbnail URL (Optional)</label>
-                <input
-                  type="url"
-                  id="courseImage"
-                  value={newCourse.imageUrl}
-                  onChange={(event) => setNewCourse({ ...newCourse, imageUrl: event.target.value })}
-                  placeholder="Leave empty for fallback thumbnail"
-                />
-              </div>
-
-              <div className={styles.field}>
-                <label htmlFor="courseDesc">Description (Optional)</label>
-                <textarea
-                  id="courseDesc"
-                  value={newCourse.description}
-                  onChange={(event) => setNewCourse({ ...newCourse, description: event.target.value })}
-                  placeholder="Brief summary of what this course covers..."
-                  style={{
-                    width: '100%',
-                    background: 'var(--panel-2, #161d2e)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: '8px',
-                    padding: '10px',
-                    color: 'var(--text, #f2eee4)',
-                    fontSize: '14px',
-                    minHeight: '80px',
-                    outline: 'none',
-                    resize: 'vertical'
-                  }}
-                />
-              </div>
-
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnGold} ${styles.btnFull}`}
-                onClick={handleAddCourse}
-                style={{ marginTop: '16px' }}
-              >
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Add Course
-              </button>
-            </div>
-
-            {courses.length === 0 ? (
-              <div className={styles.empty}>
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" stroke="currentColor">
-                  <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <p>No courses yet. Add one above.</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
-                {courses.map((c) => (
-                  <div className={styles.rowCard} key={c.id} style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                    <img 
-                      src={c.imageUrl} 
-                      alt={c.title} 
-                      style={{ 
-                        width: '80px', 
-                        height: '50px', 
-                        objectFit: 'cover', 
-                        borderRadius: '6px',
-                        border: '1px solid rgba(255,255,255,0.08)'
-                      }} 
-                    />
-                    <div style={{ flex: 1 }}>
-                      <div className={styles.rowTitle} style={{ fontSize: '15px', fontWeight: '700' }}>{c.title}</div>
-                      <div className={styles.rowSub} style={{ fontSize: '12px', marginTop: '2px', color: 'var(--muted)' }}>
-                        {c.videoUrl.length > 40 ? c.videoUrl.slice(0, 40) + '...' : c.videoUrl}
-                      </div>
-                    </div>
-                    <div className={styles.rowActions} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <label className={styles.switch}>
-                        <input
-                          type="checkbox"
-                          checked={c.active}
-                          onChange={() => handleToggleCourse(c.id)}
-                        />
-                        <span className={styles.slider}></span>
-                      </label>
-                      <button
-                        type="button"
-                        className={styles.iconBtn}
-                        onClick={() => handleDeleteCourse(c.id)}
-                        aria-label="Delete course"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                          <path d="M10 11v6M14 11v6" />
-                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-
-
-        {activeTab === 'planRequests' && (
-          <div className={styles.usersPage}>
-            <div className={styles.pageHeadRow}>
-              <div>
-                <h2 className={styles.pageTitle}>Plan Upgrade Requests</h2>
-                <p className={styles.pageSub}>Approve or reject user plan upgrades</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setPlanRequestsLoading(true)
-                  fetch('/api/admin/plans?status=pending')
-                    .then(r => r.ok ? r.json() : [])
-                    .then(data => setPlanRequests(Array.isArray(data) ? data : []))
-                    .catch(() => setPlanRequests([]))
-                    .finally(() => setPlanRequestsLoading(false))
-                }}
-                disabled={planRequestsLoading}
-                className={`${styles.btn} ${styles.btnOutline}`}
-              >
-                <svg className={styles.btnIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span>{planRequestsLoading ? 'Loading' : 'Refresh'}</span>
-              </button>
-            </div>
-            {planRequestsLoading ? (
-              <div className={styles.empty}><p>Loading plan requests...</p></div>
-            ) : planRequests.length === 0 ? (
-              <div className={styles.empty}>
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 8v8M8 12l4-4 4 4" />
-                </svg>
-                <p>No pending plan requests</p>
-              </div>
-            ) : (
-              planRequests.map((req, i) => (
-                <div className={styles.card} key={req.planId || i}>
-                  <div className={styles.cardTop}>
-                    <div className={styles.userBlock}>
-                      {req.userProfilePicture ? (
-                        <img 
-                          src={req.userProfilePicture} 
-                          alt="avatar" 
-                          className={styles.avatar} 
-                          style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
-                        />
-                      ) : (
-                        <div className={styles.avatar}>{getUserInitials(req.userName)}</div>
-                      )}
-                      <div>
-                        <div className={styles.userName}>{req.userName || 'Unknown User'}</div>
-                        <div className={styles.userEmail}>{req.userEmail || req.userPhone}</div>
-                      </div>
-                    </div>
-                    <span className={`${styles.status} ${styles.pending}`}>pending</span>
-                  </div>
-                  <div className={styles.detailGrid}>
-                    <div>
-                      <div className={styles.detailLabel}>Current Plan</div>
-                      <div className={styles.detailValue}>
-                        <span style={{ background: '#3b82f620', color: '#3b82f6', borderRadius: 6, padding: '2px 10px', fontWeight: 600 }}>{req.userCurrentPlan || 'Free'}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className={styles.detailLabel}>Requested Plan</div>
-                      <div className={styles.detailValue}>
-                        <span style={{ background: '#ede9fe', color: '#7c3aed', borderRadius: 6, padding: '2px 10px', fontWeight: 600 }}>{req.planName}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className={styles.detailLabel}>Amount (PKR)</div>
-                      <div className={`${styles.detailValue} ${styles.amount}`}>PKR {Number(req.amount || 0).toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className={styles.detailLabel}>Payment Method</div>
-                      <div className={styles.detailValue}>{req.paymentMethod || '-'}</div>
-                    </div>
-                    <div>
-                      <div className={styles.detailLabel}>Requested on</div>
-                      <div className={styles.detailValue}>{req.startDate ? new Date(req.startDate).toLocaleDateString() : '-'}</div>
-                    </div>
-                  </div>
-
-                  {/* Payment Receipt */}
-                  {req.screenshotData ? (
-                    <div style={{ margin: '14px 0', padding: '12px', background: 'rgba(255,255,255,0.04)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <div style={{ fontSize: 11, color: '#9598a3', marginBottom: 8, fontWeight: 600, letterSpacing: '0.06em' }}>PAYMENT RECEIPT</div>
-                      <img
-                        src={req.screenshotData}
-                        alt="Payment receipt"
-                        onClick={() => setPreviewReceiptUrl(req.screenshotData)}
-                        style={{
-                          width: '100%',
-                          maxHeight: 180,
-                          objectFit: 'cover',
-                          borderRadius: 8,
-                          cursor: 'zoom-in',
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          display: 'block'
-                        }}
-                      />
-                      <div style={{ textAlign: 'center', fontSize: 11, color: '#c9a04a', marginTop: 6, cursor: 'pointer' }} onClick={() => setPreviewReceiptUrl(req.screenshotData)}>
-                        🔍 Click to view full receipt
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ margin: '14px 0', padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed rgba(255,255,255,0.1)', fontSize: 12, color: '#666', textAlign: 'center' }}>
-                      No receipt uploaded
-                    </div>
-                  )}
-
-                  <div className={styles.cardActions}>
-                    <button type="button" className={`${styles.btn} ${styles.btnGreen}`} onClick={() => handlePlanAction(req.userId, req.planId, 'approve')}>Approve</button>
-                    <button type="button" className={`${styles.btn} ${styles.btnReject}`} onClick={() => handlePlanAction(req.userId, req.planId, 'reject')}>Reject</button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === 'withdrawals' && (
-          <div className={styles.usersPage}>
-            <div className={styles.pageHeadRow}>
-              <div>
-                <h2 className={styles.pageTitle}>Withdrawal Requests</h2>
-                <p className={styles.pageSub}>Approve or reject user withdrawals</p>
-              </div>
-              <button
-                type="button"
-                onClick={refreshWithdrawHistory}
-                disabled={historyLoading}
-                className={`${styles.btn} ${styles.btnOutline}`}
-              >
-                <svg className={styles.btnIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span>{historyLoading ? 'Loading' : 'Refresh'}</span>
-              </button>
-            </div>
-
-            <div className={styles.tabs}>
-              {['pending', 'approved', 'rejected', 'all'].map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  className={`${styles.tab} ${withdrawFilter === tab ? styles.tabActive : ''}`}
-                  onClick={() => setWithdrawFilter(tab)}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
               ))}
             </div>
-
-            {getSortedWithdrawHistory().length === 0 ? (
-              <div className={styles.empty}>
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
-                  <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-                  <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-                  <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
-                </svg>
-                <p>No {getWithdrawalEmptyLabel()}withdrawal requests</p>
-              </div>
-            ) : (
-              getSortedWithdrawHistory().map((request) => (
-                <div className={styles.card} key={request.transactionId || request._id}>
-                  <div className={styles.cardTop}>
-                    <div className={styles.userBlock}>
-                      {request.userProfilePicture || users.find(u => u.phone === request.userId)?.profilePicture ? (
-                        <img 
-                          src={request.userProfilePicture || users.find(u => u.phone === request.userId)?.profilePicture} 
-                          alt="avatar" 
-                          className={styles.avatar} 
-                          style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
-                        />
-                      ) : (
-                        <div className={styles.avatar}>{getUserInitials(request.userName)}</div>
-                      )}
-                      <div>
-                        <div className={styles.userName}>{request.userName || 'Unknown User'}</div>
-                        <div className={styles.userEmail}>
-                          {users.find(u => u.phone === request.userId)?.email || request.userId}
-                        </div>
-                      </div>
-                    </div>
-                    <span className={`${styles.status} ${styles[request.status] || styles.pending}`}>
-                      {request.status}
-                    </span>
-                  </div>
-                  <div className={styles.detailGrid}>
-                    <div>
-                      <div className={styles.detailLabel}>Amount</div>
-                      <div className={`${styles.detailValue} ${styles.amount}`}>
-                        Rs{getWithdrawalAmount(request)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className={styles.detailLabel}>Requested on</div>
-                      <div className={styles.detailValue}>
-                        {formatPakistanDate(request.createdAt)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className={styles.detailLabel}>Method</div>
-                      <div className={styles.detailValue}>{request.withdrawalMethod || 'N/A'}</div>
-                    </div>
-                    <div>
-                      <div className={styles.detailLabel}>Account</div>
-                      <div className={styles.detailValue}>{getWithdrawalAccount(request)}</div>
-                    </div>
-                  </div>
-                  {request.status === 'pending' && (
-                    <div className={styles.cardActions}>
-                      <button
-                        type="button"
-                        className={`${styles.btn} ${styles.btnGreen}`}
-                        onClick={() => handleWithdrawApproval(request.transactionId, true)}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.btn} ${styles.btnReject}`}
-                        onClick={() => handleWithdrawApproval(request.transactionId, false)}
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === 'earningsControl' && (
-          <div className={styles.earningsPage}>
-            <h1 className={styles.pageTitle}>Earnings Control</h1>
-            <p className={styles.pageSub}>Set per-plan reward rates for ad views and referrals</p>
-
-            {earningsPlans.map(p => (
-              <div key={p.id} className={styles.planRow}>
-                <div className={styles.planRowHead}>
-                  <span className={styles.planName}>{p.name}</span>
-                  <span className={styles.planBadge}>{p.id}</span>
-                </div>
-                <div className={styles.planFields}>
-                  <div className={styles.field}>
-                    <label>Reward per ad view ($)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={(p.perAd || 0).toFixed(2)}
-                      onChange={e => handleEarningsFieldChange(p.id, 'perAd', e.target.value)}
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label>Direct Referral % (Lvl A)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={p.refA || 0}
-                      onChange={e => handleEarningsFieldChange(p.id, 'refA', e.target.value)}
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label>Indirect Referral % (Lvl B)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={p.refB || 0}
-                      onChange={e => handleEarningsFieldChange(p.id, 'refB', e.target.value)}
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label>Downline Referral % (Lvl C)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={p.refC || 0}
-                      onChange={e => handleEarningsFieldChange(p.id, 'refC', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            <button
-              className={`${styles.btn} ${styles.btnGold} ${styles.btnFull}`}
-              style={{ marginTop: '6px' }}
-              onClick={saveEarningsPlans}
-            >
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
-                <polyline points="17 21 17 13 7 13 7 21"/>
-                <polyline points="7 3 7 8 15 8"/>
-              </svg>
-              Save Changes
-            </button>
-            {earningsSavedMsg && (
-              <p className={styles.savedMsg}>Saved.</p>
-            )}
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
 
 
-        {/* Recharge History Tab */}
-        {false && activeTab === 'planRequests' && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-gray-800">Recharge History</h3>
-              <div className="flex items-center space-x-2">
-                {historyLoading && (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
-                )}
-                <span className="text-sm text-gray-600">
-                  Total: {getFilteredRechargeHistory().length} transactions
-                </span>
-                <select
-                  value={rechargeFilter}
-                  onChange={(e) => setRechargeFilter(e.target.value)}
-                  className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-                <button
-                  onClick={refreshRechargeHistory}
-                  disabled={historyLoading}
-                  className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span>Refresh</span>
-                </button>
-                <button
-                  onClick={updateTransactionNames}
-                  disabled={historyLoading}
-                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span>Update Names</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm text-green-600 font-medium">Total Recharges</p>
-                    <p className="text-lg font-bold text-green-800">{rechargeHistory.length}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm text-blue-600 font-medium">Approved</p>
-                    <p className="text-lg font-bold text-blue-800">
-                      {rechargeHistory.filter(t => t.status === 'approved').length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm text-yellow-600 font-medium">Pending</p>
-                    <p className="text-lg font-bold text-yellow-800">
-                      {rechargeHistory.filter(t => t.status === 'pending').length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm text-red-600 font-medium">Rejected</p>
-                    <p className="text-lg font-bold text-red-800">
-                      {rechargeHistory.filter(t => t.status === 'rejected').length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {getFilteredRechargeHistory().length === 0 ? (
-              <div className="text-center py-8">
-                {historyLoading ? (
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                ) : (
-                  <p className="text-gray-500">No recharge transactions found</p>
-                )}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">User</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Amount</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Payment Method</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Transaction ID</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {getFilteredRechargeHistory().map((transaction) => (
-                      <tr key={transaction._id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4">
-                          <div>
-                            <div className="font-medium text-gray-800">{transaction.userName || 'Unknown'}</div>
-                            <div className="text-sm text-gray-500">
-                              {users.find(u => u.phone === transaction.userId)?.email || transaction.userId}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="font-semibold text-green-600">Rs{transaction.amount}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-sm text-gray-600">{transaction.paymentMethod}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="space-y-1">
-                            {transaction.userTransactionId && (
-                              <div className="text-xs text-blue-600">
-                                User ID: {transaction.userTransactionId}
-                              </div>
-                            )}
-                            <div className="text-xs text-gray-500">
-                              System: {transaction.transactionId}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            transaction.status === 'approved' 
-                              ? 'bg-green-100 text-green-800' 
-                              : transaction.status === 'rejected'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {transaction.status === 'approved' ? 'Approved' : 
-                             transaction.status === 'rejected' ? 'Rejected' : 'Pending'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-sm text-gray-600">
-                            {formatPakistanDate(transaction.createdAt)}
-                          </span>
-                          <div className="text-xs text-gray-500">
-                            {formatPakistanTime(transaction.createdAt)}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-{activeTab === 'mysteryBoxes' && (
-          <div className={styles.mysteryPage}>
-            <h1 className={styles.pageTitle}>Mystery Boxes</h1>
-            <p className={styles.pageSub}>Set monthly top-leaderboard rewards</p>
-
-            {/* Enable toggle card */}
-            <div className={styles.enableCard}>
-              <div>
-                <div className={styles.enableCardLabel}>Enable Mystery Boxes</div>
-                <div className={styles.enableCardSub}>Show reward boxes to users on the leaderboard</div>
-              </div>
-              <label className={styles.switch}>
-                <input
-                  type="checkbox"
-                  checked={mysteryBoxesEnabled}
-                  onChange={e => setMysteryBoxesEnabled(e.target.checked)}
-                />
-                <span className={styles.slider}></span>
-              </label>
-            </div>
-
-            {/* Save button */}
-            <button
-              className={`${styles.btn} ${styles.btnGold} ${styles.btnFull}`}
-              style={{ marginBottom: '24px' }}
-              onClick={saveMysteryBoxes}
-            >
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
-                <polyline points="17 21 17 13 7 13 7 21"/>
-                <polyline points="7 3 7 8 15 8"/>
-              </svg>
-              Save
-            </button>
-
-            {/* Box cards */}
-            {mysteryBoxes.map(b => (
-              <div
-                key={b.id}
-                className={`${styles.boxCard} ${
-                  b.rank === 1 ? styles.boxCardRank1 :
-                  b.rank === 3 ? styles.boxCardRank3 : ''
-                }`}
-              >
-                <div className={styles.boxMedal}>{b.medal}</div>
-                <div className={styles.boxTitle}>{b.title}</div>
-                <div className={styles.boxDesc}>{b.desc}</div>
-                <div className={styles.boxValue}>${b.value}</div>
-                <div className={styles.boxActions}>
-                  <button
-                    className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`}
-                    onClick={() => openEditBox(b)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className={`${styles.btn} ${styles.btnDangerOutline} ${styles.btnSm}`}
-                    onClick={() => deleteBox(b.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            <button className={`${styles.btn} ${styles.btnOutline}`} onClick={openAddBox} style={{ margin: '0 auto', display: 'block', marginTop: '20px' }}>
-              + Add Mystery Box
-            </button>
-
-            {/* Inline edit modal */}
-            {editingBox && (
-              <div className={styles.editModal}>
-                <div className={styles.editModalBox}>
-                  <div className={styles.editModalTitle}>{editingBox.id === 'new' ? 'Add Mystery Box' : 'Edit — ' + editingBox.title}</div>
-                  <div className={styles.field}>
-                    <label>Title</label>
-                    <input type="text" value={editingBox.title} onChange={e => setEditingBox({...editingBox, title: e.target.value})} />
-                  </div>
-                  <div className={styles.field}>
-                    <label>Description</label>
-                    <input type="text" value={editingBox.desc} onChange={e => setEditingBox({...editingBox, desc: e.target.value})} />
-                  </div>
-                  <div className={styles.field}>
-                    <label>Medal Emoji</label>
-                    <input type="text" value={editingBox.medal} onChange={e => setEditingBox({...editingBox, medal: e.target.value})} />
-                  </div>
-                  <div className={styles.field}>
-                    <label>Cash Prize Value ($)</label>
-                    <input type="number" min="0" step="1" value={editingBox.value} onChange={e => setEditingBox({...editingBox, value: e.target.value})} />
-                  </div>
-                  <div className={styles.editModalActions}>
-                    <button className={`${styles.btn} ${styles.btnGold}`} onClick={confirmEditBox}>Confirm</button>
-                    <button className={`${styles.btn} ${styles.btnOutline}`} onClick={() => setEditingBox(null)}>Cancel</button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'ecommerce' && (
-          <div className={styles.ecommercePage}>
-            <div className={styles.pageHeadRow}>
-              <div>
-                <h1 className={styles.pageTitle}>E-Commerce</h1>
-                <p className={styles.pageSub}>Manage products and view orders</p>
-              </div>
-              <button className={`${styles.btn} ${styles.btnGold}`} onClick={openAddProduct}>
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="12" y1="5" x2="12" y2="19"/>
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Add Product
-              </button>
-            </div>
-
-            <div className={styles.tabs} style={{ marginTop: '20px' }}>
-              <button
-                className={`${styles.tab} ${ecommerceTab === 'products' ? styles.tabActive : ''}`}
-                onClick={() => setEcommerceTab('products')}
-              >
-                Products ({products.length})
-              </button>
-              <button
-                className={`${styles.tab} ${ecommerceTab === 'orders' ? styles.tabActive : ''}`}
-                onClick={() => setEcommerceTab('orders')}
-              >
-                Orders ({orders.length})
-              </button>
-              <button
-                className={`${styles.tab} ${ecommerceTab === 'settings' ? styles.tabActive : ''}`}
-                onClick={() => setEcommerceTab('settings')}
-              >
-                Bank Settings
-              </button>
-            </div>
-
+      {activeTab === 'planRequests' && (
+        <div className={styles.usersPage}>
+          <div className={styles.pageHeadRow}>
             <div>
-              {ecommerceTab === 'products' ? (
-                products.length > 0 ? (
-                  <div className={styles.productsGrid}>
-                    {products.map(p => (
-                      <div key={p._id || p.id} className={styles.productCard}>
-                        <div className={styles.productImg} style={{ background: 'linear-gradient(135deg, var(--gold), var(--gold-light))', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
-                          {p.image && (
-                            <img src={p.image} alt={p.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          )}
-                          {!p.image && (
-                            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '36px' }}>📦</span>
-                          )}
-                        </div>
-                        <div className={styles.productBody}>
-                          <div className={styles.productTop}>
-                            <div className={styles.productName}>{p.name}</div>
-                            <span
-                              className={`${styles.status} ${(p.isActive !== undefined ? p.isActive : p.active) ? styles.active : styles.suspended}`}
-                              style={{ cursor: 'pointer' }}
-                              onClick={() => toggleProduct(p._id || p.id)}
-                              title="Click to toggle status"
-                            >
-                              {(p.isActive !== undefined ? p.isActive : p.active) ? 'Active' : 'Hidden'}
-                            </span>
-                          </div>
-                          <div className={styles.productDesc}>{p.description || p.desc}</div>
-                          <div className={styles.productPrice}>{p.currency || 'Rs'} {p.price?.toLocaleString()}</div>
-                          <div className={styles.productActions}>
-                            <button className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`} onClick={() => openEditProduct(p)}>
-                              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                              </svg>
-                              Edit
-                            </button>
-                            <button className={`${styles.btn} ${styles.btnDangerOutline} ${styles.btnSm}`} onClick={() => deleteProduct(p.id)}>
-                              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polyline points="3 6 5 6 21 6"/>
-                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                              </svg>
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+              <h2 className={styles.pageTitle}>Plan Upgrade Requests</h2>
+              <p className={styles.pageSub}>Approve or reject user plan upgrades</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setPlanRequestsLoading(true)
+                fetch('/api/admin/plans?status=pending')
+                  .then(r => r.ok ? r.json() : [])
+                  .then(data => setPlanRequests(Array.isArray(data) ? data : []))
+                  .catch(() => setPlanRequests([]))
+                  .finally(() => setPlanRequestsLoading(false))
+              }}
+              disabled={planRequestsLoading}
+              className={`${styles.btn} ${styles.btnOutline}`}
+            >
+              <svg className={styles.btnIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>{planRequestsLoading ? 'Loading' : 'Refresh'}</span>
+            </button>
+          </div>
+          {planRequestsLoading ? (
+            <div className={styles.empty}><p>Loading plan requests...</p></div>
+          ) : planRequests.length === 0 ? (
+            <div className={styles.empty}>
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v8M8 12l4-4 4 4" />
+              </svg>
+              <p>No pending plan requests</p>
+            </div>
+          ) : (
+            planRequests.map((req, i) => (
+              <div className={styles.card} key={req.planId || i}>
+                <div className={styles.cardTop}>
+                  <div className={styles.userBlock}>
+                    {req.userProfilePicture ? (
+                      <img
+                        src={req.userProfilePicture}
+                        alt="avatar"
+                        className={styles.avatar}
+                        style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <div className={styles.avatar}>{getUserInitials(req.userName)}</div>
+                    )}
+                    <div>
+                      <div className={styles.userName}>{req.userName || 'Unknown User'}</div>
+                      <div className={styles.userEmail}>{req.userEmail || req.userPhone}</div>
+                    </div>
+                  </div>
+                  <span className={`${styles.status} ${styles.pending}`}>pending</span>
+                </div>
+                <div className={styles.detailGrid}>
+                  <div>
+                    <div className={styles.detailLabel}>Current Plan</div>
+                    <div className={styles.detailValue}>
+                      <span style={{ background: '#3b82f620', color: '#3b82f6', borderRadius: 6, padding: '2px 10px', fontWeight: 600 }}>{req.userCurrentPlan || 'Free'}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className={styles.detailLabel}>Requested Plan</div>
+                    <div className={styles.detailValue}>
+                      <span style={{ background: '#ede9fe', color: '#7c3aed', borderRadius: 6, padding: '2px 10px', fontWeight: 600 }}>{req.planName}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className={styles.detailLabel}>Amount (PKR)</div>
+                    <div className={`${styles.detailValue} ${styles.amount}`}>PKR {Number(req.amount || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div className={styles.detailLabel}>Payment Method</div>
+                    <div className={styles.detailValue}>{req.paymentMethod || '-'}</div>
+                  </div>
+                  <div>
+                    <div className={styles.detailLabel}>Requested on</div>
+                    <div className={styles.detailValue}>{req.startDate ? new Date(req.startDate).toLocaleDateString() : '-'}</div>
+                  </div>
+                </div>
+
+                {/* Payment Receipt */}
+                {req.screenshotData ? (
+                  <div style={{ margin: '14px 0', padding: '12px', background: 'rgba(255,255,255,0.04)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ fontSize: 11, color: '#9598a3', marginBottom: 8, fontWeight: 600, letterSpacing: '0.06em' }}>PAYMENT RECEIPT</div>
+                    <img
+                      src={req.screenshotData}
+                      alt="Payment receipt"
+                      onClick={() => setPreviewReceiptUrl(req.screenshotData)}
+                      style={{
+                        width: '100%',
+                        maxHeight: 180,
+                        objectFit: 'cover',
+                        borderRadius: 8,
+                        cursor: 'zoom-in',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        display: 'block'
+                      }}
+                    />
+                    <div style={{ textAlign: 'center', fontSize: 11, color: '#c9a04a', marginTop: 6, cursor: 'pointer' }} onClick={() => setPreviewReceiptUrl(req.screenshotData)}>
+                      🔍 Click to view full receipt
+                    </div>
                   </div>
                 ) : (
-                  <div className={styles.empty}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
-                      <path d="M3 6h18"/>
-                      <path d="M16 10a4 4 0 0 1-8 0"/>
-                    </svg>
-                    <p>No products yet. Click "Add Product" to create one.</p>
+                  <div style={{ margin: '14px 0', padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed rgba(255,255,255,0.1)', fontSize: 12, color: '#666', textAlign: 'center' }}>
+                    No receipt uploaded
                   </div>
-                )
-              ) : ecommerceTab === 'orders' ? (
-                orders.length > 0 ? (
-                  orders.map(o => (
-                    <div key={o._id || o.id} className={styles.rowCard} style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-                      {o.userProfilePicture ? (
-                        <img 
-                          src={o.userProfilePicture} 
-                          alt="avatar" 
-                          className={styles.rowIcon} 
-                          style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
-                        />
-                      ) : (
-                        <div className={styles.rowIcon}>
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="9" cy="21" r="1"/>
-                            <circle cx="20" cy="21" r="1"/>
-                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                          </svg>
+                )}
+
+                <div className={styles.cardActions}>
+                  <button type="button" className={`${styles.btn} ${styles.btnGreen}`} onClick={() => handlePlanAction(req.userId, req.planId, 'approve')}>Approve</button>
+                  <button type="button" className={`${styles.btn} ${styles.btnReject}`} onClick={() => handlePlanAction(req.userId, req.planId, 'reject')}>Reject</button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {activeTab === 'withdrawals' && (
+        <div className={styles.usersPage}>
+          <div className={styles.pageHeadRow}>
+            <div>
+              <h2 className={styles.pageTitle}>Withdrawal Requests</h2>
+              <p className={styles.pageSub}>Approve or reject user withdrawals</p>
+            </div>
+            <button
+              type="button"
+              onClick={refreshWithdrawHistory}
+              disabled={historyLoading}
+              className={`${styles.btn} ${styles.btnOutline}`}
+            >
+              <svg className={styles.btnIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>{historyLoading ? 'Loading' : 'Refresh'}</span>
+            </button>
+          </div>
+
+          <div className={styles.tabs}>
+            {['pending', 'approved', 'rejected', 'all'].map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={`${styles.tab} ${withdrawFilter === tab ? styles.tabActive : ''}`}
+                onClick={() => setWithdrawFilter(tab)}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {getSortedWithdrawHistory().length === 0 ? (
+            <div className={styles.empty}>
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
+                <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+                <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+                <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+              </svg>
+              <p>No {getWithdrawalEmptyLabel()}withdrawal requests</p>
+            </div>
+          ) : (
+            getSortedWithdrawHistory().map((request) => (
+              <div className={styles.card} key={request.transactionId || request._id}>
+                <div className={styles.cardTop}>
+                  <div className={styles.userBlock}>
+                    {request.userProfilePicture || users.find(u => u.phone === request.userId)?.profilePicture ? (
+                      <img
+                        src={request.userProfilePicture || users.find(u => u.phone === request.userId)?.profilePicture}
+                        alt="avatar"
+                        className={styles.avatar}
+                        style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <div className={styles.avatar}>{getUserInitials(request.userName)}</div>
+                    )}
+                    <div>
+                      <div className={styles.userName}>{request.userName || 'Unknown User'}</div>
+                      <div className={styles.userEmail}>
+                        {users.find(u => u.phone === request.userId)?.email || request.userId}
+                      </div>
+                    </div>
+                  </div>
+                  <span className={`${styles.status} ${styles[request.status] || styles.pending}`}>
+                    {request.status}
+                  </span>
+                </div>
+                <div className={styles.detailGrid}>
+                  <div>
+                    <div className={styles.detailLabel}>Amount</div>
+                    <div className={`${styles.detailValue} ${styles.amount}`}>
+                      Rs{getWithdrawalAmount(request)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className={styles.detailLabel}>Requested on</div>
+                    <div className={styles.detailValue}>
+                      {formatPakistanDate(request.createdAt)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className={styles.detailLabel}>Method</div>
+                    <div className={styles.detailValue}>{request.withdrawalMethod || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <div className={styles.detailLabel}>Account</div>
+                    <div className={styles.detailValue}>{getWithdrawalAccount(request)}</div>
+                  </div>
+                </div>
+                {request.status === 'pending' && (
+                  <div className={styles.cardActions}>
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnGreen}`}
+                      onClick={() => handleWithdrawApproval(request.transactionId, true)}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnReject}`}
+                      onClick={() => handleWithdrawApproval(request.transactionId, false)}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {activeTab === 'earningsControl' && (
+        <div className={styles.earningsPage}>
+          <h1 className={styles.pageTitle}>Earnings Control</h1>
+          <p className={styles.pageSub}>Set per-plan reward rates for ad views and referrals</p>
+
+          {earningsPlans.map(p => (
+            <div key={p.id} className={styles.planRow}>
+              <div className={styles.planRowHead}>
+                <span className={styles.planName}>{p.name}</span>
+                <span className={styles.planBadge}>{p.id}</span>
+              </div>
+              <div className={styles.planFields}>
+                <div className={styles.field}>
+                  <label>Reward per ad view ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={(p.perAd || 0).toFixed(2)}
+                    onChange={e => handleEarningsFieldChange(p.id, 'perAd', e.target.value)}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label>Direct Referral % (Lvl A)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={p.refA || 0}
+                    onChange={e => handleEarningsFieldChange(p.id, 'refA', e.target.value)}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label>Indirect Referral % (Lvl B)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={p.refB || 0}
+                    onChange={e => handleEarningsFieldChange(p.id, 'refB', e.target.value)}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label>Downline Referral % (Lvl C)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={p.refC || 0}
+                    onChange={e => handleEarningsFieldChange(p.id, 'refC', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <button
+            className={`${styles.btn} ${styles.btnGold} ${styles.btnFull}`}
+            style={{ marginTop: '6px' }}
+            onClick={saveEarningsPlans}
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            Save Changes
+          </button>
+          {earningsSavedMsg && (
+            <p className={styles.savedMsg}>Saved.</p>
+          )}
+        </div>
+      )}
+
+
+
+      {/* Recharge History Tab */}
+      {false && activeTab === 'planRequests' && (
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-gray-800">Recharge History</h3>
+            <div className="flex items-center space-x-2">
+              {historyLoading && (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
+              )}
+              <span className="text-sm text-gray-600">
+                Total: {getFilteredRechargeHistory().length} transactions
+              </span>
+              <select
+                value={rechargeFilter}
+                onChange={(e) => setRechargeFilter(e.target.value)}
+                className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <button
+                onClick={refreshRechargeHistory}
+                disabled={historyLoading}
+                className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Refresh</span>
+              </button>
+              <button
+                onClick={updateTransactionNames}
+                disabled={historyLoading}
+                className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span>Update Names</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-green-600 font-medium">Total Recharges</p>
+                  <p className="text-lg font-bold text-green-800">{rechargeHistory.length}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-blue-600 font-medium">Approved</p>
+                  <p className="text-lg font-bold text-blue-800">
+                    {rechargeHistory.filter(t => t.status === 'approved').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-yellow-600 font-medium">Pending</p>
+                  <p className="text-lg font-bold text-yellow-800">
+                    {rechargeHistory.filter(t => t.status === 'pending').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-red-600 font-medium">Rejected</p>
+                  <p className="text-lg font-bold text-red-800">
+                    {rechargeHistory.filter(t => t.status === 'rejected').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {getFilteredRechargeHistory().length === 0 ? (
+            <div className="text-center py-8">
+              {historyLoading ? (
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              ) : (
+                <p className="text-gray-500">No recharge transactions found</p>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">User</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Amount</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Payment Method</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Transaction ID</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getFilteredRechargeHistory().map((transaction) => (
+                    <tr key={transaction._id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <div>
+                          <div className="font-medium text-gray-800">{transaction.userName || 'Unknown'}</div>
+                          <div className="text-sm text-gray-500">
+                            {users.find(u => u.phone === transaction.userId)?.email || transaction.userId}
+                          </div>
                         </div>
-                      )}
-                      <div style={{ flex: 1, minWidth: '200px' }}>
-                        <div className={styles.rowTitle}>{o.productName || o.product}</div>
-                        <div className={styles.rowSub} style={{ lineHeight: '1.4' }}>
-                          <div><strong>User:</strong> {o.userName || o.customer} ({o.userEmail || o.userId})</div>
-                          <div><strong>Plan:</strong> {o.userPlan || 'N/A'}</div>
-                          <div><strong>Address:</strong> {o.deliveryAddress || 'N/A'}</div>
-                          <div><strong>Phone:</strong> {o.phoneNumber || 'N/A'}</div>
-                          <div><strong>Payment Method:</strong> {o.paymentMethod === 'online_transfer' ? 'Online Transfer' : 'Balance'}</div>
-                          <div style={{ color: 'var(--gold)', marginTop: '4px' }}>Amount: {o.currency} {(o.amount || 0).toLocaleString()}</div>
-                          {o.paymentMethod === 'online_transfer' && o.receiptImage && (
-                            <div style={{ marginTop: '6px' }}>
-                              <button onClick={() => setReceiptModalUrl(o.receiptImage)} style={{ background: 'none', border: 'none', color: '#3b82f6', textDecoration: 'underline', fontSize: '12px', cursor: 'pointer', padding: 0 }}>View Receipt</button>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="font-semibold text-green-600">Rs{transaction.amount}</span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="text-sm text-gray-600">{transaction.paymentMethod}</span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="space-y-1">
+                          {transaction.userTransactionId && (
+                            <div className="text-xs text-blue-600">
+                              User ID: {transaction.userTransactionId}
                             </div>
                           )}
+                          <div className="text-xs text-gray-500">
+                            System: {transaction.transactionId}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${transaction.status === 'approved'
+                          ? 'bg-green-100 text-green-800'
+                          : transaction.status === 'rejected'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                          {transaction.status === 'approved' ? 'Approved' :
+                            transaction.status === 'rejected' ? 'Rejected' : 'Pending'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="text-sm text-gray-600">
+                          {formatPakistanDate(transaction.createdAt)}
+                        </span>
+                        <div className="text-xs text-gray-500">
+                          {formatPakistanTime(transaction.createdAt)}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'mysteryBoxes' && (
+        <div className={styles.mysteryPage}>
+          <h1 className={styles.pageTitle}>Mystery Boxes</h1>
+          <p className={styles.pageSub}>Set monthly top-leaderboard rewards</p>
+
+          {/* Enable toggle card */}
+          <div className={styles.enableCard}>
+            <div>
+              <div className={styles.enableCardLabel}>Enable Mystery Boxes</div>
+              <div className={styles.enableCardSub}>Show reward boxes to users on the leaderboard</div>
+            </div>
+            <label className={styles.switch}>
+              <input
+                type="checkbox"
+                checked={mysteryBoxesEnabled}
+                onChange={e => setMysteryBoxesEnabled(e.target.checked)}
+              />
+              <span className={styles.slider}></span>
+            </label>
+          </div>
+
+          {/* Save button */}
+          <button
+            className={`${styles.btn} ${styles.btnGold} ${styles.btnFull}`}
+            style={{ marginBottom: '24px' }}
+            onClick={saveMysteryBoxes}
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            Save
+          </button>
+
+          {/* Box cards */}
+          {mysteryBoxes.map(b => (
+            <div
+              key={b.id}
+              className={`${styles.boxCard} ${b.rank === 1 ? styles.boxCardRank1 :
+                b.rank === 3 ? styles.boxCardRank3 : ''
+                }`}
+            >
+              <div className={styles.boxMedal}>{b.medal}</div>
+              <div className={styles.boxTitle}>{b.title}</div>
+              <div className={styles.boxDesc}>{b.desc}</div>
+              <div className={styles.boxValue}>${b.value}</div>
+              <div className={styles.boxActions}>
+                <button
+                  className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`}
+                  onClick={() => openEditBox(b)}
+                >
+                  Edit
+                </button>
+                <button
+                  className={`${styles.btn} ${styles.btnDangerOutline} ${styles.btnSm}`}
+                  onClick={() => deleteBox(b.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <button className={`${styles.btn} ${styles.btnOutline}`} onClick={openAddBox} style={{ margin: '0 auto', display: 'block', marginTop: '20px' }}>
+            + Add Mystery Box
+          </button>
+
+          {/* Inline edit modal */}
+          {editingBox && (
+            <div className={styles.editModal}>
+              <div className={styles.editModalBox}>
+                <div className={styles.editModalTitle}>{editingBox.id === 'new' ? 'Add Mystery Box' : 'Edit — ' + editingBox.title}</div>
+                <div className={styles.field}>
+                  <label>Title</label>
+                  <input type="text" value={editingBox.title} onChange={e => setEditingBox({ ...editingBox, title: e.target.value })} />
+                </div>
+                <div className={styles.field}>
+                  <label>Description</label>
+                  <input type="text" value={editingBox.desc} onChange={e => setEditingBox({ ...editingBox, desc: e.target.value })} />
+                </div>
+                <div className={styles.field}>
+                  <label>Medal Emoji</label>
+                  <input type="text" value={editingBox.medal} onChange={e => setEditingBox({ ...editingBox, medal: e.target.value })} />
+                </div>
+                <div className={styles.field}>
+                  <label>Cash Prize Value ($)</label>
+                  <input type="number" min="0" step="1" value={editingBox.value} onChange={e => setEditingBox({ ...editingBox, value: e.target.value })} />
+                </div>
+                <div className={styles.editModalActions}>
+                  <button className={`${styles.btn} ${styles.btnGold}`} onClick={confirmEditBox}>Confirm</button>
+                  <button className={`${styles.btn} ${styles.btnOutline}`} onClick={() => setEditingBox(null)}>Cancel</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'ecommerce' && (
+        <div className={styles.ecommercePage}>
+          <div className={styles.pageHeadRow}>
+            <div>
+              <h1 className={styles.pageTitle}>E-Commerce</h1>
+              <p className={styles.pageSub}>Manage products and view orders</p>
+            </div>
+            <button className={`${styles.btn} ${styles.btnGold}`} onClick={openAddProduct}>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add Product
+            </button>
+          </div>
+
+          <div className={styles.tabs} style={{ marginTop: '20px' }}>
+            <button
+              className={`${styles.tab} ${ecommerceTab === 'products' ? styles.tabActive : ''}`}
+              onClick={() => setEcommerceTab('products')}
+            >
+              Products ({products.length})
+            </button>
+            <button
+              className={`${styles.tab} ${ecommerceTab === 'orders' ? styles.tabActive : ''}`}
+              onClick={() => setEcommerceTab('orders')}
+            >
+              Orders ({orders.length})
+            </button>
+            <button
+              className={`${styles.tab} ${ecommerceTab === 'settings' ? styles.tabActive : ''}`}
+              onClick={() => setEcommerceTab('settings')}
+            >
+              Bank Settings
+            </button>
+          </div>
+
+          <div>
+            {ecommerceTab === 'products' ? (
+              products.length > 0 ? (
+                <div className={styles.productsGrid}>
+                  {products.map(p => (
+                    <div key={p._id || p.id} className={styles.productCard}>
+                      <div className={styles.productImg} style={{ background: 'linear-gradient(135deg, var(--gold), var(--gold-light))', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+                        {p.image && (
+                          <img src={p.image} alt={p.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
+                        {!p.image && (
+                          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '36px' }}>📦</span>
+                        )}
+                      </div>
+                      <div className={styles.productBody}>
+                        <div className={styles.productTop}>
+                          <div className={styles.productName}>{p.name}</div>
+                          <span
+                            className={`${styles.status} ${(p.isActive !== undefined ? p.isActive : p.active) ? styles.active : styles.suspended}`}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => toggleProduct(p._id || p.id)}
+                            title="Click to toggle status"
+                          >
+                            {(p.isActive !== undefined ? p.isActive : p.active) ? 'Active' : 'Hidden'}
+                          </span>
+                        </div>
+                        <div className={styles.productDesc}>{p.description || p.desc}</div>
+                        <div className={styles.productPrice}>{p.currency || 'Rs'} {p.price?.toLocaleString()}</div>
+                        <div className={styles.productActions}>
+                          <button className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`} onClick={() => openEditProduct(p)}>
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                            </svg>
+                            Edit
+                          </button>
+                          <button className={`${styles.btn} ${styles.btnDangerOutline} ${styles.btnSm}`} onClick={() => deleteProduct(p.id)}>
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            </svg>
+                            Delete
+                          </button>
                         </div>
                       </div>
-                      <div className={styles.rowActions} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <span className={`${styles.status} ${styles[o.status] || ''}`}>{o.status}</span>
-                        {o.status === 'pending' && (
-                          <>
-                            <button className={`${styles.btn} ${styles.btnGreen}`} style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => handleOrderAction(o._id, 'approved')}>Approve</button>
-                            <button className={`${styles.btn} ${styles.btnReject}`} style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => handleOrderAction(o._id, 'rejected')}>Reject</button>
-                          </>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.empty}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                    <path d="M3 6h18" />
+                    <path d="M16 10a4 4 0 0 1-8 0" />
+                  </svg>
+                  <p>No products yet. Click "Add Product" to create one.</p>
+                </div>
+              )
+            ) : ecommerceTab === 'orders' ? (
+              orders.length > 0 ? (
+                orders.map(o => (
+                  <div key={o._id || o.id} className={styles.rowCard} style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+                    {o.userProfilePicture ? (
+                      <img
+                        src={o.userProfilePicture}
+                        alt="avatar"
+                        className={styles.rowIcon}
+                        style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <div className={styles.rowIcon}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="9" cy="21" r="1" />
+                          <circle cx="20" cy="21" r="1" />
+                          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                        </svg>
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div className={styles.rowTitle}>{o.productName || o.product}</div>
+                      <div className={styles.rowSub} style={{ lineHeight: '1.4' }}>
+                        <div><strong>User:</strong> {o.userName || o.customer} ({o.userEmail || o.userId})</div>
+                        <div><strong>Plan:</strong> {o.userPlan || 'N/A'}</div>
+                        <div><strong>Address:</strong> {o.deliveryAddress || 'N/A'}</div>
+                        <div><strong>Phone:</strong> {o.phoneNumber || 'N/A'}</div>
+                        <div><strong>Payment Method:</strong> {o.paymentMethod === 'online_transfer' ? 'Online Transfer' : 'Balance'}</div>
+                        <div style={{ color: 'var(--gold)', marginTop: '4px' }}>Amount: {o.currency} {(o.amount || 0).toLocaleString()}</div>
+                        {o.paymentMethod === 'online_transfer' && o.receiptImage && (
+                          <div style={{ marginTop: '6px' }}>
+                            <button onClick={() => setReceiptModalUrl(o.receiptImage)} style={{ background: 'none', border: 'none', color: '#3b82f6', textDecoration: 'underline', fontSize: '12px', cursor: 'pointer', padding: 0 }}>View Receipt</button>
+                          </div>
                         )}
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className={styles.empty}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <circle cx="9" cy="21" r="1"/>
-                      <circle cx="20" cy="21" r="1"/>
-                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                    </svg>
-                    <p>No orders yet.</p>
-                  </div>
-                )
-              ) : ecommerceTab === 'settings' ? (
-                <div className={styles.panel} style={{ maxWidth: '500px', padding: '24px' }}>
-                  <h3 style={{ margin: '0 0 16px 0' }}>Online Transfer Settings</h3>
-                  <div className={styles.field}>
-                    <label>Bank Name</label>
-                    <input
-                      type="text"
-                      value={ecommerceBankSettings.bankName}
-                      onChange={e => setEcommerceBankSettings({ ...ecommerceBankSettings, bankName: e.target.value })}
-                      placeholder="e.g. SadaPay or Meezan Bank"
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label>Account Name / Title</label>
-                    <input
-                      type="text"
-                      value={ecommerceBankSettings.accountName}
-                      onChange={e => setEcommerceBankSettings({ ...ecommerceBankSettings, accountName: e.target.value })}
-                      placeholder="e.g. HMH Admin"
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label>Account Number</label>
-                    <input
-                      type="text"
-                      value={ecommerceBankSettings.accountNumber}
-                      onChange={e => setEcommerceBankSettings({ ...ecommerceBankSettings, accountNumber: e.target.value })}
-                      placeholder="Account or IBAN"
-                    />
-                  </div>
-                  <button className={`${styles.btn} ${styles.btnGold}`} onClick={saveEcommerceBankSettings} disabled={bankSettingsSaving} style={{ marginTop: '10px' }}>
-                    {bankSettingsSaving ? 'Saving...' : 'Save Settings'}
-                  </button>
-                </div>
-              ) : null}
-            </div>
-
-            {/* Custom Product Modal (Add/Edit) */}
-            {productForm && (
-              <div className={styles.editModal}>
-                <div className={styles.editModalBox} style={{ maxWidth: '480px' }}>
-                  <div className={styles.editModalTitle}>
-                    {productForm.mode === 'add' ? 'Add New Product' : 'Edit Product'}
-                  </div>
-                  
-                  <div className={styles.field}>
-                    <label>Product Name</label>
-                    <input
-                      type="text"
-                      value={productForm.name}
-                      onChange={e => setProductForm({ ...productForm, name: e.target.value })}
-                      placeholder="Enter product name"
-                    />
-                  </div>
-
-                  <div className={styles.field}>
-                    <label>Short Description</label>
-                    <textarea
-                      value={productForm.desc}
-                      onChange={e => setProductForm({ ...productForm, desc: e.target.value })}
-                      placeholder="Enter product description"
-                      rows="3"
-                    />
-                  </div>
-
-                  <div className={styles.field}>
-                    <label>Price (Rs)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={productForm.price}
-                      onChange={e => setProductForm({ ...productForm, price: e.target.value })}
-                      placeholder="0"
-                    />
-                  </div>
-
-                  <div className={styles.field}>
-                    <label>Product Pictures (Up to 5)</label>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
-                      {(productForm.imgs || []).map((imgUrl, i) => (
-                        <div key={i} style={{ position: 'relative' }}>
-                          <img
-                            src={imgUrl}
-                            alt="Preview"
-                            style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'contain', background: 'var(--panel-2)' }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeProductImage(i)}
-                            style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 20, height: 20, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, padding: 0 }}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                      {(productForm.imgs || []).length < 5 && (
+                    <div className={styles.rowActions} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <span className={`${styles.status} ${styles[o.status] || ''}`}>{o.status}</span>
+                      {o.status === 'pending' && (
                         <>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={handleProductImageUpload}
-                            style={{ display: 'none' }}
-                            id="modal-image-upload"
-                          />
-                          <label
-                            htmlFor="modal-image-upload"
-                            className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`}
-                            style={{ cursor: 'pointer', margin: 0, height: '60px', display: 'flex', alignItems: 'center' }}
-                          >
-                            + Upload
-                          </label>
+                          <button className={`${styles.btn} ${styles.btnGreen}`} style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => handleOrderAction(o._id, 'approved')}>Approve</button>
+                          <button className={`${styles.btn} ${styles.btnReject}`} style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => handleOrderAction(o._id, 'rejected')}>Reject</button>
                         </>
                       )}
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className={styles.empty}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <circle cx="9" cy="21" r="1" />
+                    <circle cx="20" cy="21" r="1" />
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                  </svg>
+                  <p>No orders yet.</p>
+                </div>
+              )
+            ) : ecommerceTab === 'settings' ? (
+              <div className={styles.panel} style={{ maxWidth: '500px', padding: '24px' }}>
+                <h3 style={{ margin: '0 0 16px 0' }}>Online Transfer Settings</h3>
+                <div className={styles.field}>
+                  <label>Bank Name</label>
+                  <input
+                    type="text"
+                    value={ecommerceBankSettings.bankName}
+                    onChange={e => setEcommerceBankSettings({ ...ecommerceBankSettings, bankName: e.target.value })}
+                    placeholder="e.g. SadaPay or Meezan Bank"
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label>Account Name / Title</label>
+                  <input
+                    type="text"
+                    value={ecommerceBankSettings.accountName}
+                    onChange={e => setEcommerceBankSettings({ ...ecommerceBankSettings, accountName: e.target.value })}
+                    placeholder="e.g. HMH Admin"
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label>Account Number</label>
+                  <input
+                    type="text"
+                    value={ecommerceBankSettings.accountNumber}
+                    onChange={e => setEcommerceBankSettings({ ...ecommerceBankSettings, accountNumber: e.target.value })}
+                    placeholder="Account or IBAN"
+                  />
+                </div>
+                <button className={`${styles.btn} ${styles.btnGold}`} onClick={saveEcommerceBankSettings} disabled={bankSettingsSaving} style={{ marginTop: '10px' }}>
+                  {bankSettingsSaving ? 'Saving...' : 'Save Settings'}
+                </button>
+              </div>
+            ) : null}
+          </div>
 
-                  <div className={styles.editModalActions}>
-                    <button
-                      className={`${styles.btn} ${styles.btnGold}`}
-                      onClick={saveProductForm}
-                    >
-                      Save Product
-                    </button>
-                    <button
-                      className={`${styles.btn} ${styles.btnOutline}`}
-                      onClick={() => setProductForm(null)}
-                    >
-                      Cancel
-                    </button>
+          {/* Custom Product Modal (Add/Edit) */}
+          {productForm && (
+            <div className={styles.editModal}>
+              <div className={styles.editModalBox} style={{ maxWidth: '480px' }}>
+                <div className={styles.editModalTitle}>
+                  {productForm.mode === 'add' ? 'Add New Product' : 'Edit Product'}
+                </div>
+
+                <div className={styles.field}>
+                  <label>Product Name</label>
+                  <input
+                    type="text"
+                    value={productForm.name}
+                    onChange={e => setProductForm({ ...productForm, name: e.target.value })}
+                    placeholder="Enter product name"
+                  />
+                </div>
+
+                <div className={styles.field}>
+                  <label>Short Description</label>
+                  <textarea
+                    value={productForm.desc}
+                    onChange={e => setProductForm({ ...productForm, desc: e.target.value })}
+                    placeholder="Enter product description"
+                    rows="3"
+                  />
+                </div>
+
+                <div className={styles.field}>
+                  <label>Price (Rs)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={productForm.price}
+                    onChange={e => setProductForm({ ...productForm, price: e.target.value })}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className={styles.field}>
+                  <label>Product Pictures (Up to 5)</label>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
+                    {(productForm.imgs || []).map((imgUrl, i) => (
+                      <div key={i} style={{ position: 'relative' }}>
+                        <img
+                          src={imgUrl}
+                          alt="Preview"
+                          style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'contain', background: 'var(--panel-2)' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeProductImage(i)}
+                          style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 20, height: 20, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, padding: 0 }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {(productForm.imgs || []).length < 5 && (
+                      <>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleProductImageUpload}
+                          style={{ display: 'none' }}
+                          id="modal-image-upload"
+                        />
+                        <label
+                          htmlFor="modal-image-upload"
+                          className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`}
+                          style={{ cursor: 'pointer', margin: 0, height: '60px', display: 'flex', alignItems: 'center' }}
+                        >
+                          + Upload
+                        </label>
+                      </>
+                    )}
                   </div>
                 </div>
+
+                <div className={styles.editModalActions}>
+                  <button
+                    className={`${styles.btn} ${styles.btnGold}`}
+                    onClick={saveProductForm}
+                  >
+                    Save Product
+                  </button>
+                  <button
+                    className={`${styles.btn} ${styles.btnOutline}`}
+                    onClick={() => setProductForm(null)}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+      )}
       {previewReceiptUrl && (
         <div
           style={{
@@ -4572,15 +4571,15 @@ export default function AdminDashboard() {
             <h3 style={{ margin: '0 0 12px', fontSize: '18px', color: 'var(--text)' }}>{confirmModal.title}</h3>
             <p style={{ margin: '0 0 24px', fontSize: '14.5px', color: 'var(--text-dim)', lineHeight: '1.5' }}>{confirmModal.message}</p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button 
-                className={`${styles.btn} ${styles.btnOutline}`} 
+              <button
+                className={`${styles.btn} ${styles.btnOutline}`}
                 onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
                 style={{ flex: 1, padding: '10px 16px' }}
               >
                 Cancel
               </button>
-              <button 
-                className={`${styles.btn} ${styles.btnGold}`} 
+              <button
+                className={`${styles.btn} ${styles.btnGold}`}
                 onClick={confirmModal.onConfirm}
                 style={{ flex: 1, padding: '10px 16px' }}
               >
@@ -4593,5 +4592,5 @@ export default function AdminDashboard() {
       {(isAppLoading || isLoading) && <Loader />}
     </AdminShell>
   )
-} 
+}
 
