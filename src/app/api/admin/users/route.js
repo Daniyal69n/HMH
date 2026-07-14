@@ -207,13 +207,32 @@ export async function PUT(request) {
         // Handle new withdrawals to sync to Transaction collection
         if (data.withdrawHistory && Array.isArray(data.withdrawHistory)) {
           const { default: Transaction } = await import('@/models/Transaction');
+          
+          // Find deleted manual withdrawals and delete corresponding Transaction
+          // We find ALL manual withdrawals for this user in the Transaction table.
+          // If they don't match an item in data.withdrawHistory, we delete them.
+          const manualTxs = await Transaction.find({ userId: editUser.phone, type: 'withdraw', description: 'Manual withdrawal added by Admin' });
+          for (let tx of manualTxs) {
+            const stillExists = data.withdrawHistory.some(wd => 
+              Number(wd.amount) === Number(tx.amount) && 
+              wd.date && new Date(wd.date).getTime() === new Date(tx.createdAt).getTime()
+            );
+            
+            // Fallback match in case date was modified or missing
+            const fallbackExists = data.withdrawHistory.some(wd => Number(wd.amount) === Number(tx.amount) && wd.status === tx.status);
+            
+            if (!stillExists && !fallbackExists) {
+              await Transaction.findByIdAndDelete(tx._id);
+            }
+          }
+
           for (let wd of data.withdrawHistory) {
             if (wd._id && String(wd._id).startsWith('new_')) {
               await Transaction.create({
                 userId: editUser.phone,
                 userName: editUser.name,
                 type: 'withdraw',
-                amount: wd.amount,
+                amount: Number(wd.amount),
                 status: wd.status,
                 description: 'Manual withdrawal added by Admin',
                 transactionId: 'MANUAL_WD_' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase(),
@@ -221,7 +240,7 @@ export async function PUT(request) {
               });
               delete wd._id;
             } else if (wd._id) {
-              const txs = await Transaction.find({ userId: editUser.phone, type: 'withdraw', amount: wd.amount });
+              const txs = await Transaction.find({ userId: editUser.phone, type: 'withdraw', amount: Number(wd.amount) });
               let bestMatch = txs.length === 1 ? txs[0] : (txs.find(t => wd.date && t.createdAt && new Date(t.createdAt).getTime() === new Date(wd.date).getTime()) || txs.find(t => t.status !== wd.status) || txs[0]);
               if (bestMatch && bestMatch.status !== wd.status) {
                 bestMatch.status = wd.status;
