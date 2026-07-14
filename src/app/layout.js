@@ -2,6 +2,7 @@ import { Fraunces, Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import "./meridian.css";
 import ClientLayout from './client-layout';
+import WhatsAppButton from './components/WhatsAppButton';
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -35,6 +36,7 @@ export default function RootLayout({ children }) {
       >
         <ClientLayout>
           {children}
+          <WhatsAppButton />
         </ClientLayout>
       </body>
     </html>
