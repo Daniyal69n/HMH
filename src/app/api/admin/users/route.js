@@ -180,6 +180,10 @@ export async function PUT(request) {
         // Find if any plan status was changed to 'active'
         let planToActivate = null;
         for (const newPlan of newPlans) {
+          // Remove the dummy _id for newly added plans so mongoose generates a real ObjectId
+          if (newPlan._id && String(newPlan._id).startsWith('new_')) {
+            delete newPlan._id;
+          }
           if (newPlan.status === 'active') {
             const oldPlan = oldPlans.find(p => p._id && p._id.toString() === newPlan._id?.toString());
             if (!oldPlan || oldPlan.status !== 'active') {
@@ -200,7 +204,46 @@ export async function PUT(request) {
           }
         }
         
+        // Handle new withdrawals to sync to Transaction collection
+        if (data.withdrawHistory && Array.isArray(data.withdrawHistory)) {
+          const { default: Transaction } = await import('@/models/Transaction');
+          for (let wd of data.withdrawHistory) {
+            if (wd._id && String(wd._id).startsWith('new_')) {
+              await Transaction.create({
+                userId: editUser.phone,
+                userName: editUser.name,
+                type: 'withdraw',
+                amount: wd.amount,
+                status: wd.status,
+                description: 'Manual withdrawal added by Admin',
+                transactionId: 'MANUAL_WD_' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase(),
+                createdAt: wd.date ? new Date(wd.date) : Date.now()
+              });
+              delete wd._id;
+            }
+          }
+        }
         editUser.withdrawHistory = data.withdrawHistory || [];
+
+        // Handle new recharges to sync to Transaction collection
+        if (data.rechargeHistory && Array.isArray(data.rechargeHistory)) {
+          const { default: Transaction } = await import('@/models/Transaction');
+          for (let rc of data.rechargeHistory) {
+            if (rc._id && String(rc._id).startsWith('new_')) {
+              await Transaction.create({
+                userId: editUser.phone,
+                userName: editUser.name,
+                type: 'recharge',
+                amount: rc.amount,
+                status: rc.status,
+                description: 'Manual recharge added by Admin',
+                transactionId: 'MANUAL_RC_' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase(),
+                createdAt: rc.date ? new Date(rc.date) : Date.now()
+              });
+              delete rc._id;
+            }
+          }
+        }
         editUser.rechargeHistory = data.rechargeHistory || [];
         
         if (data.password) {
