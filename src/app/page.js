@@ -371,6 +371,10 @@ export default function Page() {
   const [mysteryBoxes, setMysteryBoxes] = useState([])
   const [mysteryBoxesEnabled, setMysteryBoxesEnabled] = useState(true)
 
+  const [mysteryCycleEnd, setMysteryCycleEnd] = useState(null)
+  const [mysteryWinners, setMysteryWinners] = useState([])
+  const [mysteryClaiming, setMysteryClaiming] = useState(false)
+
   useEffect(() => {
     const ts = Date.now()
     fetch(`/api/user/products?_t=${ts}`)
@@ -389,7 +393,11 @@ export default function Page() {
     fetch(`/api/leaderboard?_t=${ts}`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
+        if (data && data.leaderboard) {
+          setLeaders(data.leaderboard)
+          setMysteryCycleEnd(data.cycleEndDate)
+          setMysteryWinners(data.winners || [])
+        } else if (Array.isArray(data)) {
           setLeaders(data)
         }
       })
@@ -1466,6 +1474,50 @@ export default function Page() {
     }
   }
 
+  const handleClaimMysteryBox = async () => {
+    if (!profile?.phone || mysteryClaiming) return
+
+    setMysteryClaiming(true)
+    try {
+      const res = await fetch('/api/user/claim-mystery-box', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: profile.phone })
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        showToast(`$${data.usdRewardAmount} Mystery Box claimed successfully!`)
+        
+        // Mark as claimed locally
+        setMysteryWinners(prev => prev.map(w => w.phone === profile.phone ? { ...w, claimed: true } : w))
+
+        // Refresh profile to update balance
+        const ts = Date.now()
+        fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone)}&_t=${ts}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && !data.error) {
+              setProfile(prev => {
+                const next = { ...prev, ...data }
+                localStorage.setItem('hmh-profile', JSON.stringify(next))
+                return next
+              })
+            }
+          })
+      } else {
+        showToast(data.message || 'Failed to claim mystery box')
+      }
+    } catch (err) {
+      console.error(err)
+      showToast('Error claiming mystery box')
+    } finally {
+      setMysteryClaiming(false)
+    }
+  }
+
+
   const handleClaimPurchaseReward = async () => {
     if (!profile?.phone || claimRewardSubmitting) return
 
@@ -1908,17 +1960,52 @@ export default function Page() {
               <div className="card" style={{ marginBottom: 18 }}>
                 <h3 style={{ margin: '0 0 4px' }}>🎁 Mystery boxes</h3>
                 <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
-                  Stay in the Top 3 of the leaderboard for 15 days to claim.
+                  Top 3 on the leaderboard at the end of the 15-day cycle win cash prizes!
+                  {mysteryCycleEnd && (
+                    <span style={{ display: 'block', marginTop: 4, color: 'var(--gold)' }}>
+                      Cycle Ends: {new Date(mysteryCycleEnd).toLocaleString()}
+                    </span>
+                  )}
                 </p>
                 <div className="mystery-grid">
-                  {mysteryBoxes.map((b) => (
-                    <div key={b.id || b.title} className="card mystery-card">
-                      <div className="mystery-medal">{b.medal}</div>
-                      <div className="mystery-title">{b.title}</div>
-                      <div className="mystery-sub">{b.desc}</div>
-                      <div className="lock-pill">🔒 Locked · 15-day streak</div>
-                    </div>
-                  ))}
+                  {mysteryBoxes.map((b, idx) => {
+                    const rank = idx + 1;
+                    const winnerStatus = mysteryWinners.find(w => w.rank === rank);
+                    const isMyWin = winnerStatus && winnerStatus.phone === profile?.phone;
+                    const isClaimed = winnerStatus && winnerStatus.claimed;
+
+                    return (
+                      <div key={b.id || b.title} className="card mystery-card" style={isMyWin && !isClaimed ? { border: '1px solid var(--gold)' } : {}}>
+                        <div className="mystery-medal">{b.medal}</div>
+                        <div className="mystery-title">{b.title}</div>
+                        <div className="mystery-sub">{b.desc}</div>
+                        
+                        {isMyWin ? (
+                          <button 
+                            className="lock-pill" 
+                            style={{ 
+                              background: isClaimed ? 'rgba(255,255,255,0.1)' : 'var(--gold)', 
+                              color: isClaimed ? 'var(--text-dim)' : '#000',
+                              cursor: isClaimed ? 'default' : 'pointer',
+                              border: 'none',
+                              width: '100%',
+                              padding: '6px'
+                            }}
+                            onClick={isClaimed ? undefined : handleClaimMysteryBox}
+                            disabled={isClaimed || mysteryClaiming}
+                          >
+                            {isClaimed ? '✅ Claimed' : (mysteryClaiming ? 'Processing...' : '🎁 Claim Prize')}
+                          </button>
+                        ) : winnerStatus ? (
+                          <div className="lock-pill" style={{ opacity: 0.7 }}>
+                            {isClaimed ? '✅ Claimed by Winner' : '🎉 Won by another'}
+                          </div>
+                        ) : (
+                          <div className="lock-pill">🔒 Locked (Top {rank} wins)</div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
