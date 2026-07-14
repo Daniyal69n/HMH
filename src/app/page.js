@@ -227,7 +227,8 @@ export default function Page() {
   const [planSubmitting, setPlanSubmitting] = useState(false)
   const [planPaymentDetails, setPlanPaymentDetails] = useState({
     jazzcash: { number: '03715918754', accountName: 'Muhammad Haseeb' },
-    easypaisa: { number: '03715918754', accountName: 'Muhammad Haseeb' }
+    easypaisa: { number: '03715918754', accountName: 'Muhammad Haseeb' },
+    binance: { number: '940791290', accountName: 'Binance Pay ID' }
   })
 
   // Spin reset countdown and cycle state
@@ -1063,7 +1064,7 @@ export default function Page() {
               previousPlan: activePlanName,
               amount: amountToPay,
               fullPlanPKR: newPlanPKR,
-              paymentMethod: planPaymentMethod === 'jazzcash' ? 'JazzCash' : 'EasyPaisa',
+              paymentMethod: planPaymentMethod === 'jazzcash' ? 'JazzCash' : (planPaymentMethod === 'easypaisa' ? 'EasyPaisa' : 'Binance'),
               screenshotUrl: screenshotUrl
             })
           })
@@ -3988,6 +3989,19 @@ export default function Page() {
                   <span style={{ background: '#00a651', borderRadius: '50%', width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff', fontWeight: 800 }}>EP</span>
                   EasyPaisa
                 </button>
+                <button
+                  onClick={() => setPlanPaymentMethod('binance')}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '6px 14px', borderRadius: 20, border: 'none',
+                    background: planPaymentMethod === 'binance' ? '#c9a04a' : '#374151',
+                    color: planPaymentMethod === 'binance' ? '#181205' : '#fff',
+                    fontWeight: 700, fontSize: 13, cursor: 'pointer'
+                  }}
+                >
+                  <span style={{ background: '#f3ba2f', borderRadius: '50%', width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#181205', fontWeight: 800 }}>B</span>
+                  Binance
+                </button>
               </div>
               {/* Account Name */}
               <div style={{ background: '#1a1f2e', borderRadius: 10, padding: '10px 14px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -4037,6 +4051,7 @@ export default function Page() {
               >
                 <option value="jazzcash">JazzCash</option>
                 <option value="easypaisa">EasyPaisa</option>
+                <option value="binance">Binance</option>
               </select>
             </div>
 

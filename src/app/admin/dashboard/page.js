@@ -111,7 +111,8 @@ export default function AdminDashboard() {
   const [newCourse, setNewCourse] = useState({ title: '', videoUrl: '', imageUrl: '', description: '' })
   const [paymentDetails, setPaymentDetails] = useState({
     easypaisa: { number: '', accountName: '' },
-    jazzcash: { number: '', accountName: '' }
+    jazzcash: { number: '', accountName: '' },
+    binance: { number: '', accountName: '' }
   })
 
   const [confirmModal, setConfirmModal] = useState({
@@ -1273,7 +1274,8 @@ export default function AdminDashboard() {
               // Default payment details
               const defaultPaymentDetails = {
                 easypaisa: { number: '0300 1234567', accountName: 'Neo Earner' },
-                jazzcash: { number: '0300 7654321', accountName: 'Neo Earner' }
+                jazzcash: { number: '0300 7654321', accountName: 'Neo Earner' },
+                binance: { number: '940791290', accountName: 'Binance Pay ID' }
               }
               setPaymentDetails(defaultPaymentDetails)
             }
@@ -1281,7 +1283,8 @@ export default function AdminDashboard() {
             // If API fails, use default payment details
             const defaultPaymentDetails = {
               easypaisa: { number: '0300 1234567', accountName: 'Neo Earner' },
-              jazzcash: { number: '0300 7654321', accountName: 'Neo Earner' }
+              jazzcash: { number: '0300 7654321', accountName: 'Neo Earner' },
+              binance: { number: '940791290', accountName: 'Binance Pay ID' }
             }
             setPaymentDetails(defaultPaymentDetails)
           }
@@ -1290,7 +1293,8 @@ export default function AdminDashboard() {
           // Use default payment details on error
           const defaultPaymentDetails = {
             easypaisa: { number: '0300 1234567', accountName: 'Neo Earner' },
-            jazzcash: { number: '0300 7654321', accountName: 'Neo Earner' }
+            jazzcash: { number: '0300 7654321', accountName: 'Neo Earner' },
+            binance: { number: '940791290', accountName: 'Binance Pay ID' }
           }
           setPaymentDetails(defaultPaymentDetails)
         }
