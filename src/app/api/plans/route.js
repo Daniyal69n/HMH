@@ -14,53 +14,81 @@ export async function GET(request) {
       query.isActive = true;
     }
     
+    // Self-healing: if wrong Neo Earner plans exist, wipe them out so they get recreated correctly
+    const wrongPlans = await InvestmentPlan.countDocuments({ name: { $regex: 'Neo Earner' } });
+    if (wrongPlans > 0) {
+      await InvestmentPlan.deleteMany({});
+    }
+
     // Check if plans exist, if not create default ones
     const existingPlans = await InvestmentPlan.countDocuments();
     if (existingPlans === 0) {
       const defaultPlans = [
         {
-          name: 'Neo Earner Type R',
-          image: 'car1.jpeg',
-          investAmount: '$5,000',
-          dailyIncome: '$25',
-          validity: '200 days',
-          color: 'from-red-500 to-red-700',
-          description: 'High performance variant with turbocharged engine',
+          name: 'Basic',
+          image: 'basic.png',
+          investAmount: 'Rs1,500',
+          dailyIncome: 'Rs50',
+          validity: 'Lifetime',
+          color: 'from-green-400 to-green-600',
+          description: 'Perfect for Beginners',
           isActive: true,
           order: 1
         },
         {
-          name: 'Neo Earner Sedan',
-          image: 'car2.jpeg',
-          investAmount: '$3,500',
-          dailyIncome: '$17.50',
-          validity: '200 days',
-          color: 'from-blue-500 to-blue-700',
-          description: 'Classic four-door model with excellent fuel economy',
+          name: 'Standard',
+          image: 'standard.png',
+          investAmount: 'Rs3,000',
+          dailyIncome: 'Rs100',
+          validity: 'Lifetime',
+          color: 'from-blue-400 to-blue-600',
+          description: 'Best for Regular Earners',
           isActive: true,
           order: 2
         },
         {
-          name: 'Neo Earner Hatchback',
-          image: 'car3.jpeg',
-          investAmount: '$4,000',
-          dailyIncome: '$20',
-          validity: '200 days',
-          color: 'from-green-500 to-green-700',
-          description: 'Versatile hatchback with sporty styling and ample cargo space',
+          name: 'Diamond',
+          image: 'diamond.png',
+          investAmount: 'Rs6,000',
+          dailyIncome: 'Rs200',
+          validity: 'Lifetime',
+          color: 'from-purple-400 to-purple-600',
+          description: 'Grow Your Income Faster',
           isActive: true,
           order: 3
         },
         {
-          name: 'Neo Earner Si',
-          image: 'car4.jpeg',
-          investAmount: '$4,500',
-          dailyIncome: '$22.50',
-          validity: '200 days',
-          color: 'from-yellow-500 to-yellow-700',
-          description: 'Sport-injected model with enhanced performance features',
+          name: 'Pro',
+          image: 'pro.png',
+          investAmount: 'Rs9,000',
+          dailyIncome: 'Rs300',
+          validity: 'Lifetime',
+          color: 'from-indigo-400 to-indigo-600',
+          description: 'For Serious Earners',
           isActive: true,
           order: 4
+        },
+        {
+          name: 'Premium',
+          image: 'premium.png',
+          investAmount: 'Rs12,000',
+          dailyIncome: 'Rs400',
+          validity: 'Lifetime',
+          color: 'from-red-400 to-red-600',
+          description: 'Maximum Value & Benefits',
+          isActive: true,
+          order: 5
+        },
+        {
+          name: 'Legend',
+          image: 'legend.png',
+          investAmount: 'Rs15,000',
+          dailyIncome: 'Rs500',
+          validity: 'Lifetime',
+          color: 'from-yellow-400 to-yellow-600',
+          description: 'Ultimate Membership Experience',
+          isActive: true,
+          order: 6
         }
       ];
       
@@ -81,30 +109,78 @@ export async function GET(request) {
   } catch (error) {
     console.warn('Plans fetch connection failed (offline mode):', error.message);
     const defaultPlans = [
-      {
-        _id: 'fallback_1',
-        name: 'Neo Earner Type R',
-        image: 'car1.jpeg',
-        investAmount: '$5,000',
-        dailyIncome: '$25',
-        validity: '200 days',
-        color: 'from-red-500 to-red-700',
-        description: 'High performance variant with turbocharged engine',
-        isActive: true,
-        order: 1
-      },
-      {
-        _id: 'fallback_2',
-        name: 'Neo Earner Sedan',
-        image: 'car2.jpeg',
-        investAmount: '$3,500',
-        dailyIncome: '$17.50',
-        validity: '200 days',
-        color: 'from-blue-500 to-blue-700',
-        description: 'Classic four-door model with excellent fuel economy',
-        isActive: true,
-        order: 2
-      }
+        {
+          _id: 'fallback_1',
+          name: 'Basic',
+          image: 'basic.png',
+          investAmount: 'Rs1,500',
+          dailyIncome: 'Rs50',
+          validity: 'Lifetime',
+          color: 'from-green-400 to-green-600',
+          description: 'Perfect for Beginners',
+          isActive: true,
+          order: 1
+        },
+        {
+          _id: 'fallback_2',
+          name: 'Standard',
+          image: 'standard.png',
+          investAmount: 'Rs3,000',
+          dailyIncome: 'Rs100',
+          validity: 'Lifetime',
+          color: 'from-blue-400 to-blue-600',
+          description: 'Best for Regular Earners',
+          isActive: true,
+          order: 2
+        },
+        {
+          _id: 'fallback_3',
+          name: 'Diamond',
+          image: 'diamond.png',
+          investAmount: 'Rs6,000',
+          dailyIncome: 'Rs200',
+          validity: 'Lifetime',
+          color: 'from-purple-400 to-purple-600',
+          description: 'Grow Your Income Faster',
+          isActive: true,
+          order: 3
+        },
+        {
+          _id: 'fallback_4',
+          name: 'Pro',
+          image: 'pro.png',
+          investAmount: 'Rs9,000',
+          dailyIncome: 'Rs300',
+          validity: 'Lifetime',
+          color: 'from-indigo-400 to-indigo-600',
+          description: 'For Serious Earners',
+          isActive: true,
+          order: 4
+        },
+        {
+          _id: 'fallback_5',
+          name: 'Premium',
+          image: 'premium.png',
+          investAmount: 'Rs12,000',
+          dailyIncome: 'Rs400',
+          validity: 'Lifetime',
+          color: 'from-red-400 to-red-600',
+          description: 'Maximum Value & Benefits',
+          isActive: true,
+          order: 5
+        },
+        {
+          _id: 'fallback_6',
+          name: 'Legend',
+          image: 'legend.png',
+          investAmount: 'Rs15,000',
+          dailyIncome: 'Rs500',
+          validity: 'Lifetime',
+          color: 'from-yellow-400 to-yellow-600',
+          description: 'Ultimate Membership Experience',
+          isActive: true,
+          order: 6
+        }
     ];
     return Response.json(defaultPlans);
   }
