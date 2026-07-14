@@ -25,7 +25,7 @@ const getCroppedImg = (imageSrc, pixelCrop) => {
         pixelCrop.width,
         pixelCrop.height
       )
-      resolve(canvas.toDataURL('image/jpeg'))
+      resolve(canvas.toDataURL('image/jpeg', 0.6))
     }
     image.onerror = (e) => reject(e)
   })
@@ -1595,7 +1595,7 @@ export default function Page() {
       const userData = localStorage.getItem('user')
       if (userData) {
         const user = JSON.parse(userData)
-        localStorage.setItem('user', JSON.stringify({ ...user, name: nextProfile.name, email: nextProfile.email }))
+        localStorage.setItem('user', JSON.stringify({ ...user, name: nextProfile.name, email: nextProfile.email, profilePicture: nextProfile.profilePicture }))
       }
 
       // Persist to database
@@ -1614,8 +1614,14 @@ export default function Page() {
           }
         })
       })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        console.error('Failed to save profile to database:', errData)
+        showToast('Profile saved locally, but database update failed.')
+      }
     } catch (e) {
       console.error('Error saving profile:', e)
+      showToast('Error saving profile')
     }
   }
 
