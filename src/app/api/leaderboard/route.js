@@ -15,14 +15,17 @@ export async function GET(request) {
     const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
     
     // Check cycle state
+    console.log("[Leaderboard] Starting DB query for cycle state");
     console.time("query1");
     let cycleState = await SystemSettings.findOne({ key: 'mystery_box_cycle' }).lean();
     console.timeEnd("query1");
+    console.log("[Leaderboard] Cycle state fetched:", !!cycleState);
 
     let cycleEndDate = null;
     let cycleWinners = [];
     
     if (!cycleState || !cycleState.value) {
+      console.log("[Leaderboard] Initializing cycle state");
       // Initialize cycle
       cycleEndDate = new Date(Date.now() + FIFTEEN_DAYS_MS);
       await SystemSettings.findOneAndUpdate(
@@ -41,44 +44,61 @@ export async function GET(request) {
       cycleWinners = cycleState.value.winners || [];
     }
 
-    // Always fetch dynamic leaderboard
+    // Always fetch dynamic leaderboard using MongoDB aggregation for performance
+    console.log("[Leaderboard] Fetching users via aggregation...");
     console.time("query2");
-    const users = await User.find({ isAdmin: { $ne: true }, isBlocked: { $ne: true } })
-      .select('-investmentPlans.screenshotData')
-      .lean();
+    
+    const topUsers = await User.aggregate([
+      { $match: { isAdmin: { $ne: true }, isBlocked: { $ne: true } } },
+      {
+        $project: {
+          name: 1,
+          phone: 1,
+          profilePicture: 1,
+          claimedLevels: 1,
+          customTotalEarnings: 1,
+          earnBalance: 1,
+          totalCommissionEarned: 1,
+          computedEarnings: {
+            $cond: {
+              if: { $ne: [{ $type: "$customTotalEarnings" }, "missing"] },
+              then: "$customTotalEarnings",
+              else: { $add: [{ $ifNull: ["$earnBalance", 0] }, { $ifNull: ["$totalCommissionEarned", 0] }] }
+            }
+          }
+        }
+      },
+      { $match: { computedEarnings: { $gt: 0 } } },
+      { $sort: { computedEarnings: -1 } },
+      { $limit: 100 } // Fetch top 100 to find top 10 unique names
+    ]);
+    
     console.timeEnd("query2");
     
     console.time("processing");
-    // Calculate earnings and level for each user
-    const realLeaders = users.map(user => {
+    const realLeaders = topUsers.map(user => {
       const level = (user.claimedLevels && user.claimedLevels.length > 0) ? Math.max(...user.claimedLevels) : 1;
+      const amt = user.computedEarnings / 300.0; // convert PKR to USD
       
-      const pkrEarnings = (user.customTotalEarnings !== undefined && user.customTotalEarnings !== null)
-        ? user.customTotalEarnings
-        : ((user.earnBalance || 0) + (user.totalCommissionEarned || 0));
-        
-      const amt = pkrEarnings / 300.0; // convert PKR to USD
-      
-      // format name to "Firstname L." format
       const nameParts = (user.name || '').trim().split(/\s+/);
       let displayName = user.name || 'Anonymous';
       if (nameParts.length > 1) {
         const firstName = nameParts[0];
-        const lastInitial = nameParts[nameParts.length - 1][0].toUpperCase();
-        displayName = `${firstName} ${lastInitial}.`;
+        const lastPart = nameParts[nameParts.length - 1];
+        if (lastPart && lastPart.length > 0) {
+          const lastInitial = lastPart[0].toUpperCase();
+          displayName = `${firstName} ${lastInitial}.`;
+        }
       }
       
       return {
-        phone: user.phone, // Include phone to identify winners
+        phone: user.phone,
         name: displayName,
         level,
         amt,
         profilePicture: user.profilePicture || ''
       };
-    }).filter(l => l.amt > 0); // only keep users with positive earnings
-    
-    // Sort real leaders by amount descending
-    realLeaders.sort((a, b) => b.amt - a.amt);
+    });
     
     // Take top 10 unique names
     const uniqueLeaders = [];
@@ -151,6 +171,6 @@ export async function GET(request) {
 
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
-    return Response.json([]);
+    return Response.json({ error: error.message, stack: error.stack }, { status: 500 });
   }
 }
