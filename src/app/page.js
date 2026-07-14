@@ -226,8 +226,8 @@ export default function Page() {
   const [planScreenshotName, setPlanScreenshotName] = useState('')
   const [planSubmitting, setPlanSubmitting] = useState(false)
   const [planPaymentDetails, setPlanPaymentDetails] = useState({
-    jazzcash: { number: '03715918754', accountName: 'Muhammad Haseeb' },
-    easypaisa: { number: '03715918754', accountName: 'Muhammad Haseeb' },
+    jazzcash: { number: '03715918754', accountName: 'Aqsa Shahid' },
+    easypaisa: { number: '03715918754', accountName: 'Aqsa Shahid' },
     binance: { number: '940791290', accountName: 'Binance Pay ID' }
   })
 
@@ -1490,7 +1490,7 @@ export default function Page() {
 
       if (res.ok) {
         showToast(`$${data.usdRewardAmount} Mystery Box claimed successfully!`)
-        
+
         // Mark as claimed locally
         setMysteryWinners(prev => prev.map(w => w.phone === profile.phone ? { ...w, claimed: true } : w))
 
@@ -1548,7 +1548,7 @@ export default function Page() {
               })
             }
           })
-          
+
         // Refresh purchase progress so the bar resets
         fetch(`/api/user/purchase-progress?phone=${encodeURIComponent(profile.phone)}&_t=${ts}`)
           .then(res => res.json())
@@ -1986,12 +1986,12 @@ export default function Page() {
                         <div className="mystery-medal">{b.medal}</div>
                         <div className="mystery-title">{b.title}</div>
                         <div className="mystery-sub">{b.desc}</div>
-                        
+
                         {isMyWin ? (
-                          <button 
-                            className="lock-pill" 
-                            style={{ 
-                              background: isClaimed ? 'rgba(255,255,255,0.1)' : 'var(--gold)', 
+                          <button
+                            className="lock-pill"
+                            style={{
+                              background: isClaimed ? 'rgba(255,255,255,0.1)' : 'var(--gold)',
                               color: isClaimed ? 'var(--text-dim)' : '#000',
                               cursor: isClaimed ? 'default' : 'pointer',
                               border: 'none',
