@@ -31,13 +31,15 @@ export async function GET(request) {
     await user.save();
 
     const TARGET_AMOUNT = 15000;
-    const progressPercentage = Math.min((totalApprovedPurchases / TARGET_AMOUNT) * 100, 100);
+    const claimedCount = user.purchaseRewardsClaimedCount || 0;
+    const currentProgressAmount = Math.max(0, totalApprovedPurchases - (claimedCount * TARGET_AMOUNT));
+    const progressPercentage = Math.min((currentProgressAmount / TARGET_AMOUNT) * 100, 100);
 
     return Response.json({
       totalApprovedPurchases,
       progressPercentage,
       targetAmount: TARGET_AMOUNT,
-      hasClaimedReward: user.hasClaimedPurchaseReward
+      hasClaimedReward: false // Allow infinite claiming
     }, { status: 200 });
 
   } catch (error) {

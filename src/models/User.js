@@ -151,6 +151,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  purchaseRewardsClaimedCount: {
+    type: Number,
+    default: 0
+  },
   investmentPlans: {
     type: [{
       planId: String,

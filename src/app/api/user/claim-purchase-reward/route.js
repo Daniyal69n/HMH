@@ -17,17 +17,14 @@ export async function POST(request) {
       return Response.json({ message: 'User not found' }, { status: 404 });
     }
 
-    // Check if user has already claimed the reward
-    if (user.hasClaimedPurchaseReward) {
-      return Response.json({ message: 'Reward already claimed' }, { status: 400 });
-    }
-
-    // Check if user has reached the target amount
     const TARGET_AMOUNT = 15000;
-    if (user.totalApprovedPurchases < TARGET_AMOUNT) {
+    const claimedCount = user.purchaseRewardsClaimedCount || 0;
+    const currentProgressAmount = user.totalApprovedPurchases - (claimedCount * TARGET_AMOUNT);
+
+    if (currentProgressAmount < TARGET_AMOUNT) {
       return Response.json({ 
         message: 'Target not reached yet', 
-        currentAmount: user.totalApprovedPurchases,
+        currentAmount: currentProgressAmount,
         targetAmount: TARGET_AMOUNT 
       }, { status: 400 });
     }
@@ -37,6 +34,10 @@ export async function POST(request) {
     user.balance += REWARD_AMOUNT;
     user.earnBalance += REWARD_AMOUNT;
     user.totalCommissionEarned += REWARD_AMOUNT;
+    
+    // Increment the claim count
+    user.purchaseRewardsClaimedCount = claimedCount + 1;
+    // (Legacy field, keep it true just in case)
     user.hasClaimedPurchaseReward = true;
     
     await user.save();

@@ -226,8 +226,8 @@ export default function Page() {
   const [planScreenshotName, setPlanScreenshotName] = useState('')
   const [planSubmitting, setPlanSubmitting] = useState(false)
   const [planPaymentDetails, setPlanPaymentDetails] = useState({
-    jazzcash: { number: '03705318754', accountName: 'Muhammad Haseeb' },
-    easypaisa: { number: '03705318754', accountName: 'Muhammad Haseeb' }
+    jazzcash: { number: '03715918754', accountName: 'Muhammad Haseeb' },
+    easypaisa: { number: '03715918754', accountName: 'Muhammad Haseeb' }
   })
 
   // Spin reset countdown and cycle state
@@ -1027,21 +1027,21 @@ export default function Page() {
       const newPlanPKR = selectedPlanData.price * PKR_RATE
       const currentPlanPKR = currentPlanPrice * PKR_RATE
       const amountToPay = activePlanName === 'Free' ? newPlanPKR : Math.max(0, newPlanPKR - currentPlanPKR)
-      
+
       const reader = new FileReader()
       reader.readAsDataURL(planScreenshot)
       reader.onload = async () => {
         try {
           const imageBase64 = reader.result
-          
+
           const uploadRes = await fetch('/api/user/plan-screenshot-upload', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ imageBase64 })
           })
-          
+
           if (!uploadRes.ok) throw new Error('Failed to upload screenshot')
-          
+
           const uploadData = await uploadRes.json()
           const screenshotUrl = uploadData.screenshotUrl
 
@@ -1100,7 +1100,7 @@ export default function Page() {
       showToast('Please select a platform, enter your link, and upload a screenshot')
       return
     }
-    
+
     // Client-side link validation
     const linkLower = stLink.toLowerCase()
     const platformLower = stPlatform.toLowerCase()
@@ -1481,7 +1481,6 @@ export default function Page() {
 
       if (res.ok) {
         showToast(`$${data.rewardAmount} reward claimed successfully!`)
-        setPurchaseProgress(prev => ({ ...prev, hasClaimedReward: true }))
 
         // Refresh profile to update balance
         const ts = Date.now()
@@ -1494,6 +1493,15 @@ export default function Page() {
                 localStorage.setItem('hmh-profile', JSON.stringify(next))
                 return next
               })
+            }
+          })
+          
+        // Refresh purchase progress so the bar resets
+        fetch(`/api/user/purchase-progress?phone=${encodeURIComponent(profile.phone)}&_t=${ts}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.progressPercentage !== undefined) {
+              setPurchaseProgress(data)
             }
           })
       } else {
@@ -2953,15 +2961,15 @@ export default function Page() {
               </select>
 
               <label style={{ marginTop: 12 }}>Link to Post</label>
-              <input 
-                type="url" 
-                value={stLink} 
-                onChange={(e) => setStLink(e.target.value)} 
-                disabled={stSubmitting} 
-                placeholder="https://..." 
+              <input
+                type="url"
+                value={stLink}
+                onChange={(e) => setStLink(e.target.value)}
+                disabled={stSubmitting}
+                placeholder="https://..."
                 style={{
                   background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px', width: '100%', color: 'var(--text)', marginTop: '4px'
-                }} 
+                }}
               />
 
               <label style={{ marginTop: 12 }}>Upload Screenshot</label>
