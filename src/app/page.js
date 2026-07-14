@@ -1599,7 +1599,7 @@ export default function Page() {
       }
 
       // Persist to database
-      await fetch('/api/user/profile', {
+      const res = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
