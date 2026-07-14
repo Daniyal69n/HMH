@@ -3782,9 +3782,9 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Checkout modal */}
-      <div className={`modal-bg ${galleryOpen ? 'show' : ''}`} onClick={() => setGalleryOpen(false)}>
-        <div className={`modal-container ${galleryOpen ? 'show' : ''}`} onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', width: '90%', padding: '20px', borderRadius: '12px' }}>
+      {/* Image Gallery Modal */}
+      <div className={`modal-bg ${galleryOpen ? 'show' : ''}`} onClick={() => setGalleryOpen(false)} style={{ zIndex: 99999 }}>
+        <div className={`modal-container ${galleryOpen ? 'show' : ''}`} onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', width: '95%', padding: '20px', borderRadius: '12px', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
           <button className="modal-close" onClick={() => setGalleryOpen(false)} aria-label="Close">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
           </button>
@@ -3793,7 +3793,7 @@ export default function Page() {
             <p>Image {galleryIndex + 1} of {galleryImages.length}</p>
           </div>
 
-          <div style={{ position: 'relative', width: '100%', height: '300px', background: 'var(--panel-2)', borderRadius: '8px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'relative', width: '100%', height: '60vh', minHeight: '300px', background: 'var(--panel-2)', borderRadius: '8px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '10px' }}>
             {galleryImages.length > 0 && (
               <img src={galleryImages[galleryIndex]} alt="Gallery" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
             )}
