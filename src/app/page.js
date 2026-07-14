@@ -237,6 +237,7 @@ export default function Page() {
 
   // Social task state
   const [stPlatform, setStPlatform] = useState('')
+  const [stLink, setStLink] = useState('')
   const [stScreenshot, setStScreenshot] = useState(null)
   const [stNotes, setStNotes] = useState('')
   const [stSubmitting, setStSubmitting] = useState(false)
@@ -1095,21 +1096,43 @@ export default function Page() {
   }
 
   const submitSocialTask = async () => {
-    if (!stPlatform || !stScreenshot) {
-      showToast('Please select a platform and upload a screenshot')
+    if (!stPlatform || !stScreenshot || !stLink) {
+      showToast('Please select a platform, enter your link, and upload a screenshot')
       return
     }
+    
+    // Client-side link validation
+    const linkLower = stLink.toLowerCase()
+    const platformLower = stPlatform.toLowerCase()
+    if (platformLower === 'youtube' && !linkLower.includes('youtube.com') && !linkLower.includes('youtu.be')) {
+      showToast('Please provide a valid YouTube link.')
+      return
+    }
+    if (platformLower === 'instagram' && !linkLower.includes('instagram.com')) {
+      showToast('Please provide a valid Instagram link.')
+      return
+    }
+    if (platformLower === 'tiktok' && !linkLower.includes('tiktok.com')) {
+      showToast('Please provide a valid TikTok link.')
+      return
+    }
+    if (platformLower === 'facebook' && !linkLower.includes('facebook.com') && !linkLower.includes('fb.watch') && !linkLower.includes('fb.com')) {
+      showToast('Please provide a valid Facebook link.')
+      return
+    }
+
     setStSubmitting(true)
     try {
       const res = await fetch('/api/user/social-task', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: profile.phone })
+        body: JSON.stringify({ phone: profile.phone, link: stLink, platform: stPlatform })
       })
       const data = await res.json()
       if (res.ok) {
         showToast(data.message || 'Task submitted successfully!')
         setStPlatform('')
+        setStLink('')
         setStScreenshot(null)
         setStNotes('')
 
@@ -2932,6 +2955,18 @@ export default function Page() {
                 <option value="Facebook">Facebook</option>
                 <option value="YouTube">YouTube</option>
               </select>
+
+              <label style={{ marginTop: 12 }}>Link to Post</label>
+              <input 
+                type="url" 
+                value={stLink} 
+                onChange={(e) => setStLink(e.target.value)} 
+                disabled={stSubmitting} 
+                placeholder="https://..." 
+                style={{
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px', width: '100%', color: 'var(--text)', marginTop: '4px'
+                }} 
+              />
 
               <label style={{ marginTop: 12 }}>Upload Screenshot</label>
               <input type="file" accept="image/*" onChange={(e) => setStScreenshot(e.target.files[0])} disabled={stSubmitting} style={{

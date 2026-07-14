@@ -46,6 +46,14 @@ const userSchema = new mongoose.Schema({
     enum: ['A', 'B', 'C'],
     default: null
   },
+  hasSeenAppDownloadMsg: {
+    type: Boolean,
+    default: false
+  },
+  submittedSocialLinks: {
+    type: [String],
+    default: []
+  },
   isBlocked: {
     type: Boolean,
     default: false

@@ -6,10 +6,37 @@ export async function POST(request) {
   try {
     await connectDB();
     const body = await request.json();
-    const { phone } = body;
+    const { phone, link, platform } = body;
     
     if (!phone) {
       return Response.json({ message: 'Phone number is required' }, { status: 400 });
+    }
+
+    if (!link || !platform) {
+      return Response.json({ message: 'Link and platform are required' }, { status: 400 });
+    }
+
+    // Validate link belongs to the selected platform
+    const linkLower = link.toLowerCase();
+    const platformLower = platform.toLowerCase();
+    
+    if (platformLower === 'youtube' && !linkLower.includes('youtube.com') && !linkLower.includes('youtu.be')) {
+      return Response.json({ message: 'Invalid link. Please provide a valid YouTube link.' }, { status: 400 });
+    }
+    if (platformLower === 'instagram' && !linkLower.includes('instagram.com')) {
+      return Response.json({ message: 'Invalid link. Please provide a valid Instagram link.' }, { status: 400 });
+    }
+    if (platformLower === 'tiktok' && !linkLower.includes('tiktok.com')) {
+      return Response.json({ message: 'Invalid link. Please provide a valid TikTok link.' }, { status: 400 });
+    }
+    if (platformLower === 'facebook' && !linkLower.includes('facebook.com') && !linkLower.includes('fb.watch') && !linkLower.includes('fb.com')) {
+      return Response.json({ message: 'Invalid link. Please provide a valid Facebook link.' }, { status: 400 });
+    }
+
+    // Check globally if this exact link has already been submitted by anyone
+    const existingLinkUser = await User.findOne({ submittedSocialLinks: link });
+    if (existingLinkUser) {
+      return Response.json({ message: 'This link has already been submitted. Please upload a new link.' }, { status: 400 });
     }
     
     const user = await User.findOne({ phone });
@@ -75,6 +102,11 @@ export async function POST(request) {
       createdAt: new Date()
     });
     
+    // Save the submitted link
+    if (!user.submittedSocialLinks) {
+      user.submittedSocialLinks = [];
+    }
+    user.submittedSocialLinks.push(link);
     await user.save();
     
     return Response.json({
