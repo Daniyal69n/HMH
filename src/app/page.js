@@ -4108,8 +4108,8 @@ export default function Page() {
 
       {/* Crop Modal */}
       {showCropModal && cropImageSrc && (
-        <div className="modal-backdrop" style={{ zIndex: 9999 }}>
-          <div className="modal-content" style={{ maxWidth: 500, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div className="modal-bg show" style={{ zIndex: 999999 }}>
+          <div className="modal" style={{ maxWidth: 500, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: '16px 24px', borderBottom: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0 }}>Crop Picture</h3>
               <button onClick={() => { setShowCropModal(false); setCropImageSrc(null); }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 24 }}>&times;</button>
