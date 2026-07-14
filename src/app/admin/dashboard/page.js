@@ -217,6 +217,26 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleDownloadReceipt = async (e, url, filename) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const objectUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error('Error downloading receipt:', error);
+      window.open(url, '_blank');
+    }
+  };
+
+
   // ─── Mystery Boxes state ───────────────────────────────────────────────
   const [mysteryBoxes, setMysteryBoxes] = useState([])
   const [mysteryBoxesEnabled, setMysteryBoxesEnabled] = useState(true)
@@ -4537,25 +4557,23 @@ export default function AdminDashboard() {
                 border: '2px solid rgba(255,255,255,0.2)'
               }}
             />
-            <a
-              href={previewReceiptUrl}
-              download="payment_receipt.png"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={(e) => handleDownloadReceipt(e, previewReceiptUrl, "payment_receipt.png")}
               style={{
                 marginTop: '16px',
                 padding: '10px 24px',
                 background: '#c9a04a',
                 color: '#181205',
-                textDecoration: 'none',
+                border: 'none',
                 borderRadius: '8px',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                display: 'inline-block'
+                display: 'inline-block',
+                fontSize: '14px'
               }}
             >
               📥 Save Receipt
-            </a>
+            </button>
           </div>
         </div>
       )}
@@ -4569,25 +4587,23 @@ export default function AdminDashboard() {
               <button onClick={() => setReceiptModalUrl('')} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--text)' }}>×</button>
             </div>
             <img src={receiptModalUrl} alt="Receipt" style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '8px' }} />
-            <a
-              href={receiptModalUrl}
-              download="ecommerce_receipt.png"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={(e) => handleDownloadReceipt(e, receiptModalUrl, "ecommerce_receipt.png")}
               style={{
                 display: 'inline-block',
                 marginTop: '16px',
                 padding: '10px 24px',
                 background: '#c9a04a',
                 color: '#181205',
-                textDecoration: 'none',
+                border: 'none',
                 borderRadius: '8px',
                 fontWeight: 'bold',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                fontSize: '14px'
               }}
             >
               📥 Save Receipt
-            </a>
+            </button>
           </div>
         </div>
       )}
