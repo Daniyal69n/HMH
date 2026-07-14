@@ -30,7 +30,7 @@ export async function GET(request) {
     // Run all database operations in parallel using raw collection queries
     const [users, totalUsers, blockedUsers, activeUsers] = await Promise.all([
       User.collection.find(searchQuery)
-        .project({ password: 0, 'investmentPlans.screenshotData': 0, profilePicture: 0 })
+        .project({ password: 0, 'investmentPlans.screenshotData': 0 })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)

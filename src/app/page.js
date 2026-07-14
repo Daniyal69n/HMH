@@ -1,8 +1,35 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Loader from '@/components/Loader'
+import Cropper from 'react-easy-crop'
+
+const getCroppedImg = (imageSrc, pixelCrop) => {
+  return new Promise((resolve, reject) => {
+    const image = new Image()
+    image.src = imageSrc
+    image.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = pixelCrop.width
+      canvas.height = pixelCrop.height
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(
+        image,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height
+      )
+      resolve(canvas.toDataURL('image/jpeg'))
+    }
+    image.onerror = (e) => reject(e)
+  })
+}
 
 const EMPTY_PROFILE = {
   name: '',
@@ -59,6 +86,28 @@ export default function Page() {
   const [toast, setToast] = useState('')
   const toastTimer = useRef(null)
   const spinTimer = useRef(null)
+
+  const [cropImageSrc, setCropImageSrc] = useState(null)
+  const [showCropModal, setShowCropModal] = useState(false)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
+
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels)
+  }, [])
+
+  const handleCropSave = async () => {
+    try {
+      const croppedImage = await getCroppedImg(cropImageSrc, croppedAreaPixels)
+      setProfileDraft(prev => ({ ...prev, profilePicture: croppedImage }))
+      setShowCropModal(false)
+      setCropImageSrc(null)
+    } catch (e) {
+      console.error(e)
+      showToast('Failed to crop image')
+    }
+  }
 
   const [currency, setCurrency] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -1440,10 +1489,13 @@ export default function Page() {
     if (file) {
       const reader = new FileReader()
       reader.onloadend = () => {
-        setProfileDraft(prev => ({ ...prev, profilePicture: reader.result }))
+        setCropImageSrc(reader.result)
+        setShowCropModal(true)
       }
       reader.readAsDataURL(file)
     }
+    // reset input
+    e.target.value = ''
   }
 
   const saveProfile = async () => {
@@ -3903,6 +3955,52 @@ export default function Page() {
             >
               {planSubmitting ? 'Submitting...' : '⬆ Submit Request'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Crop Modal */}
+      {showCropModal && cropImageSrc && (
+        <div className="modal-backdrop" style={{ zIndex: 9999 }}>
+          <div className="modal-content" style={{ maxWidth: 500, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '16px 24px', borderBottom: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0 }}>Crop Picture</h3>
+              <button onClick={() => { setShowCropModal(false); setCropImageSrc(null); }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 24 }}>&times;</button>
+            </div>
+            <div style={{ position: 'relative', width: '100%', height: 400, background: '#111' }}>
+              <Cropper
+                image={cropImageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+              />
+            </div>
+            <div style={{ padding: '16px 24px', background: '#1a1f2e' }}>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ color: '#ccc', fontSize: 12, marginBottom: 8, display: 'block' }}>Zoom</label>
+                <input
+                  type="range"
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  aria-labelledby="Zoom"
+                  onChange={(e) => setZoom(e.target.value)}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <button
+                onClick={handleCropSave}
+                style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #c9a04a, #e8c06a)', color: '#181205', fontWeight: 800, border: 'none', borderRadius: 8, cursor: 'pointer' }}
+              >
+                Apply Crop
+              </button>
+            </div>
           </div>
         </div>
       )}
