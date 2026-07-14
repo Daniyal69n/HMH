@@ -2088,16 +2088,12 @@ export default function Page() {
                 </span>
               </div>
 
-              {adWatchData.limitReached ? (
+              {adWatchData.limitReached && (
                 <div style={{ padding: '12px', background: 'rgba(255, 50, 50, 0.1)', color: '#ff4d4d', borderRadius: '8px', marginBottom: '14px', fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>
                   🚫 Ad Limit Reached. Invite a member to unlock more days!
                   <div style={{ marginTop: '8px' }}>
                     <button className="btn btn-gold" onClick={() => setPage('network')} style={{ padding: '6px 12px', fontSize: '12px' }}>Go to Team to Invite</button>
                   </div>
-                </div>
-              ) : (
-                <div style={{ padding: '8px', background: 'rgba(201,160,74,0.1)', color: 'var(--gold)', borderRadius: '8px', marginBottom: '14px', fontSize: '14px', textAlign: 'center' }}>
-                  ⏳ Days Left to Earn: <strong>{adWatchData.adWatchDaysLeft || 0}</strong>
                 </div>
               )}
 
@@ -3771,7 +3767,7 @@ export default function Page() {
           <div style={{ display: 'flex', gap: 12, marginTop: 4, marginBottom: 12 }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0, fontSize: 13 }}>
               <input type="radio" name="paymentMethod" value="balance" checked={coPaymentMethod === 'balance'} onChange={() => setCoPaymentMethod('balance')} />
-              HMHPro Earn (Balance)
+              HMHPro Earn (Balance: Rs {profile?.balance ? profile.balance.toLocaleString() : '0'})
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0, fontSize: 13 }}>
               <input type="radio" name="paymentMethod" value="online_transfer" checked={coPaymentMethod === 'online_transfer'} onChange={() => setCoPaymentMethod('online_transfer')} />
