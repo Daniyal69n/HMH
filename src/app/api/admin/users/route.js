@@ -29,12 +29,12 @@ export async function GET(request) {
 
     // Run all database operations in parallel using raw collection queries
     const [users, totalUsers, blockedUsers, activeUsers] = await Promise.all([
-      User.collection.find(searchQuery)
-        .project({ password: 0, 'investmentPlans.screenshotData': 0 })
+      User.find(searchQuery)
+        .select('-password -investmentPlans.screenshotData')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .toArray(),
+        .lean(),
       User.collection.countDocuments(searchQuery),
       User.collection.countDocuments({ isBlocked: true }),
       User.collection.countDocuments({ isBlocked: false })
