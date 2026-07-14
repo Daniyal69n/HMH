@@ -1760,8 +1760,8 @@ export default function Page() {
                     {formatVal(profile.customTotalWithdrawals !== undefined && profile.customTotalWithdrawals !== null
                       ? profile.customTotalWithdrawals
                       : (withdrawHistory || [])
-                        .filter(w => w.status !== 'rejected' && w.status !== 'cancelled')
-                        .reduce((sum, w) => sum + w.amount, 0))}
+                        .filter(w => w.status === 'approved')
+                        .reduce((sum, w) => sum + Number(w.amount || 0), 0))}
                   </div>
                 </div>
               </div>

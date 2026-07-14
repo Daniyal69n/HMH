@@ -220,6 +220,13 @@ export async function PUT(request) {
                 createdAt: wd.date ? new Date(wd.date) : Date.now()
               });
               delete wd._id;
+            } else if (wd._id) {
+              const txs = await Transaction.find({ userId: editUser.phone, type: 'withdraw', amount: wd.amount });
+              let bestMatch = txs.length === 1 ? txs[0] : (txs.find(t => wd.date && t.createdAt && new Date(t.createdAt).getTime() === new Date(wd.date).getTime()) || txs.find(t => t.status !== wd.status) || txs[0]);
+              if (bestMatch && bestMatch.status !== wd.status) {
+                bestMatch.status = wd.status;
+                await bestMatch.save();
+              }
             }
           }
         }
@@ -241,6 +248,13 @@ export async function PUT(request) {
                 createdAt: rc.date ? new Date(rc.date) : Date.now()
               });
               delete rc._id;
+            } else if (rc._id) {
+              const txs = await Transaction.find({ userId: editUser.phone, type: 'recharge', amount: rc.amount });
+              let bestMatch = txs.length === 1 ? txs[0] : (txs.find(t => rc.date && t.createdAt && new Date(t.createdAt).getTime() === new Date(rc.date).getTime()) || txs.find(t => t.status !== rc.status) || txs[0]);
+              if (bestMatch && bestMatch.status !== rc.status) {
+                bestMatch.status = rc.status;
+                await bestMatch.save();
+              }
             }
           }
         }
