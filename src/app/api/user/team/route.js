@@ -27,6 +27,9 @@ export async function GET(request) {
     console.time("query2");
     const levelAMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': 'active' }).select('-profilePicture -investmentPlans.screenshotData').lean();
     const levelAPhones = levelAMembers.map(m => m.phone);
+    
+    // Get Pending members (direct referrals with NO active plan)
+    const pendingMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': { $ne: 'active' } }).select('-profilePicture -investmentPlans.screenshotData').lean();
  
     // Get Level B members (indirect referrals with active plans)
     const levelBMembers = levelAPhones.length > 0 
@@ -119,6 +122,20 @@ export async function GET(request) {
             earnBalance: member.earnBalance,
             joinDate: member.createdAt,
             plan: activePlan ? activePlan.planName : 'Free'
+          };
+        })
+      },
+      pending: {
+        count: pendingMembers.length,
+        members: pendingMembers.map(member => {
+          return {
+            name: member.name,
+            phone: member.phone,
+            email: member.email,
+            balance: member.balance,
+            earnBalance: member.earnBalance,
+            joinDate: member.createdAt,
+            plan: 'Free'
           };
         })
       }

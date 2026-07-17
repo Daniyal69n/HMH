@@ -2788,7 +2788,7 @@ export default function Page() {
               )}
             </div>
 
-            <div className="card">
+            <div className="card" style={{ marginBottom: 18 }}>
               <h3 style={{ margin: '0 0 14px' }}>👥 Downline referrals ({teamData.levelC?.count || 0})</h3>
               {teamData.levelC?.members?.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -2809,6 +2809,30 @@ export default function Page() {
                 </div>
               ) : (
                 <div className="empty-state">No downline referrals yet — these appear once your indirect referrals invite others.</div>
+              )}
+            </div>
+
+            <div className="card">
+              <h3 style={{ margin: '0 0 14px', color: 'var(--text-dim)' }}>⏳ Pending members ({teamData.pending?.count || 0})</h3>
+              {teamData.pending?.members?.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {teamData.pending.members.map((member, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--text)' }}>{member.name}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{member.email || 'No email'}</div>
+                      </div>
+                      <div style={{ fontSize: 13, color: 'var(--text-dim)', alignSelf: 'center', textAlign: 'right' }}>
+                        <div>Joined: {new Date(member.joinDate).toLocaleDateString()}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 4, fontWeight: 600 }}>
+                          Plan: {member.plan || 'Free'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">No pending members at the moment. All your direct referrals have active plans!</div>
               )}
             </div>
           </section>
