@@ -124,7 +124,10 @@ export async function POST(request) {
     
     // Credit reward and level salary to:
     // 1. My rewards (totalCommissionEarned)
-    user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR + levelSalaryPKR;
+    user.earnBalance = (user.earnBalance || 0) + rewardPKR + levelSalaryPKR;
+    if (user.customTotalEarnings !== undefined && user.customTotalEarnings !== null) {
+      user.customTotalEarnings += rewardPKR + levelSalaryPKR;
+    }
     
     // 3. Current balance (balance) gets the standard level reward
     user.balance = (user.balance || 0) + rewardPKR;

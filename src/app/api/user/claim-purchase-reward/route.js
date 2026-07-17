@@ -51,7 +51,7 @@ export async function POST(request) {
     const REWARD_AMOUNT = 5;
     const rewardPKR = REWARD_AMOUNT * 300;
     lockedUser.balance = (lockedUser.balance || 0) + rewardPKR;
-    lockedUser.totalCommissionEarned = (lockedUser.totalCommissionEarned || 0) + rewardPKR;
+    lockedUser.earnBalance = (lockedUser.earnBalance || 0) + rewardPKR;
     
     if (lockedUser.customTotalEarnings !== undefined && lockedUser.customTotalEarnings !== null) {
       lockedUser.customTotalEarnings += rewardPKR;

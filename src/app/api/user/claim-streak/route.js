@@ -51,7 +51,11 @@ export async function POST(request) {
     // Award $10 (Rs 3000)
     const rewardPKR = 10 * 300; // $10 converted to PKR
 
-    user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
+    user.balance = (user.balance || 0) + rewardPKR;
+    user.earnBalance = (user.earnBalance || 0) + rewardPKR;
+    if (user.customTotalEarnings !== undefined && user.customTotalEarnings !== null) {
+      user.customTotalEarnings += rewardPKR;
+    }
     user.claimedStreakReward = true;
 
     // Create a transaction log

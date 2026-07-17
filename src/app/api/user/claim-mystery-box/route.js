@@ -46,7 +46,7 @@ export async function POST(request) {
     const pkrRewardAmount = rewardAmount * 300;
 
     user.balance += pkrRewardAmount;
-    user.totalCommissionEarned += pkrRewardAmount;
+    user.earnBalance += pkrRewardAmount;
     
     if (user.customTotalEarnings !== undefined && user.customTotalEarnings !== null) {
       user.customTotalEarnings += pkrRewardAmount;
