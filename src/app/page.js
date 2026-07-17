@@ -2018,7 +2018,14 @@ export default function Page() {
             )}
 
             <div className="card">
-              <h3 style={{ margin: '0 0 4px' }}>🏆 Top 10 leaderboard</h3>
+              <h3 style={{ margin: '0 0 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>🏆 Top 10 leaderboard</span>
+                {mysteryCycleEnd && (
+                  <span style={{ fontSize: 13, color: 'var(--gold)', fontWeight: 'normal', paddingLeft: '10px' }}>
+                    {Math.max(0, Math.ceil((new Date(mysteryCycleEnd) - new Date()) / (1000 * 60 * 60 * 24)))} Days Left
+                  </span>
+                )}
+              </h3>
               <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
                 Ranked by total earnings.
               </p>
