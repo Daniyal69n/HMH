@@ -41,7 +41,7 @@ export async function GET(request) {
     // Auto-reset claimedStreakReward if current streak is broken
     if (user.claimedStreakReward) {
       console.time("query2");
-      const levelAMembers = await User.find({ referredBy: user.phone }).select('-profilePicture -investmentPlans.screenshotData').lean();
+      const levelAMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': 'active' }).select('-profilePicture -investmentPlans.screenshotData').lean();
       console.timeEnd("query2");
       const getLocalDayIndex = (dateVal) => {
         const d = new Date(dateVal);

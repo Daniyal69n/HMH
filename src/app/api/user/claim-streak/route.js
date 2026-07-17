@@ -17,7 +17,7 @@ export async function POST(request) {
     }
 
     // Calculate current streak
-    const levelAMembers = await User.find({ referredBy: user.phone }).select('-profilePicture -investmentPlans.screenshotData').lean();
+    const levelAMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': 'active' }).select('-profilePicture -investmentPlans.screenshotData').lean();
     const getLocalDayIndex = (dateVal) => {
       const d = new Date(dateVal);
       const localTime = d.getTime() + 5 * 60 * 60 * 1000; // PKT

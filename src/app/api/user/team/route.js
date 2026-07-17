@@ -23,20 +23,20 @@ export async function GET(request) {
       return Response.json({ message: 'User not found' }, { status: 404 });
     }
     
-    // Get Level A members (direct referrals)
+    // Get Level A members (direct referrals with active plans)
     console.time("query2");
-    const levelAMembers = await User.find({ referredBy: user.phone }).select('-profilePicture -investmentPlans.screenshotData').lean();
+    const levelAMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': 'active' }).select('-profilePicture -investmentPlans.screenshotData').lean();
     const levelAPhones = levelAMembers.map(m => m.phone);
  
-    // Get Level B members (indirect referrals)
+    // Get Level B members (indirect referrals with active plans)
     const levelBMembers = levelAPhones.length > 0 
-      ? await User.find({ referredBy: { $in: levelAPhones } }).select('-profilePicture -investmentPlans.screenshotData').lean()
+      ? await User.find({ referredBy: { $in: levelAPhones }, 'investmentPlans.status': 'active' }).select('-profilePicture -investmentPlans.screenshotData').lean()
       : [];
     const levelBPhones = levelBMembers.map(m => m.phone);
  
-    // Get Level C members (downline referrals)
+    // Get Level C members (downline referrals with active plans)
     const levelCMembers = levelBPhones.length > 0
-      ? await User.find({ referredBy: { $in: levelBPhones } }).select('-profilePicture -investmentPlans.screenshotData').lean()
+      ? await User.find({ referredBy: { $in: levelBPhones }, 'investmentPlans.status': 'active' }).select('-profilePicture -investmentPlans.screenshotData').lean()
       : [];
 
     // Calculate actual earnings per level from Transaction history
