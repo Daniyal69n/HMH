@@ -23,9 +23,15 @@ export async function GET(request) {
           $project: {
             userId: 1,
             userName: 1,
+            userEmail: 1,
+            userPlan: 1,
             productName: 1,
             amount: 1,
             currency: 1,
+            deliveryAddress: 1,
+            phoneNumber: 1,
+            paymentMethod: 1,
+            receiptImage: 1,
             status: 1,
             createdAt: 1,
             _id: 1
