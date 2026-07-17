@@ -1180,13 +1180,25 @@ export default function Page() {
 
     setCheckoutSubmitting(true)
     try {
-      let receiptBase64 = ''
+      let finalReceiptUrl = ''
       if (coReceiptFile) {
-        receiptBase64 = await new Promise((resolve) => {
+        const receiptBase64 = await new Promise((resolve) => {
           const reader = new FileReader()
           reader.onloadend = () => resolve(reader.result)
           reader.readAsDataURL(coReceiptFile)
         })
+        const uploadRes = await fetch('/api/user/receipt-image-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: receiptBase64 })
+        })
+        const uploadData = await uploadRes.json()
+        if (!uploadRes.ok) {
+          showToast(uploadData.message || 'Failed to upload receipt')
+          setCheckoutSubmitting(false)
+          return
+        }
+        finalReceiptUrl = uploadData.receiptUrl
       }
 
       const res = await fetch('/api/user/orders', {
@@ -1198,7 +1210,7 @@ export default function Page() {
           deliveryAddress: coAddress,
           phoneNumber: coPhone,
           paymentMethod: coPaymentMethod,
-          receiptImage: receiptBase64
+          receiptImage: finalReceiptUrl
         })
       })
       const data = await res.json()

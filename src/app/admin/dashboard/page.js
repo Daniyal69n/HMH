@@ -221,6 +221,15 @@ export default function AdminDashboard() {
   const handleDownloadReceipt = async (e, url, filename) => {
     e.preventDefault();
     try {
+      if (url.includes('cloudinary.com')) {
+         const parts = url.split('/upload/');
+         if (parts.length === 2) {
+           const downloadUrl = `${parts[0]}/upload/fl_attachment/${parts[1]}`;
+           window.open(downloadUrl, '_blank');
+           return;
+         }
+      }
+
       const response = await fetch(url);
       const blob = await response.blob();
       const objectUrl = window.URL.createObjectURL(blob);
