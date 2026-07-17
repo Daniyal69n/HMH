@@ -29,10 +29,11 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
-    // Award the $5 reward
+    // Award the $5 reward (converted to PKR)
     const REWARD_AMOUNT = 5;
-    user.balance += REWARD_AMOUNT;
-    user.totalCommissionEarned += REWARD_AMOUNT;
+    const rewardPKR = REWARD_AMOUNT * 300;
+    user.balance = (user.balance || 0) + rewardPKR;
+    user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
     
     // Increment the claim count
     user.purchaseRewardsClaimedCount = claimedCount + 1;

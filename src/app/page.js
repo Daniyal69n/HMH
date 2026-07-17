@@ -1597,7 +1597,8 @@ export default function Page() {
       const data = await res.json()
 
       if (res.ok) {
-        showToast(`$${data.rewardAmount} reward claimed successfully!`)
+        setCollectRewardAmount({ usd: data.rewardAmount, pkr: data.rewardAmount * 300 })
+        setShowCollectAnimModal(true)
 
         // Refresh profile to update balance
         const ts = Date.now()
