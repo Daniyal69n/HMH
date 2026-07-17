@@ -54,6 +54,10 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  socialTasks: {
+    type: Object,
+    default: { date: '', tiktok: false, instagram: false, facebook: false, youtube: false, rewardClaimed: false }
+  },
   isBlocked: {
     type: Boolean,
     default: false

@@ -6,20 +6,112 @@ export async function POST(request) {
   try {
     await connectDB();
     const body = await request.json();
-    const { phone, link, platform } = body;
+    const { phone, link, platform, action } = body;
     
     if (!phone) {
       return Response.json({ message: 'Phone number is required' }, { status: 400 });
     }
 
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return Response.json({ message: 'User not found' }, { status: 404 });
+    }
+    
+    // Find active plan
+    const activePlan = (user.investmentPlans || []).reverse().find(p => p.status === 'active');
+    if (!activePlan) {
+      return Response.json({ message: 'You must have an active plan to complete this task.' }, { status: 400 });
+    }
+
+    // Calculate today's date string in PKT
+    const now = new Date();
+    const pktTime = new Date(now.getTime() + 5 * 60 * 60 * 1000);
+    const todayStr = pktTime.toISOString().split('T')[0];
+
+    // Ensure socialTasks object exists
+    let st = user.socialTasks || { date: '', tiktok: false, instagram: false, facebook: false, youtube: false, rewardClaimed: false };
+    
+    // Reset if it's a new day
+    if (st.date !== todayStr) {
+      st = { date: todayStr, tiktok: false, instagram: false, facebook: false, youtube: false, rewardClaimed: false };
+    }
+
+    if (action === 'claim_reward') {
+      if (st.rewardClaimed) {
+        return Response.json({ message: 'You have already collected the reward for today.' }, { status: 400 });
+      }
+      if (!st.tiktok || !st.instagram || !st.facebook || !st.youtube) {
+        return Response.json({ message: 'You must complete all 4 tasks first.' }, { status: 400 });
+      }
+
+      const planName = activePlan.planName.toLowerCase().trim();
+      let rewardUSD = 0;
+      
+      if (planName === 'basic' || planName === 'standard') {
+        rewardUSD = 1;
+      } else if (planName === 'diamond' || planName === 'pro') {
+        rewardUSD = 2;
+      } else if (planName === 'premium' || planName === 'legend') {
+        rewardUSD = 3;
+      } else {
+        return Response.json({ message: 'Your plan is not eligible for this task.' }, { status: 400 });
+      }
+      
+      const PKR_RATE = 300;
+      const rewardPKR = rewardUSD * PKR_RATE;
+      
+      user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
+      st.rewardClaimed = true;
+      user.socialTasks = st;
+      
+      const txnId = `TXN-SOCIAL-${Date.now()}`;
+      await Transaction.create({
+        transactionId: txnId,
+        userId: user.phone,
+        userName: user.name,
+        userPhone: user.phone,
+        amount: rewardPKR,
+        type: 'social_task_reward',
+        status: 'completed',
+        description: `Social Task Completion Reward ($${rewardUSD})`,
+        createdAt: new Date()
+      });
+      
+      await user.save();
+      
+      return Response.json({
+        message: `Successfully completed all tasks and earned $${rewardUSD}!`,
+        balance: user.balance,
+        earnBalance: user.earnBalance,
+        totalCommissionEarned: user.totalCommissionEarned,
+        socialTasks: user.socialTasks
+      });
+    }
+
+    // Otherwise, action is submit_link
     if (!link || !platform) {
       return Response.json({ message: 'Link and platform are required' }, { status: 400 });
     }
 
-    // Validate link belongs to the selected platform
-    const linkLower = link.toLowerCase();
     const platformLower = platform.toLowerCase();
     
+    // Check sequence
+    if (platformLower === 'instagram' && !st.tiktok) {
+      return Response.json({ message: 'You must complete the TikTok task first.' }, { status: 400 });
+    }
+    if (platformLower === 'facebook' && !st.instagram) {
+      return Response.json({ message: 'You must complete the Instagram task first.' }, { status: 400 });
+    }
+    if (platformLower === 'youtube' && !st.facebook) {
+      return Response.json({ message: 'You must complete the Facebook task first.' }, { status: 400 });
+    }
+    
+    if (st[platformLower]) {
+      return Response.json({ message: `You have already completed the ${platform} task today.` }, { status: 400 });
+    }
+
+    // Validate links
+    const linkLower = link.toLowerCase();
     if (platformLower === 'youtube' && !linkLower.includes('youtube.com') && !linkLower.includes('youtu.be')) {
       return Response.json({ message: 'Invalid link. Please provide a valid YouTube link.' }, { status: 400 });
     }
@@ -38,71 +130,11 @@ export async function POST(request) {
     if (existingLinkUser) {
       return Response.json({ message: 'This link has already been submitted. Please upload a new link.' }, { status: 400 });
     }
-    
-    const user = await User.findOne({ phone });
-    if (!user) {
-      return Response.json({ message: 'User not found' }, { status: 404 });
-    }
-    
-    // Calculate today at 12:00 AM PKT (UTC+5)
-    const now = new Date();
-    const pktTime = new Date(now.getTime() + 5 * 60 * 60 * 1000);
-    pktTime.setUTCHours(0, 0, 0, 0);
-    const startOfToday = new Date(pktTime.getTime() - 5 * 60 * 60 * 1000);
 
-    // Check if the user has already completed a task today
-    const existingTxn = await Transaction.findOne({
-      userId: user.phone,
-      type: 'social_task_reward',
-      createdAt: { $gte: startOfToday }
-    });
+    // Update status
+    st[platformLower] = true;
+    user.socialTasks = st;
     
-    if (existingTxn) {
-      return Response.json({ message: 'You have already completed the social task for today. Please try again after 12:00 AM.' }, { status: 400 });
-    }
-    
-    // Find active plan
-    const activePlan = (user.investmentPlans || []).reverse().find(p => p.status === 'active');
-    if (!activePlan) {
-      return Response.json({ message: 'You must have an active plan to complete this task.' }, { status: 400 });
-    }
-    
-    const planName = activePlan.planName.toLowerCase().trim();
-    let rewardUSD = 0;
-    
-    if (planName === 'basic' || planName === 'standard') {
-      rewardUSD = 1;
-    } else if (planName === 'diamond' || planName === 'pro') {
-      rewardUSD = 2;
-    } else if (planName === 'premium' || planName === 'legend') {
-      rewardUSD = 3;
-    } else {
-      return Response.json({ message: 'Your plan is not eligible for this task.' }, { status: 400 });
-    }
-    
-    // Exchange rate is $1 = Rs 300
-    const PKR_RATE = 300;
-    const rewardPKR = rewardUSD * PKR_RATE;
-    
-    // Credit reward only to my rewards (totalCommissionEarned)
-    // The dashboard automatically calculates Total Earnings as earnBalance + totalCommissionEarned
-    user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
-    
-    // Create corresponding transaction log
-    const txnId = `TXN-SOCIAL-${Date.now()}`;
-    await Transaction.create({
-      transactionId: txnId,
-      userId: user.phone,
-      userName: user.name,
-      userPhone: user.phone,
-      amount: rewardPKR,
-      type: 'social_task_reward',
-      status: 'completed',
-      description: `Social Task Completion Reward ($${rewardUSD})`,
-      createdAt: new Date()
-    });
-    
-    // Save the submitted link
     if (!user.submittedSocialLinks) {
       user.submittedSocialLinks = [];
     }
@@ -110,10 +142,8 @@ export async function POST(request) {
     await user.save();
     
     return Response.json({
-      message: `Successfully completed task and earned $${rewardUSD}!`,
-      balance: user.balance,
-      earnBalance: user.earnBalance,
-      totalCommissionEarned: user.totalCommissionEarned
+      message: `${platform} task completed!`,
+      socialTasks: user.socialTasks
     });
     
   } catch (error) {

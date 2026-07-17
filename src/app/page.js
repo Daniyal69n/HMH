@@ -1106,14 +1106,67 @@ export default function Page() {
   }
 
   const submitSocialTask = async () => {
-    if (!stPlatform || !stScreenshot || !stLink) {
-      showToast('Please select a platform, enter your link, and upload a screenshot')
+    const stData = profile?.socialTasks || {}
+    const now = new Date();
+    const pktTime = new Date(now.getTime() + 5 * 60 * 60 * 1000);
+    const todayStr = pktTime.toISOString().split('T')[0];
+    
+    const isToday = stData.date === todayStr;
+    const tkDone = isToday && stData.tiktok;
+    const igDone = isToday && stData.instagram;
+    const fbDone = isToday && stData.facebook;
+    const ytDone = isToday && stData.youtube;
+    
+    let completedCount = 0;
+    if (tkDone) completedCount++;
+    if (igDone) completedCount++;
+    if (fbDone) completedCount++;
+    if (ytDone) completedCount++;
+
+    if (completedCount === 4) {
+      setStSubmitting(true)
+      try {
+        const res = await fetch('/api/user/social-task', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: profile.phone, action: 'claim_reward' })
+        })
+        const data = await res.json()
+        if (res.ok) {
+          showToast(data.message || 'Reward collected!')
+          setProfile(prev => {
+            const next = {
+              ...prev,
+              balance: data.balance,
+              earnBalance: data.earnBalance,
+              totalCommissionEarned: data.totalCommissionEarned,
+              socialTasks: data.socialTasks
+            }
+            localStorage.setItem('hmh-profile', JSON.stringify(next))
+            return next
+          })
+        } else {
+          showToast(data.message || 'Error claiming reward')
+        }
+      } catch(err) {
+        console.error(err)
+        showToast('Error submitting request')
+      } finally {
+        setStSubmitting(false)
+      }
+      return
+    }
+
+    const currentRequiredPlatform = !tkDone ? 'TikTok' : (!igDone ? 'Instagram' : (!fbDone ? 'Facebook' : (!ytDone ? 'YouTube' : '')));
+
+    if (!stScreenshot || !stLink) {
+      showToast('Please enter your link and upload a screenshot')
       return
     }
 
     // Client-side link validation
     const linkLower = stLink.toLowerCase()
-    const platformLower = stPlatform.toLowerCase()
+    const platformLower = currentRequiredPlatform.toLowerCase()
     if (platformLower === 'youtube' && !linkLower.includes('youtube.com') && !linkLower.includes('youtu.be')) {
       showToast('Please provide a valid YouTube link.')
       return
@@ -1136,24 +1189,17 @@ export default function Page() {
       const res = await fetch('/api/user/social-task', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: profile.phone, link: stLink, platform: stPlatform })
+        body: JSON.stringify({ phone: profile.phone, action: 'submit_link', link: stLink, platform: currentRequiredPlatform })
       })
       const data = await res.json()
       if (res.ok) {
         showToast(data.message || 'Task submitted successfully!')
-        setStPlatform('')
         setStLink('')
         setStScreenshot(null)
         setStNotes('')
 
-        // Update balance and earning instantly
         setProfile(prev => {
-          const next = {
-            ...prev,
-            balance: data.balance,
-            earnBalance: data.earnBalance,
-            totalCommissionEarned: data.totalCommissionEarned
-          }
+          const next = { ...prev, socialTasks: data.socialTasks }
           localStorage.setItem('hmh-profile', JSON.stringify(next))
           return next
         })
@@ -3053,73 +3099,136 @@ export default function Page() {
 
           {/* SOCIAL TASK */}
           <section className={`page ${page === 'social-task' ? 'active' : ''}`}>
-            <div className="page-head">
-              <h1>Social Task</h1>
-              <p>Complete Social Media Tasks &amp; Earn Rewards!</p>
-            </div>
+            {(() => {
+              const _stData = profile?.socialTasks || {};
+              const _now = new Date();
+              const _pktTime = new Date(_now.getTime() + 5 * 60 * 60 * 1000);
+              const _todayStr = _pktTime.toISOString().split('T')[0];
+              
+              const _isToday = _stData.date === _todayStr;
+              const _tkDone = _isToday && _stData.tiktok;
+              const _igDone = _isToday && _stData.instagram;
+              const _fbDone = _isToday && _stData.facebook;
+              const _ytDone = _isToday && _stData.youtube;
+              const _rewardClaimed = _isToday && _stData.rewardClaimed;
 
-            <div className="card" style={{ marginBottom: 18 }}>
-              <h3 style={{ margin: '0 0 4px' }}>📋 Task Details</h3>
-              <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
-                Task Name: Upload a Promotional Video
-              </p>
-              <ul style={{ paddingLeft: 20, color: 'var(--text-dim)', fontSize: 13, marginBottom: 20 }}>
-                <li style={{ paddingBottom: 6 }}>✅ Upload the video on TikTok, Instagram, Facebook, or YouTube.</li>
-                <li style={{ paddingBottom: 6 }}>✅ Keep the post public.</li>
-                <li style={{ paddingBottom: 6 }}>✅ Take a screenshot of the uploaded post.</li>
-                <li style={{ paddingBottom: 6 }}>✅ Submit the form below.</li>
-              </ul>
+              let _completedCount = 0;
+              if (_tkDone) _completedCount++;
+              if (_igDone) _completedCount++;
+              if (_fbDone) _completedCount++;
+              if (_ytDone) _completedCount++;
+              
+              const _currentPlatform = !_tkDone ? 'TikTok' : (!_igDone ? 'Instagram' : (!_fbDone ? 'Facebook' : (!_ytDone ? 'YouTube' : '')));
 
-              <label>Select Platform</label>
-              <select value={stPlatform} onChange={(e) => setStPlatform(e.target.value)} disabled={stSubmitting}>
-                <option value="">Select Platform</option>
-                <option value="TikTok">TikTok</option>
-                <option value="Instagram">Instagram</option>
-                <option value="Facebook">Facebook</option>
-                <option value="YouTube">YouTube</option>
-              </select>
+              return (
+                <>
+                  <div className="page-head">
+                    <h1>Social Task</h1>
+                    <p>Complete Social Media Tasks &amp; Earn Rewards!</p>
+                  </div>
 
-              <label style={{ marginTop: 12 }}>Link to Post</label>
-              <input
-                type="url"
-                value={stLink}
-                onChange={(e) => setStLink(e.target.value)}
-                disabled={stSubmitting}
-                placeholder="https://..."
-                style={{
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px', width: '100%', color: 'var(--text)', marginTop: '4px'
-                }}
-              />
+                  <div className="card" style={{ marginBottom: 18 }}>
+                    <h3 style={{ margin: '0 0 4px', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>📋 Task Details</span>
+                      <span style={{ fontSize: 14, color: 'var(--gold)' }}>{_completedCount}/4 Completed</span>
+                    </h3>
+                    <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
+                      Task Name: Upload a Promotional Video
+                    </p>
+                    <ul style={{ paddingLeft: 20, color: 'var(--text-dim)', fontSize: 14, marginBottom: 20, listStyle: 'none', marginLeft: -20 }}>
+                      <li style={{ paddingBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {_tkDone ? '✅' : '⏳'} <span>Upload video on <strong>TikTok</strong></span>
+                      </li>
+                      <li style={{ paddingBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {_igDone ? '✅' : '⏳'} <span>Upload video on <strong>Instagram</strong></span>
+                      </li>
+                      <li style={{ paddingBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {_fbDone ? '✅' : '⏳'} <span>Upload video on <strong>Facebook</strong></span>
+                      </li>
+                      <li style={{ paddingBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {_ytDone ? '✅' : '⏳'} <span>Upload video on <strong>YouTube</strong></span>
+                      </li>
+                    </ul>
 
-              <label style={{ marginTop: 12 }}>Upload Screenshot</label>
-              <input type="file" accept="image/*" onChange={(e) => setStScreenshot(e.target.files[0])} disabled={stSubmitting} style={{
-                background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px', width: '100%', color: 'var(--text)'
-              }} />
+                    {_rewardClaimed ? (
+                      <div style={{ padding: 16, background: 'rgba(0, 166, 81, 0.1)', borderRadius: 8, border: '1px solid rgba(0, 166, 81, 0.3)', textAlign: 'center' }}>
+                        <span style={{ fontSize: 30, display: 'block', marginBottom: 8 }}>🎉</span>
+                        <h4 style={{ margin: 0, color: '#00a651' }}>All Tasks Completed Today!</h4>
+                        <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-dim)' }}>Come back tomorrow to earn more rewards.</p>
+                      </div>
+                    ) : (
+                      <>
+                        {_completedCount === 4 ? (
+                          <div style={{ marginTop: 18 }}>
+                            <button
+                              className="btn btn-gold"
+                              onClick={submitSocialTask}
+                              disabled={stSubmitting}
+                              style={{ opacity: stSubmitting ? 0.7 : 1, cursor: stSubmitting ? 'not-allowed' : 'pointer', width: '100%', padding: 14, fontSize: 16, fontWeight: 'bold' }}
+                            >
+                              {stSubmitting ? '⏳ Claiming...' : '🎁 Collect Reward'}
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <label>Current Platform</label>
+                            <input
+                              type="text"
+                              value={_currentPlatform}
+                              disabled
+                              style={{
+                                background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px', width: '100%', color: 'var(--gold)', marginTop: '4px', fontWeight: 'bold'
+                              }}
+                            />
 
-              <label style={{ marginTop: 12 }}>Additional Notes (Optional)</label>
-              <textarea value={stNotes} onChange={(e) => setStNotes(e.target.value)} disabled={stSubmitting} placeholder="Any notes..." style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text)', minHeight: 80, fontFamily: 'inherit' }} />
+                            <label style={{ marginTop: 12 }}>Link to Post</label>
+                            <input
+                              type="url"
+                              value={stLink}
+                              onChange={(e) => setStLink(e.target.value)}
+                              disabled={stSubmitting}
+                              placeholder={`https://www.${_currentPlatform.toLowerCase()}.com/...`}
+                              style={{
+                                background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px', width: '100%', color: 'var(--text)', marginTop: '4px'
+                              }}
+                            />
 
-              <div style={{ marginTop: 18 }}>
-                <button
-                  className="btn btn-gold"
-                  onClick={submitSocialTask}
-                  disabled={stSubmitting}
-                  style={{ opacity: stSubmitting ? 0.7 : 1, cursor: stSubmitting ? 'not-allowed' : 'pointer' }}
-                >
-                  {stSubmitting ? '⏳ Submitting…' : '🟢 Collect Reward'}
-                </button>
-              </div>
-            </div>
+                            <label style={{ marginTop: 12 }}>Upload Screenshot</label>
+                            <input type="file" accept="image/*" onChange={(e) => setStScreenshot(e.target.files[0])} disabled={stSubmitting} style={{
+                              background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px', width: '100%', color: 'var(--text)'
+                            }} />
 
-            <div className="card">
-              <h3 style={{ margin: '0 0 10px', color: 'var(--red)' }}>📢 Important Rules</h3>
-              <ul style={{ paddingLeft: 20, color: 'var(--text-faint)', fontSize: 13 }}>
-                <li style={{ paddingBottom: 6 }}>Only original uploads are accepted.</li>
-                <li style={{ paddingBottom: 6 }}>Screenshot must be clear.</li>
-                <li style={{ paddingBottom: 6 }}>Post must remain public.</li>
-                <li style={{ paddingBottom: 6 }}>Fake submissions will be rejected.</li>
-              </ul>
-            </div>
+                            <label style={{ marginTop: 12 }}>Additional Notes (Optional)</label>
+                            <textarea value={stNotes} onChange={(e) => setStNotes(e.target.value)} disabled={stSubmitting} placeholder="Any notes..." style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text)', minHeight: 80, fontFamily: 'inherit' }} />
+
+                            <div style={{ marginTop: 18 }}>
+                              <button
+                                className="btn btn-gold"
+                                onClick={submitSocialTask}
+                                disabled={stSubmitting}
+                                style={{ opacity: stSubmitting ? 0.7 : 1, cursor: stSubmitting ? 'not-allowed' : 'pointer' }}
+                              >
+                                {stSubmitting ? '⏳ Submitting…' : `Submit ${_currentPlatform} Link`}
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="card">
+                    <h3 style={{ margin: '0 0 10px', color: 'var(--red)' }}>📢 Important Rules</h3>
+                    <ul style={{ paddingLeft: 20, color: 'var(--text-faint)', fontSize: 13 }}>
+                      <li style={{ paddingBottom: 6 }}>Only original uploads are accepted.</li>
+                      <li style={{ paddingBottom: 6 }}>Screenshot must be clear.</li>
+                      <li style={{ paddingBottom: 6 }}>Post must remain public.</li>
+                      <li style={{ paddingBottom: 6 }}>Fake submissions will be rejected.</li>
+                    </ul>
+                  </div>
+                </>
+              );
+            })()}
           </section>
 
           {/* LEVELS */}
