@@ -184,6 +184,7 @@ export default function Page() {
   const [currentWatchingAd, setCurrentWatchingAd] = useState(null)
   const [watchCountdown, setWatchCountdown] = useState(15)
   const [watchSubmitting, setWatchSubmitting] = useState(false)
+  const [adClicked, setAdClicked] = useState(false)
 
   const [teamData, setTeamData] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -1318,6 +1319,7 @@ export default function Page() {
     }
     setCurrentWatchingAd(ad)
     setWatchCountdown(15)
+    setAdClicked(false)
     setWatchAdModalOpen(true)
   }
 
@@ -1325,14 +1327,17 @@ export default function Page() {
   useEffect(() => {
     let interval = null
     if (watchAdModalOpen && watchCountdown > 0) {
-      interval = setInterval(() => {
-        setWatchCountdown(prev => prev - 1)
-      }, 1000)
+      const isExternalLink = currentWatchingAd && !currentWatchingAd.url.includes('youtube.com') && !currentWatchingAd.url.includes('youtu.be') && !currentWatchingAd.url.match(/\.(mp4|webm|ogg)$/i)
+      if (!isExternalLink || adClicked) {
+        interval = setInterval(() => {
+          setWatchCountdown(prev => prev - 1)
+        }, 1000)
+      }
     }
     return () => {
       if (interval) clearInterval(interval)
     }
-  }, [watchAdModalOpen, watchCountdown])
+  }, [watchAdModalOpen, watchCountdown, currentWatchingAd, adClicked])
 
   const claimAdReward = async () => {
     if (watchSubmitting || !profile || !profile.phone || !currentWatchingAd || adWatchData.limitReached) return
@@ -2444,6 +2449,7 @@ export default function Page() {
                             href={currentWatchingAd.url}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() => setAdClicked(true)}
                             style={{
                               background: 'var(--gold)',
                               color: '#000',
