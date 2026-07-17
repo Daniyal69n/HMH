@@ -2583,7 +2583,7 @@ export default function Page() {
                 </div>
               </div>
             )}
-
+          </section>
 
           {/* NETWORK (direct + indirect only) */}
           <section className={`page ${page === 'network' ? 'active' : ''}`}>
@@ -4265,7 +4265,6 @@ export default function Page() {
                 </div>
               </div>
             )}
-          </section>
       {/* Crop Modal */}
       {showCropModal && cropImageSrc && (
         <div className="modal-bg show" style={{ zIndex: 999999 }}>
