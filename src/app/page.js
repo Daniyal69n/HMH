@@ -2584,130 +2584,6 @@ export default function Page() {
               </div>
             )}
 
-            {/* COLLECT AD REWARD SUCCESS MODAL */}
-            {showCollectAnimModal && (
-              <div style={{
-                position: 'fixed',
-                inset: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 99999,
-                animation: 'fadeIn 0.4s ease-out'
-              }}>
-                <style dangerouslySetInnerHTML={{
-                  __html: `
-                  @keyframes bounceReward {
-                    0%, 100% { transform: translateY(0) scale(1); }
-                    50% { transform: translateY(-12px) scale(1.05); }
-                  }
-                  @keyframes pulseGlow {
-                    0%, 100% { transform: scale(1); opacity: 0.8; }
-                    50% { transform: scale(1.1); opacity: 1; }
-                  }
-                ` }} />
-                <div style={{
-                  position: 'absolute',
-                  width: '500px',
-                  height: '500px',
-                  background: 'radial-gradient(circle, rgba(201, 160, 74, 0.15) 0%, transparent 70%)',
-                  borderRadius: '50%',
-                  zIndex: 0,
-                  pointerEvents: 'none',
-                  animation: 'pulseGlow 3s ease-in-out infinite'
-                }} />
-
-                <div style={{
-                  background: 'linear-gradient(135deg, #1c1917 0%, #0c0a09 100%)',
-                  border: '3px solid #c9a04a',
-                  borderRadius: '24px',
-                  padding: '48px 32px',
-                  textAlign: 'center',
-                  maxWidth: '420px',
-                  width: '90%',
-                  boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8), 0 0 50px rgba(201,160,74,0.4)',
-                  animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                  position: 'relative',
-                  zIndex: 1
-                }}>
-                  <div style={{ position: 'relative', height: '100px', marginBottom: '20px' }}>
-                    <div style={{ fontSize: '72px', animation: 'bounceReward 2s infinite' }}>🎁</div>
-                    <div style={{
-                      position: 'absolute',
-                      top: '10px',
-                      left: '30%',
-                      fontSize: '24px'
-                    }}>✨</div>
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '10px',
-                      right: '30%',
-                      fontSize: '24px'
-                    }}>✨</div>
-                  </div>
-
-                  <h2 style={{
-                    color: '#e2b968',
-                    fontSize: '28px',
-                    fontWeight: 900,
-                    margin: '0 0 12px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1.5px',
-                    fontFamily: 'var(--font-fraunces), serif'
-                  }}>
-                    Reward Collected!
-                  </h2>
-
-                  <p style={{ color: 'var(--text-dim)', fontSize: '15px', margin: '0 0 28px', lineHeight: 1.5 }}>
-                    Congratulations! You have successfully completed your daily tasks and earned:
-                  </p>
-
-                  <div style={{
-                    fontSize: '32px',
-                    fontWeight: 900,
-                    color: '#ffffff',
-                    background: 'linear-gradient(135deg, rgba(201, 160, 74, 0.2) 0%, rgba(201, 160, 74, 0.04) 100%)',
-                    border: '2px dashed #c9a04a',
-                    padding: '16px 28px',
-                    borderRadius: '16px',
-                    margin: '0 auto 36px',
-                    width: 'fit-content',
-                    boxShadow: '0 0 25px rgba(201, 160, 74, 0.2)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}>
-                    <span style={{ fontSize: '14px', textTransform: 'uppercase', color: '#e2b968', fontWeight: 700, letterSpacing: '1px' }}>
-                      Total Earned
-                    </span>
-                    <span style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}>
-                      Rs {collectRewardAmount.pkr.toLocaleString()}
-                    </span>
-                    <span style={{ fontSize: '16px', color: 'var(--text-dim)', fontWeight: 600 }}>
-                      (${collectRewardAmount.usd.toFixed(2)})
-                    </span>
-                  </div>
-
-                  <button
-                    className="btn btn-gold"
-                    onClick={() => setShowCollectAnimModal(false)}
-                    style={{
-                      width: '100%',
-                      padding: '14px',
-                      fontWeight: 800,
-                      fontSize: '16px',
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 15px rgba(201, 160, 74, 0.3)'
-                    }}
-                  >
-                    Awesome, Thanks!
-                  </button>
-                </div>
-              </div>
-            )}
-          </section>
 
           {/* NETWORK (direct + indirect only) */}
           <section className={`page ${page === 'network' ? 'active' : ''}`}>
@@ -4266,6 +4142,130 @@ export default function Page() {
         </div>
       )}
 
+            {/* COLLECT AD REWARD SUCCESS MODAL */}
+            {showCollectAnimModal && (
+              <div style={{
+                position: 'fixed',
+                inset: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 99999,
+                animation: 'fadeIn 0.4s ease-out'
+              }}>
+                <style dangerouslySetInnerHTML={{
+                  __html: `
+                  @keyframes bounceReward {
+                    0%, 100% { transform: translateY(0) scale(1); }
+                    50% { transform: translateY(-12px) scale(1.05); }
+                  }
+                  @keyframes pulseGlow {
+                    0%, 100% { transform: scale(1); opacity: 0.8; }
+                    50% { transform: scale(1.1); opacity: 1; }
+                  }
+                ` }} />
+                <div style={{
+                  position: 'absolute',
+                  width: '500px',
+                  height: '500px',
+                  background: 'radial-gradient(circle, rgba(201, 160, 74, 0.15) 0%, transparent 70%)',
+                  borderRadius: '50%',
+                  zIndex: 0,
+                  pointerEvents: 'none',
+                  animation: 'pulseGlow 3s ease-in-out infinite'
+                }} />
+
+                <div style={{
+                  background: 'linear-gradient(135deg, #1c1917 0%, #0c0a09 100%)',
+                  border: '3px solid #c9a04a',
+                  borderRadius: '24px',
+                  padding: '48px 32px',
+                  textAlign: 'center',
+                  maxWidth: '420px',
+                  width: '90%',
+                  boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8), 0 0 50px rgba(201,160,74,0.4)',
+                  animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  position: 'relative',
+                  zIndex: 1
+                }}>
+                  <div style={{ position: 'relative', height: '100px', marginBottom: '20px' }}>
+                    <div style={{ fontSize: '72px', animation: 'bounceReward 2s infinite' }}>🎁</div>
+                    <div style={{
+                      position: 'absolute',
+                      top: '10px',
+                      left: '30%',
+                      fontSize: '24px'
+                    }}>✨</div>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '10px',
+                      right: '30%',
+                      fontSize: '24px'
+                    }}>✨</div>
+                  </div>
+
+                  <h2 style={{
+                    color: '#e2b968',
+                    fontSize: '28px',
+                    fontWeight: 900,
+                    margin: '0 0 12px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1.5px',
+                    fontFamily: 'var(--font-fraunces), serif'
+                  }}>
+                    Reward Collected!
+                  </h2>
+
+                  <p style={{ color: 'var(--text-dim)', fontSize: '15px', margin: '0 0 28px', lineHeight: 1.5 }}>
+                    Congratulations! You have successfully completed your daily tasks and earned:
+                  </p>
+
+                  <div style={{
+                    fontSize: '32px',
+                    fontWeight: 900,
+                    color: '#ffffff',
+                    background: 'linear-gradient(135deg, rgba(201, 160, 74, 0.2) 0%, rgba(201, 160, 74, 0.04) 100%)',
+                    border: '2px dashed #c9a04a',
+                    padding: '16px 28px',
+                    borderRadius: '16px',
+                    margin: '0 auto 36px',
+                    width: 'fit-content',
+                    boxShadow: '0 0 25px rgba(201, 160, 74, 0.2)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span style={{ fontSize: '14px', textTransform: 'uppercase', color: '#e2b968', fontWeight: 700, letterSpacing: '1px' }}>
+                      Total Earned
+                    </span>
+                    <span style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}>
+                      Rs {collectRewardAmount.pkr.toLocaleString()}
+                    </span>
+                    <span style={{ fontSize: '16px', color: 'var(--text-dim)', fontWeight: 600 }}>
+                      (${collectRewardAmount.usd.toFixed(2)})
+                    </span>
+                  </div>
+
+                  <button
+                    className="btn btn-gold"
+                    onClick={() => setShowCollectAnimModal(false)}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      fontWeight: 800,
+                      fontSize: '16px',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 15px rgba(201, 160, 74, 0.3)'
+                    }}
+                  >
+                    Awesome, Thanks!
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
       {/* Crop Modal */}
       {showCropModal && cropImageSrc && (
         <div className="modal-bg show" style={{ zIndex: 999999 }}>
