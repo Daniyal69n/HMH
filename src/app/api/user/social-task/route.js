@@ -60,6 +60,7 @@ export async function POST(request) {
       const PKR_RATE = 300;
       const rewardPKR = rewardUSD * PKR_RATE;
       
+      user.balance = (user.balance || 0) + rewardPKR;
       user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
       st.rewardClaimed = true;
       user.socialTasks = st;

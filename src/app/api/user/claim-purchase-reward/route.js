@@ -32,7 +32,6 @@ export async function POST(request) {
     // Award the $5 reward
     const REWARD_AMOUNT = 5;
     user.balance += REWARD_AMOUNT;
-    user.earnBalance += REWARD_AMOUNT;
     user.totalCommissionEarned += REWARD_AMOUNT;
     
     // Increment the claim count

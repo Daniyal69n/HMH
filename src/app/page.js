@@ -1449,7 +1449,8 @@ export default function Page() {
           const next = {
             ...prev,
             balance: data.balance,
-            earnBalance: data.earnBalance
+            earnBalance: data.earnBalance,
+            totalCommissionEarned: data.totalCommissionEarned
           }
           localStorage.setItem('hmh-profile', JSON.stringify(next))
           return next

@@ -125,7 +125,7 @@ export async function POST(request) {
     if (rewardPKR > 0) {
       // Credit reward to user balance
       user.balance = (user.balance || 0) + rewardPKR;
-      user.earnBalance = (user.earnBalance || 0) + rewardPKR;
+      user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
       user.lastAdRewardClaimDate = currentDate;
       user.adWatchDaysLeft -= 1;
       await user.save();
@@ -162,7 +162,8 @@ export async function POST(request) {
       rewardUSD,
       rewardPKR,
       balance: user.balance,
-      earnBalance: user.earnBalance
+      earnBalance: user.earnBalance,
+      totalCommissionEarned: user.totalCommissionEarned
     });
     
   } catch (error) {
