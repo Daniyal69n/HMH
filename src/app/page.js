@@ -1294,7 +1294,7 @@ export default function Page() {
     // Rotate wheel at least 10 times (3600 deg) + offset to align pointer to winning sector
     const currentAngle = spinAngleRef.current
     const targetSectorAngle = (360 - (chosenIndex * 30 + 15) + 360) % 360
-    const finalAngle = currentAngle + 3600 + targetSectorAngle
+    const finalAngle = currentAngle - (currentAngle % 360) + 3600 + targetSectorAngle
     spinAngleRef.current = finalAngle
     setSpinAngle(finalAngle)
 
@@ -3397,10 +3397,10 @@ export default function Page() {
                   }}>
                     <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎉</div>
                     <h2 style={{ color: 'var(--gold-bright)', fontSize: '24px', fontWeight: 800, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                      Congratulations!
+                      Big congratulations!
                     </h2>
                     <p style={{ color: 'var(--text-dim)', fontSize: '15px', margin: '0 0 24px' }}>
-                      You have successfully spun the wheel and won:
+                      You have won this amount:
                     </p>
                     <div style={{
                       fontSize: '42px',
