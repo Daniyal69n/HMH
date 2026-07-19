@@ -172,6 +172,7 @@ export async function PUT(request) {
         editUser.customDirectReferrals = (data.customDirectReferrals !== undefined && data.customDirectReferrals !== null && data.customDirectReferrals !== "") ? parseInt(data.customDirectReferrals) : null;
         editUser.customIndirectReferrals = (data.customIndirectReferrals !== undefined && data.customIndirectReferrals !== null && data.customIndirectReferrals !== "") ? parseInt(data.customIndirectReferrals) : null;
         editUser.customAdEarning = (data.customAdEarning !== undefined && data.customAdEarning !== null && data.customAdEarning !== "") ? parseFloat(data.customAdEarning) : null;
+        editUser.customSpinReward = (data.customSpinReward && data.customSpinReward !== 'nil') ? data.customSpinReward : null;
 
         // Handle plans
         const oldPlans = editUser.investmentPlans || [];

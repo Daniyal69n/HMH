@@ -2153,7 +2153,8 @@ export default function AdminDashboard() {
       customTotalWithdrawals: user.customTotalWithdrawals !== undefined && user.customTotalWithdrawals !== null ? String(user.customTotalWithdrawals) : '',
       customDirectReferrals: user.customDirectReferrals !== undefined && user.customDirectReferrals !== null ? String(user.customDirectReferrals) : '',
       customIndirectReferrals: user.customIndirectReferrals !== undefined && user.customIndirectReferrals !== null ? String(user.customIndirectReferrals) : '',
-      customAdEarning: user.customAdEarning !== undefined && user.customAdEarning !== null ? String(user.customAdEarning) : ''
+      customAdEarning: user.customAdEarning !== undefined && user.customAdEarning !== null ? String(user.customAdEarning) : '',
+      customSpinReward: user.customSpinReward || 'nil'
     })
   }
 
@@ -2726,6 +2727,31 @@ export default function AdminDashboard() {
                   {editingUserData?.adWatchDaysLeft || 0} Days
                 </div>
                 <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Remaining days for user to earn from ads.</span>
+              </div>
+            </div>
+
+            {/* Custom Spin Reward */}
+            <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '8px', marginBottom: '12px', color: 'var(--gold)' }}>Custom Lucky Spin Reward</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '24px', background: 'rgba(201,160,74,0.06)', border: '1px solid rgba(201,160,74,0.2)', borderRadius: '10px', padding: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--gold)' }}>Guaranteed Spin Prize</label>
+                <select
+                  value={editForm.customSpinReward}
+                  onChange={e => setEditForm(prev => ({ ...prev, customSpinReward: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid rgba(201,160,74,0.4)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                >
+                  <option value="nil">Nil (Use Random Default)</option>
+                  <option value="1$">1$</option>
+                  <option value="2$">2$</option>
+                  <option value="3$">3$</option>
+                  <option value="4$">4$</option>
+                  <option value="5$">5$</option>
+                  <option value="Smart watch">Smart watch</option>
+                  <option value="Airpods">Airpods</option>
+                  <option value="Laptop">Laptop</option>
+                  <option value="Android mobile">Android mobile</option>
+                </select>
+                <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Pre-determine what this user will win on their next spin. Select 'Nil' to restore normal 60/40 probability.</span>
               </div>
             </div>
 

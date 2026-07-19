@@ -139,6 +139,10 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: null  // null = use plan-based earnings. A number = override daily ad reward in USD
   },
+  customSpinReward: {
+    type: String,
+    default: null
+  },
   claimedStreakReward: {
     type: Boolean,
     default: false

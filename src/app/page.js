@@ -1281,13 +1281,23 @@ export default function Page() {
     setSpinRunning(true)
     setSpinResult('Spinning...')
 
-    // Choose winning prize index: 60% chance for 1$ (index 0 or 9), 40% chance for 2$ (index 1 or 10)
-    const rand = Math.random()
     let chosenIndex;
-    if (rand < 0.6) {
-      chosenIndex = Math.random() < 0.5 ? 0 : 9
+    let customIndex = -1;
+    
+    if (profile && profile.customSpinReward && profile.customSpinReward !== 'nil') {
+      customIndex = spinPrizes.findIndex(p => p.label === profile.customSpinReward);
+    }
+    
+    if (customIndex !== -1) {
+      chosenIndex = customIndex;
     } else {
-      chosenIndex = Math.random() < 0.5 ? 1 : 10
+      // Choose winning prize index: 60% chance for 1$ (index 0 or 9), 40% chance for 2$ (index 1 or 10)
+      const rand = Math.random()
+      if (rand < 0.6) {
+        chosenIndex = Math.random() < 0.5 ? 0 : 9
+      } else {
+        chosenIndex = Math.random() < 0.5 ? 1 : 10
+      }
     }
     const prize = spinPrizes[chosenIndex]
 
@@ -1314,7 +1324,10 @@ export default function Page() {
 
         // Award user balance on the database
         try {
-          const rewardAmount = prize.label === '2$' ? 2 : 1
+          let rewardAmount = 0;
+          if (prize.label.endsWith('$')) {
+            rewardAmount = parseInt(prize.label.replace('$', ''), 10) || 0;
+          }
           const res = await fetch('/api/user/balance', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
