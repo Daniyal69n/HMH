@@ -2720,6 +2720,13 @@ export default function AdminDashboard() {
                 />
                 <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Leave empty = user earns based on their plan. Set a $ amount to override their ad reward.</span>
               </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--gold)' }}>Ads Earning Days Left</label>
+                <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px', height: '38px', display: 'flex', alignItems: 'center' }}>
+                  {editingUserData?.adWatchDaysLeft || 0} Days
+                </div>
+                <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Remaining days for user to earn from ads.</span>
+              </div>
             </div>
 
             {/* Status and Access Toggles */}
