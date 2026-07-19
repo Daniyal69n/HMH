@@ -4310,7 +4310,7 @@ export default function AdminDashboard() {
                     <div key={p._id || p.id} className={styles.productCard}>
                       <div className={styles.productImg} style={{ background: 'linear-gradient(135deg, var(--gold), var(--gold-light))', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
                         {p.image && (
-                          <img src={p.image} alt={p.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <img src={p.image} alt={p.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#fff' }} />
                         )}
                         {!p.image && (
                           <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '36px' }}>📦</span>
