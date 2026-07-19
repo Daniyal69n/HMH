@@ -2974,9 +2974,9 @@ export default function Page() {
                   <div key={p._id || p.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
                     <div style={{ height: 150, background: 'linear-gradient(135deg,#2a2116,#171b25)', display: 'flex', alignItems: 'center', justifyItems: 'center', position: 'relative' }}>
                       {p.images && p.images.length > 0 ? (
-                        <img src={p.images[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={p.images[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#fff' }} />
                       ) : p.image ? (
-                        <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#fff' }} />
                       ) : (
                         <div style={{ fontSize: 38 }}>🛒</div>
                       )}
