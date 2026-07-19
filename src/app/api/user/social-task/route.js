@@ -81,6 +81,7 @@ export async function POST(request) {
         createdAt: new Date()
       });
       
+      user.markModified('socialTasks');
       await user.save();
       
       return Response.json({
@@ -143,6 +144,8 @@ export async function POST(request) {
       user.submittedSocialLinks = [];
     }
     user.submittedSocialLinks.push(link);
+    
+    user.markModified('socialTasks');
     await user.save();
     
     return Response.json({
