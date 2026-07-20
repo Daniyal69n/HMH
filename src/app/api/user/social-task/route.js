@@ -60,7 +60,13 @@ export async function POST(request) {
       const PKR_RATE = 300;
       const rewardPKR = rewardUSD * PKR_RATE;
       
-      user.balance = (user.balance || 0) + rewardPKR;
+      const userLevel = (user.claimedLevels && user.claimedLevels.length > 0) ? Math.max(...user.claimedLevels) : 0;
+      
+      if (userLevel >= 5) {
+        user.balance = (user.balance || 0) + rewardPKR;
+      }
+      
+      user.earnBalance = (user.earnBalance || 0) + rewardPKR;
       user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
       if (user.customTotalEarnings !== undefined && user.customTotalEarnings !== null) {
         user.customTotalEarnings += rewardPKR;
