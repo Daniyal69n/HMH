@@ -2332,6 +2332,7 @@ export default function Page() {
                 adWatchData.activeAds.map((ad, idx) => {
                   const activeAdsLength = adWatchData.activeAds.length;
                   const isLimitReached = adWatchData.watchedToday >= activeAdsLength || adWatchData.limitReached;
+                  const isWatched = idx < adWatchData.watchedToday;
 
                   return (
                     <div
@@ -2371,18 +2372,18 @@ export default function Page() {
                       <button
                         className="btn btn-gold"
                         onClick={() => handleWatchAd(ad)}
-                        disabled={isLimitReached}
+                        disabled={isLimitReached || isWatched}
                         style={{
                           width: 'auto',
                           padding: '8px 18px',
                           fontSize: '13px',
                           fontWeight: '700',
                           borderRadius: '8px',
-                          opacity: isLimitReached ? 0.5 : 1,
-                          cursor: isLimitReached ? 'not-allowed' : 'pointer'
+                          opacity: (isLimitReached || isWatched) ? 0.5 : 1,
+                          cursor: (isLimitReached || isWatched) ? 'not-allowed' : 'pointer'
                         }}
                       >
-                        {isLimitReached ? '🔒 Locked' : '▶ Watch'}
+                        {isWatched ? '✅ Watched' : (isLimitReached ? '🔒 Locked' : '▶ Watch')}
                       </button>
                     </div>
                   );
