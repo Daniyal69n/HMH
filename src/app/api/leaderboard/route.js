@@ -2,6 +2,9 @@ import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 import SystemSettings from '@/models/SystemSettings';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request) {
   try {
     console.time("connectDB");
@@ -60,11 +63,10 @@ export async function GET(request) {
           earnBalance: 1,
           totalCommissionEarned: 1,
           computedEarnings: {
-            $cond: {
-              if: { $ne: [{ $type: "$customTotalEarnings" }, "missing"] },
-              then: "$customTotalEarnings",
-              else: { $add: [{ $ifNull: ["$earnBalance", 0] }, { $ifNull: ["$totalCommissionEarned", 0] }] }
-            }
+            $ifNull: [
+              "$customTotalEarnings",
+              { $add: [{ $ifNull: ["$earnBalance", 0] }, { $ifNull: ["$totalCommissionEarned", 0] }] }
+            ]
           }
         }
       },
