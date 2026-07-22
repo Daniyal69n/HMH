@@ -10,13 +10,13 @@ export async function GET(request) {
     console.time("connectDB");
     await connectDB();
     console.timeEnd("connectDB");
-    
+
     const { searchParams } = new URL(request.url);
     const force = searchParams.get('force') === 'true';
 
     // 15 days in milliseconds
     const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
-    
+
     // Check cycle state
     console.log("[Leaderboard] Starting DB query for cycle state");
     console.time("query1");
@@ -26,7 +26,7 @@ export async function GET(request) {
 
     let cycleEndDate = null;
     let cycleWinners = [];
-    
+
     if (!cycleState || !cycleState.value) {
       console.log("[Leaderboard] Initializing cycle state");
       // Initialize cycle
@@ -50,7 +50,7 @@ export async function GET(request) {
     // Always fetch dynamic leaderboard using MongoDB aggregation for performance
     console.log("[Leaderboard] Fetching users via aggregation...");
     console.time("query2");
-    
+
     const topUsers = await User.aggregate([
       { $match: { isAdmin: { $ne: true }, isBlocked: { $ne: true } } },
       {
@@ -74,16 +74,25 @@ export async function GET(request) {
       { $sort: { computedEarnings: -1 } },
       { $limit: 100 } // Fetch top 100 to find top 10 unique names
     ]);
-    
+
     console.timeEnd("query2");
-    
+
     console.time("processing");
     const realLeaders = topUsers.map(user => {
       const level = (user.claimedLevels && user.claimedLevels.length > 0) ? Math.max(...user.claimedLevels) : 1;
       const amt = user.computedEarnings / 300.0; // convert PKR to USD
-      
-      const displayName = user.name || 'Anonymous';
-      
+
+      const nameParts = (user.name || '').trim().split(/\s+/);
+      let displayName = user.name || 'Anonymous';
+      if (nameParts.length > 1) {
+        const firstName = nameParts[0];
+        const lastPart = nameParts[nameParts.length - 1];
+        if (lastPart && lastPart.length > 0) {
+          const lastInitial = lastPart[0].toUpperCase();
+          displayName = `${firstName} ${lastInitial}.`;
+        }
+      }
+
       return {
         phone: user.phone,
         name: displayName,
@@ -92,7 +101,7 @@ export async function GET(request) {
         profilePicture: user.profilePicture || ''
       };
     });
-    
+
     // Take top 10 unique names
     const uniqueLeaders = [];
     const seenNames = new Set();
@@ -115,10 +124,10 @@ export async function GET(request) {
         claimed: false
       }));
       cycleWinners = top3;
-      
+
       // Reset cycle end date
       const newEndDate = new Date(Date.now() + FIFTEEN_DAYS_MS);
-      
+
       // Save winners and new end date
       await SystemSettings.findOneAndUpdate(
         { key: 'mystery_box_cycle' },
@@ -129,10 +138,10 @@ export async function GET(request) {
           }
         }
       );
-      
+
       cycleEndDate = newEndDate;
     }
-    
+
     // Strip phone numbers from public leaderboard data
     data = uniqueLeaders.map(u => ({
       name: u.name,
@@ -140,7 +149,7 @@ export async function GET(request) {
       amt: u.amt,
       profilePicture: u.profilePicture
     }));
-    
+
     console.timeEnd("processing");
 
     // Include cycle info in the response

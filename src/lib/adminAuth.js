@@ -1,6 +1,6 @@
 export const ADMIN_CREDENTIALS = {
-  username: 'admin',
-  password: 'admin@123',
+  username: 'HafizHaseeb',
+  password: 'haseeb@4563',
 }
 
 export function validateAdminLogin(username, password) {
