@@ -3877,6 +3877,10 @@ export default function AdminDashboard() {
                     <div className={styles.detailValue}>{request.withdrawalMethod || 'N/A'}</div>
                   </div>
                   <div>
+                    <div className={styles.detailLabel}>Account Name</div>
+                    <div className={styles.detailValue}>{request.withdrawalAccountName || 'N/A'}</div>
+                  </div>
+                  <div>
                     <div className={styles.detailLabel}>Account</div>
                     <div className={styles.detailValue}>{getWithdrawalAccount(request)}</div>
                   </div>
