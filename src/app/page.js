@@ -244,10 +244,16 @@ export default function Page() {
   const [stNotes, setStNotes] = useState('')
   const [stSubmitting, setStSubmitting] = useState(false)
 
+  // Transaction history state
+  const [txHistory, setTxHistory] = useState([])
+  const [txLoading, setTxLoading] = useState(false)
+  const [txTab, setTxTab] = useState('All')
+
   const NAV = useMemo(
     () => [
       { id: 'dashboard', label: 'Dashboard', icon: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z' },
       { id: 'withdraw', label: 'Withdraw funds', icon: 'M3 7h18v10H3zM3 10h18' },
+      { id: 'history', label: 'Transaction History', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
       { id: 'watch-ads', label: 'Watch Ads & Earn', icon: 'M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7.5v-3l5 1.5-5 1.5z' },
       { id: 'network', label: 'My network', icon: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM17 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 3-5 6-5s6 2 6 5M13 20c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4' },
       { id: 'plans', label: 'My plan', icon: 'M12 3v18M5 8l7-5 7 5' },
@@ -797,6 +803,23 @@ export default function Page() {
     const timer = setInterval(updateCountdown, 1000)
     return () => clearInterval(timer)
   }, [profile, teamData])
+
+  // Fetch transaction history
+  useEffect(() => {
+    if (page === 'history' && profile?.phone) {
+      setTxLoading(true)
+      fetch(`/api/transactions?userId=${profile.phone}`)
+        .then(res => res.json())
+        .then(data => {
+          setTxHistory(Array.isArray(data) ? data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) : [])
+          setTxLoading(false)
+        })
+        .catch(err => {
+          console.error('Error fetching transactions:', err)
+          setTxLoading(false)
+        })
+    }
+  }, [page, profile?.phone])
 
   useEffect(() => {
     const savedSpinAngle = localStorage.getItem('hmh-spin-angle')
@@ -2255,6 +2278,86 @@ export default function Page() {
                   })}
                 </div>
               )}
+            </div>
+          </section>
+
+          {/* TRANSACTION HISTORY */}
+          <section className={`page ${page === 'history' ? 'active' : ''}`}>
+            <div className="page-head">
+              <h1>Transaction History</h1>
+              <p>Track all your earnings, withdrawals, and rewards</p>
+            </div>
+
+            <div className="tabs" style={{ background: 'var(--card-bg)', padding: '6px', borderRadius: '16px', display: 'flex', gap: '8px', marginBottom: '20px' }}>
+              {['All', 'Earnings', 'Withdrawals', 'Rewards'].map(tab => (
+                <button
+                  key={tab}
+                  className={`tab-btn ${txTab === tab ? 'active' : ''}`}
+                  onClick={() => setTxTab(tab)}
+                  style={{ flex: 1, padding: '10px 0', border: 'none', background: txTab === tab ? 'var(--input-bg)' : 'transparent', color: txTab === tab ? '#fff' : 'var(--text-faint)', borderRadius: '12px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            <div className="card" style={{ padding: '20px' }}>
+              {txLoading ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-dim)' }}>
+                  Loading transactions...
+                </div>
+              ) : (() => {
+                const filtered = txHistory.filter(t => {
+                  if (txTab === 'All') return true;
+                  if (txTab === 'Earnings') return t.type === 'ad_reward' || t.type === 'referral_commission' || t.type === 'level_reward' || t.type === 'spin_reward' || t.type === 'daily_salary' || t.type === 'coupon_reward' || t.type === 'bonus';
+                  if (txTab === 'Withdrawals') return t.type === 'withdraw';
+                  if (txTab === 'Rewards') return t.type === 'level_reward' || t.type === 'spin_reward' || t.type === 'coupon_reward' || t.type === 'bonus';
+                  return true;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-dim)', background: 'var(--input-bg)', borderRadius: '12px' }}>
+                      No transactions found
+                    </div>
+                  );
+                }
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {filtered.map(t => (
+                      <div key={t._id || t.transactionId || Math.random()} style={{ padding: '16px', background: 'var(--input-bg)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: '15px', color: '#fff', marginBottom: '4px' }}>
+                            {t.type === 'withdraw' ? 'Withdrawal' :
+                             t.type === 'ad_reward' ? 'Ad Reward' :
+                             t.type === 'referral_commission' ? 'Referral Commission' :
+                             t.type === 'level_reward' ? 'Level Reward' :
+                             t.type === 'spin_reward' ? 'Spin Reward' :
+                             t.type === 'daily_salary' ? 'Daily Salary' :
+                             t.type === 'recharge' ? 'Recharge' :
+                             t.type === 'plan_purchase' ? 'Plan Purchase' :
+                             t.type === 'coupon_reward' ? 'Coupon Reward' :
+                             (t.type || '').replace('_', ' ')}
+                          </div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-faint)' }}>
+                            {new Date(t.createdAt).toLocaleString()}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontWeight: 'bold', fontSize: '15px', color: (t.type === 'withdraw' || t.type === 'plan_purchase' || t.type === 'ecommerce_purchase') ? '#f44336' : '#4caf50' }}>
+                            {(t.type === 'withdraw' || t.type === 'plan_purchase' || t.type === 'ecommerce_purchase') ? '-' : '+'}
+                            {formatVal(t.amount || t.amountAfterFee)}
+                          </div>
+                          <div style={{ fontSize: '12px', color: t.status === 'completed' || t.status === 'approved' ? '#4caf50' : t.status === 'pending' ? '#ff9800' : '#f44336' }}>
+                            {(t.status || '').toUpperCase()}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </section>
 
