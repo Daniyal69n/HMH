@@ -48,11 +48,11 @@ export async function POST(request) {
       let rewardUSD = 0;
       
       if (planName === 'basic' || planName === 'standard') {
-        rewardUSD = 1;
+        rewardUSD = 2;
       } else if (planName === 'diamond' || planName === 'pro') {
         rewardUSD = 2;
       } else if (planName === 'premium' || planName === 'legend') {
-        rewardUSD = 3;
+        rewardUSD = 2;
       } else {
         return Response.json({ message: 'Your plan is not eligible for this task.' }, { status: 400 });
       }

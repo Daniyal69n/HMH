@@ -84,6 +84,7 @@ export default function AdminDashboard() {
     totalWithdrawalsPaid: 0
   })
   const [userSearchQuery, setUserSearchQuery] = useState('')
+  const [userFilterStatus, setUserFilterStatus] = useState('all') // 'all', 'active', 'pending'
   const [editingUserData, setEditingUserData] = useState(null)
   const [editForm, setEditForm] = useState({
     name: '',
@@ -2267,6 +2268,12 @@ export default function AdminDashboard() {
   }
 
   const filteredUsers = users.filter((user) => {
+    const activePlan = [...(user.investmentPlans || [])].reverse().find((plan) => plan.status === 'active')?.planName || 'Free';
+    const isPaid = activePlan !== 'Free';
+
+    if (userFilterStatus === 'active' && !isPaid) return false;
+    if (userFilterStatus === 'pending' && isPaid) return false;
+
     const q = userSearchQuery.trim().toLowerCase()
     if (!q) return true
 
@@ -2480,6 +2487,30 @@ export default function AdminDashboard() {
             />
           </div>
 
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+            <button 
+              className={`${styles.btn} ${userFilterStatus === 'all' ? styles.btnGold : styles.btnOutline}`} 
+              onClick={() => setUserFilterStatus('all')}
+              style={{ padding: '8px 16px', fontSize: '14px' }}
+            >
+              All Users
+            </button>
+            <button 
+              className={`${styles.btn} ${userFilterStatus === 'active' ? styles.btnGold : styles.btnOutline}`} 
+              onClick={() => setUserFilterStatus('active')}
+              style={{ padding: '8px 16px', fontSize: '14px' }}
+            >
+              Active (Paid)
+            </button>
+            <button 
+              className={`${styles.btn} ${userFilterStatus === 'pending' ? styles.btnGold : styles.btnOutline}`} 
+              onClick={() => setUserFilterStatus('pending')}
+              style={{ padding: '8px 16px', fontSize: '14px' }}
+            >
+              Pending (Free)
+            </button>
+          </div>
+
           {isUsersLoading && users.length === 0 ? (
             <div className={styles.empty}>
               <svg
@@ -2523,8 +2554,8 @@ export default function AdminDashboard() {
                       <div className={styles.userEmail}>{user.email || user.phone || 'No email provided'}</div>
                     </div>
                   </div>
-                  <span className={`${styles.status} ${user.isBlocked ? styles.suspended : styles.active}`}>
-                    {user.isBlocked ? 'suspended' : 'active'}
+                  <span className={`${styles.status} ${user.isBlocked ? styles.suspended : (([...(user.investmentPlans || [])].reverse().find((plan) => plan.status === 'active')?.planName || 'Free') !== 'Free' ? styles.active : styles.pending)}`}>
+                    {user.isBlocked ? 'SUSPENDED' : (([...(user.investmentPlans || [])].reverse().find((plan) => plan.status === 'active')?.planName || 'Free') !== 'Free' ? 'ACTIVE' : 'PENDING')}
                   </span>
                   <span className={`${styles.status} ${user.status === 'approved' ? styles.approved :
                     user.status === 'rejected' ? styles.rejected :
@@ -2554,7 +2585,7 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <div className={styles.detailLabel}>User ID</div>
-                    <div className={styles.detailValue}>{user.phone || user._id}</div>
+                    <div className={styles.detailValue}>{user.shortId || (user._id ? user._id.toString().substring(user._id.toString().length - 8) : 'N/A')}</div>
                   </div>
                 </div>
                 <div className={styles.cardActions}>
