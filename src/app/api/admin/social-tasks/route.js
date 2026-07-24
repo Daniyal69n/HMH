@@ -6,21 +6,22 @@ export async function GET() {
     await connectDB();
     const users = await User.find({
       'socialTaskSubmissions': { $exists: true, $not: { $size: 0 } }
-    }, 'phone socialTaskSubmissions').lean();
+    }, 'name email phone socialTaskSubmissions').lean();
 
-    const submissions = [];
-    users.forEach(user => {
-      user.socialTaskSubmissions.forEach(sub => {
-        submissions.push({
-          ...sub,
-          phone: user.phone
-        });
-      });
+    const usersWithSubmissions = users.map(user => {
+      return {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        submissions: user.socialTaskSubmissions.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))
+      };
+    }).sort((a, b) => {
+      const latestA = a.submissions.length > 0 ? new Date(a.submissions[0].submittedAt) : new Date(0);
+      const latestB = b.submissions.length > 0 ? new Date(b.submissions[0].submittedAt) : new Date(0);
+      return latestB - latestA;
     });
 
-    submissions.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-
-    return Response.json({ submissions });
+    return Response.json({ users: usersWithSubmissions });
   } catch (error) {
     console.error('Error fetching social tasks:', error);
     return Response.json({ message: 'Internal server error' }, { status: 500 });

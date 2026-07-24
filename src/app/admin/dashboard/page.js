@@ -413,7 +413,8 @@ export default function AdminDashboard() {
   }
 
   // --- Social Tasks ---
-  const [socialTasks, setSocialTasks] = useState([])
+  const [socialTaskUsers, setSocialTaskUsers] = useState([])
+  const [stExpandedUser, setStExpandedUser] = useState(null)
   const [socialTasksLoading, setSocialTasksLoading] = useState(false)
   const [stRemarkModalOpen, setStRemarkModalOpen] = useState(false)
   const [stCurrentSub, setStCurrentSub] = useState(null)
@@ -426,7 +427,7 @@ export default function AdminDashboard() {
       const res = await fetch('/api/admin/social-tasks')
       if (res.ok) {
         const data = await res.json()
-        setSocialTasks(data.submissions || [])
+        setSocialTaskUsers(data.users || [])
       }
     } catch (err) {
       console.error(err)
@@ -4331,57 +4332,80 @@ export default function AdminDashboard() {
           </div>
 
           <div className={styles.grid}>
-            {socialTasks.length === 0 && !socialTasksLoading ? (
+            {socialTaskUsers.length === 0 && !socialTasksLoading ? (
               <div className={styles.empty}>No social task submissions found.</div>
             ) : (
-              socialTasks.map((sub, idx) => (
-                <div key={idx} className={styles.card}>
-                  <div className={styles.cardTop}>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <strong style={{ color: 'var(--gold)' }}>{sub.platform}</strong>
-                      <span style={{ fontSize: '13px', color: 'var(--text-dim)' }}>User: {sub.phone}</span>
-                      <span style={{ fontSize: '12px', color: 'var(--text-faint)' }}>{new Date(sub.submittedAt).toLocaleString()}</span>
+              socialTaskUsers.map((user, idx) => {
+                const isExpanded = stExpandedUser === user.phone;
+                return (
+                  <div key={idx} className={styles.card}>
+                    <div className={styles.cardTop} style={{ cursor: 'pointer' }} onClick={() => setStExpandedUser(isExpanded ? null : user.phone)}>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <strong style={{ color: 'var(--gold)', fontSize: '16px' }}>{user.name || 'Unknown User'}</strong>
+                        <span style={{ fontSize: '13px', color: 'var(--text-dim)' }}>{user.email || 'No Email'} | {user.phone}</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-faint)', marginTop: '4px' }}>
+                          {user.submissions?.length || 0} Submissions
+                        </span>
+                      </div>
+                      <button className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`}>
+                        {isExpanded ? 'Hide Details' : 'View Details'}
+                      </button>
                     </div>
-                    <span className={`${styles.status} ${sub.status === 'reviewed' ? styles.approved : styles.pending}`}>
-                      {sub.status || 'pending'}
-                    </span>
-                  </div>
-                  <div className={styles.detailGrid} style={{ marginTop: '12px' }}>
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <div className={styles.detailLabel}>Link</div>
-                      <a href={sub.link} target="_blank" rel="noopener noreferrer" style={{ color: '#5b7fd6', fontSize: '14px', wordBreak: 'break-all' }}>{sub.link}</a>
-                    </div>
-                    {sub.notes && (
-                      <div style={{ gridColumn: '1 / -1' }}>
-                        <div className={styles.detailLabel}>User Notes</div>
-                        <div style={{ fontSize: '14px' }}>{sub.notes}</div>
+                    
+                    {isExpanded && (
+                      <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {user.submissions?.map((sub, sIdx) => (
+                          <div key={sIdx} style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                            <div className={styles.cardTop}>
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <strong style={{ color: 'var(--gold)' }}>{sub.platform}</strong>
+                                <span style={{ fontSize: '12px', color: 'var(--text-faint)' }}>{new Date(sub.submittedAt).toLocaleString()}</span>
+                              </div>
+                              <span className={`${styles.status} ${sub.status === 'reviewed' ? styles.approved : styles.pending}`}>
+                                {sub.status || 'pending'}
+                              </span>
+                            </div>
+                            <div className={styles.detailGrid} style={{ marginTop: '12px' }}>
+                              <div style={{ gridColumn: '1 / -1' }}>
+                                <div className={styles.detailLabel}>Link</div>
+                                <a href={sub.link} target="_blank" rel="noopener noreferrer" style={{ color: '#5b7fd6', fontSize: '14px', wordBreak: 'break-all' }}>{sub.link}</a>
+                              </div>
+                              {sub.notes && (
+                                <div style={{ gridColumn: '1 / -1' }}>
+                                  <div className={styles.detailLabel}>User Notes</div>
+                                  <div style={{ fontSize: '14px' }}>{sub.notes}</div>
+                                </div>
+                              )}
+                              {sub.screenshotBase64 && (
+                                <div style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
+                                  <button className={`${styles.btn} ${styles.btnOutline}`} onClick={() => setStPreviewImage(sub.screenshotBase64)}>
+                                    View Screenshot
+                                  </button>
+                                </div>
+                              )}
+                              {sub.adminRemarks && (
+                                <div style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px', marginTop: '10px' }}>
+                                  <div className={styles.detailLabel} style={{ color: 'var(--red)' }}>Your Remarks</div>
+                                  <div style={{ fontSize: '14px' }}>{sub.adminRemarks}</div>
+                                </div>
+                              )}
+                            </div>
+                            <div className={styles.cardActions} style={{ marginTop: '16px' }}>
+                              <button className={`${styles.btn} ${styles.btnGold}`} onClick={() => {
+                                setStCurrentSub({ ...sub, phone: user.phone }) // Inject phone for API call
+                                setStRemark(sub.adminRemarks || '')
+                                setStRemarkModalOpen(true)
+                              }}>
+                                Add Remarks & Review
+                              </button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
-                    {sub.screenshotBase64 && (
-                      <div style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
-                        <button className={`${styles.btn} ${styles.btnOutline}`} onClick={() => setStPreviewImage(sub.screenshotBase64)}>
-                          View Screenshot
-                        </button>
-                      </div>
-                    )}
-                    {sub.adminRemarks && (
-                      <div style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px', marginTop: '10px' }}>
-                        <div className={styles.detailLabel} style={{ color: 'var(--red)' }}>Your Remarks</div>
-                        <div style={{ fontSize: '14px' }}>{sub.adminRemarks}</div>
-                      </div>
-                    )}
                   </div>
-                  <div className={styles.cardActions} style={{ marginTop: '16px' }}>
-                    <button className={`${styles.btn} ${styles.btnGold}`} onClick={() => {
-                      setStCurrentSub(sub)
-                      setStRemark(sub.adminRemarks || '')
-                      setStRemarkModalOpen(true)
-                    }}>
-                      Add Remarks & Review
-                    </button>
-                  </div>
-                </div>
-              ))
+                )
+              })
             )}
           </div>
 
