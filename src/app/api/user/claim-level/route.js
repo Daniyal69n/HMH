@@ -145,6 +145,36 @@ export async function POST(request) {
     } else if (level === 50) {
       user.balance += 500 * PKR_RATE; // $500 salary to balance
     }
+
+    // 5. Retroactive Social Task Rewards: If reaching Level 5, move all accumulated past social task rewards to balance
+    if (level === 5) {
+      const pastSocialTasks = await Transaction.find({
+        userPhone: user.phone,
+        type: 'social_task_reward',
+        status: 'completed'
+      }).lean();
+      
+      let retroactiveSocialTaskPKR = 0;
+      pastSocialTasks.forEach(txn => {
+        retroactiveSocialTaskPKR += (txn.amount || 0);
+      });
+
+      if (retroactiveSocialTaskPKR > 0) {
+        user.balance = (user.balance || 0) + retroactiveSocialTaskPKR;
+        
+        await Transaction.create({
+          transactionId: `TXN-SOCIAL-RETRO-${Date.now()}`,
+          userId: user.phone,
+          userName: user.name,
+          userPhone: user.phone,
+          amount: retroactiveSocialTaskPKR,
+          type: 'social_task_retroactive',
+          status: 'completed',
+          description: 'Retroactive Social Task Reward unlocked at Level 5',
+          createdAt: new Date()
+        });
+      }
+    }
     
     if (!user.claimedLevels) {
       user.claimedLevels = [];
