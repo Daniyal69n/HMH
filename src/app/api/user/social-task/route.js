@@ -91,6 +91,8 @@ export async function POST(request) {
       
       return Response.json({
         message: `Successfully completed all tasks and earned $${rewardUSD}!`,
+        rewardUSD: rewardUSD,
+        rewardPKR: rewardPKR,
         balance: user.balance,
         earnBalance: user.earnBalance,
         totalCommissionEarned: user.totalCommissionEarned,

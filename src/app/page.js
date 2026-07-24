@@ -1156,7 +1156,8 @@ export default function Page() {
         })
         const data = await res.json()
         if (res.ok) {
-          showToast(data.message || 'Reward collected!')
+          setCollectRewardAmount({ usd: data.rewardUSD || 2, pkr: data.rewardPKR || 600 })
+          setShowCollectAnimModal(true)
           setProfile(prev => {
             const next = {
               ...prev,
