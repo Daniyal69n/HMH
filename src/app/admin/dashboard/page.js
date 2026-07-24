@@ -459,7 +459,9 @@ export default function AdminDashboard() {
     if (isAdminLoggedIn && activeTab === 'socialTasks') {
       fetchSocialTasks()
     }
-  }, [isAdminLoggedIn, activeTab])  useEffect(() => {
+  }, [isAdminLoggedIn, activeTab])
+  
+  useEffect(() => {
     if (isAdminLoggedIn && activeTab === 'ecommerce') {
       fetchEcommerceData()
     }
