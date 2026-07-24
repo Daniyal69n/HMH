@@ -151,13 +151,13 @@ export default function AdminDashboard() {
   const EARNINGS_STORAGE_KEY = 'admin_earnings_plans'
   function seedEarningsData() {
     return [
-      { id: 'free', name: 'Free Plan', perAd: 0.02, refA: 0, refB: 0, refC: 0 },
-      { id: 'basic', name: 'Basic Plan', perAd: 0.20, refA: 20, refB: 5, refC: 5 },
-      { id: 'standard', name: 'Standard Plan', perAd: 0.40, refA: 20, refB: 5, refC: 5 },
-      { id: 'diamond', name: 'Diamond Plan', perAd: 0.80, refA: 20, refB: 5, refC: 5 },
-      { id: 'pro', name: 'Pro Plan', perAd: 1.20, refA: 20, refB: 5, refC: 5 },
-      { id: 'premium', name: 'Premium Plan', perAd: 1.60, refA: 20, refB: 5, refC: 5 },
-      { id: 'legend', name: 'Legend Plan', perAd: 2.00, refA: 20, refB: 5, refC: 5 }
+      { id: 'free', name: 'Free Plan', perAd: 0.02, refA: 0, refB: 0, refC: 0, adWatchDays: 10 },
+      { id: 'basic', name: 'Basic Plan', perAd: 0.20, refA: 20, refB: 5, refC: 5, adWatchDays: 10 },
+      { id: 'standard', name: 'Standard Plan', perAd: 0.40, refA: 20, refB: 5, refC: 5, adWatchDays: 10 },
+      { id: 'diamond', name: 'Diamond Plan', perAd: 0.80, refA: 20, refB: 5, refC: 5, adWatchDays: 10 },
+      { id: 'pro', name: 'Pro Plan', perAd: 1.20, refA: 20, refB: 5, refC: 5, adWatchDays: 10 },
+      { id: 'premium', name: 'Premium Plan', perAd: 1.60, refA: 20, refB: 5, refC: 5, adWatchDays: 10 },
+      { id: 'legend', name: 'Legend Plan', perAd: 2.00, refA: 20, refB: 5, refC: 5, adWatchDays: 10 }
     ]
   }
 
@@ -4010,6 +4010,15 @@ export default function AdminDashboard() {
                     min="0"
                     value={(p.perAd || 0).toFixed(2)}
                     onChange={e => handleEarningsFieldChange(p.id, 'perAd', e.target.value)}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label>Ad Watch Days Limit</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={p.adWatchDays || 10}
+                    onChange={e => handleEarningsFieldChange(p.id, 'adWatchDays', e.target.value)}
                   />
                 </div>
                 <div className={styles.field}>

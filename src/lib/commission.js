@@ -57,13 +57,13 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
 
   // Load dynamic earnings settings from DB
   let earningsPlans = [
-    { id: 'free',     name: 'Free Plan',     perAd: 0.02, refA: 0,  refB: 0, refC: 0 },
-    { id: 'basic',    name: 'Basic Plan',    perAd: 0.20, refA: 20, refB: 5, refC: 5 },
-    { id: 'standard', name: 'Standard Plan', perAd: 0.40, refA: 20, refB: 5, refC: 5 },
-    { id: 'diamond',  name: 'Diamond Plan',  perAd: 0.80, refA: 20, refB: 5, refC: 5 },
-    { id: 'pro',      name: 'Pro Plan',      perAd: 1.20, refA: 20, refB: 5, refC: 5 },
-    { id: 'premium',  name: 'Premium Plan',  perAd: 1.60, refA: 20, refB: 5, refC: 5 },
-    { id: 'legend',   name: 'Legend Plan',   perAd: 2.00, refA: 20, refB: 5, refC: 5 }
+    { id: 'free',     name: 'Free Plan',     perAd: 0.02, refA: 0,  refB: 0, refC: 0, adWatchDays: 10 },
+    { id: 'basic',    name: 'Basic Plan',    perAd: 0.20, refA: 20, refB: 5, refC: 5, adWatchDays: 10 },
+    { id: 'standard', name: 'Standard Plan', perAd: 0.40, refA: 20, refB: 5, refC: 5, adWatchDays: 10 },
+    { id: 'diamond',  name: 'Diamond Plan',  perAd: 0.80, refA: 20, refB: 5, refC: 5, adWatchDays: 10 },
+    { id: 'pro',      name: 'Pro Plan',      perAd: 1.20, refA: 20, refB: 5, refC: 5, adWatchDays: 10 },
+    { id: 'premium',  name: 'Premium Plan',  perAd: 1.60, refA: 20, refB: 5, refC: 5, adWatchDays: 10 },
+    { id: 'legend',   name: 'Legend Plan',   perAd: 2.00, refA: 20, refB: 5, refC: 5, adWatchDays: 10 }
   ];
 
   try {
@@ -113,7 +113,8 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
 
   if (r1PlanId !== 'free' && purchasedPlanId !== 'free') {
     if (r1PlanId === purchasedPlanId) {
-      extraDays = 10;
+      const pConfig = earningsPlans.find(p => p.id === purchasedPlanId) || { adWatchDays: 10 };
+      extraDays = pConfig.adWatchDays || 10;
     } else {
       if (purchasedPlanId === 'basic') extraDays = 2;
       else if (purchasedPlanId === 'standard') extraDays = 3;
@@ -250,10 +251,39 @@ export async function activateUserPlan(user, planToApprove) {
   }
   planToApprove.status = 'active';
   
-  // 2. Update ad watch limit — give 10 days only if user doesn't already have days
-  // This prevents double-crediting if plan approval is somehow triggered twice
+  // 2. Update ad watch limit — give days based on plan config
+  // Load dynamic earnings settings to find plan adWatchDays
+  let configPlans = [
+    { id: 'free',     adWatchDays: 10 },
+    { id: 'basic',    adWatchDays: 10 },
+    { id: 'standard', adWatchDays: 10 },
+    { id: 'diamond',  adWatchDays: 10 },
+    { id: 'pro',      adWatchDays: 10 },
+    { id: 'premium',  adWatchDays: 10 },
+    { id: 'legend',   adWatchDays: 10 }
+  ];
+  try {
+    const SystemSettings = (await import('@/models/SystemSettings')).default;
+    const settings = await SystemSettings.findOne({ key: 'earnings_plans' });
+    if (settings && settings.value) {
+      configPlans = settings.value;
+    }
+  } catch (err) {}
+  
+  const planIdName = planToApprove.planName.toLowerCase();
+  let foundPlanId = 'free';
+  if (planIdName.includes('basic')) foundPlanId = 'basic';
+  else if (planIdName.includes('standard')) foundPlanId = 'standard';
+  else if (planIdName.includes('diamond')) foundPlanId = 'diamond';
+  else if (planIdName.includes('pro')) foundPlanId = 'pro';
+  else if (planIdName.includes('premium')) foundPlanId = 'premium';
+  else if (planIdName.includes('legend')) foundPlanId = 'legend';
+  
+  const selectedConfig = configPlans.find(p => p.id === foundPlanId) || { adWatchDays: 10 };
+  const initialDays = selectedConfig.adWatchDays || 10;
+
   if (!user.adWatchDaysLeft || user.adWatchDaysLeft <= 0) {
-    user.adWatchDaysLeft = 10;
+    user.adWatchDaysLeft = initialDays;
   }
   await user.save();
 

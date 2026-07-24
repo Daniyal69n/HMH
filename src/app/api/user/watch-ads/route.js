@@ -89,8 +89,8 @@ export async function GET(request) {
 
     if (activeInvestment) {
       if (adWatchDaysLeft === undefined || adWatchDaysLeft === null) {
-        adWatchDaysLeft = 10;
-        await User.findByIdAndUpdate(user._id, { adWatchDaysLeft: 10 });
+        adWatchDaysLeft = planConfig.adWatchDays || 10;
+        await User.findByIdAndUpdate(user._id, { adWatchDaysLeft: adWatchDaysLeft });
       }
       if (adWatchDaysLeft <= 0) {
         limitReached = true;
@@ -150,8 +150,23 @@ export async function POST(request) {
 
     if (activeInvestment) {
       if (adWatchDaysLeft === undefined || adWatchDaysLeft === null) {
-        adWatchDaysLeft = 10;
-        user.adWatchDaysLeft = 10;
+        
+        let planId = 'free';
+        const planNameStr = activeInvestment.planName.toLowerCase();
+        if (planNameStr.includes('basic')) planId = 'basic';
+        else if (planNameStr.includes('standard')) planId = 'standard';
+        else if (planNameStr.includes('diamond')) planId = 'diamond';
+        else if (planNameStr.includes('pro')) planId = 'pro';
+        else if (planNameStr.includes('premium')) planId = 'premium';
+        else if (planNameStr.includes('legend')) planId = 'legend';
+
+        const SystemSettings = (await import('@/models/SystemSettings')).default;
+        const earningsSetting = await SystemSettings.findOne({ key: 'earnings_plans' }).lean();
+        const earningsPlans = earningsSetting && earningsSetting.value ? earningsSetting.value : [];
+        const planConfig = earningsPlans.find(p => p.id === planId) || { adWatchDays: 10 };
+        
+        adWatchDaysLeft = planConfig.adWatchDays || 10;
+        user.adWatchDaysLeft = adWatchDaysLeft;
         await user.save();
       }
       if (adWatchDaysLeft <= 0) {

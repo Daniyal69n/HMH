@@ -73,7 +73,30 @@ export async function POST(request) {
     
     // Deduct investment amount from user balance
     user.balance -= investAmount;
-    user.adWatchDaysLeft = (user.adWatchDaysLeft || 0) + 10;
+    
+    // Fetch dynamic earnings config
+    let configPlans = [];
+    try {
+      const SystemSettings = (await import('@/models/SystemSettings')).default;
+      const settings = await SystemSettings.findOne({ key: 'earnings_plans' });
+      if (settings && settings.value) {
+        configPlans = settings.value;
+      }
+    } catch (err) {}
+    
+    const planIdName = investmentData.planName.toLowerCase();
+    let foundPlanId = 'free';
+    if (planIdName.includes('basic')) foundPlanId = 'basic';
+    else if (planIdName.includes('standard')) foundPlanId = 'standard';
+    else if (planIdName.includes('diamond')) foundPlanId = 'diamond';
+    else if (planIdName.includes('pro')) foundPlanId = 'pro';
+    else if (planIdName.includes('premium')) foundPlanId = 'premium';
+    else if (planIdName.includes('legend')) foundPlanId = 'legend';
+    
+    const selectedConfig = configPlans.find(p => p.id === foundPlanId) || { adWatchDays: 10 };
+    const initialDays = selectedConfig.adWatchDays || 10;
+    
+    user.adWatchDaysLeft = (user.adWatchDaysLeft || 0) + initialDays;
     await user.save();
     
     // Create investment

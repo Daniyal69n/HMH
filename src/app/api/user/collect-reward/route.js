@@ -74,8 +74,21 @@ export async function POST(request) {
 
     if (activeInvestment) {
       if (adWatchDaysLeft === undefined || adWatchDaysLeft === null) {
-        adWatchDaysLeft = 10;
-        user.adWatchDaysLeft = 10;
+        let planId = 'free';
+        const planNameStr = activeInvestment.planName.toLowerCase();
+        if (planNameStr.includes('basic')) planId = 'basic';
+        else if (planNameStr.includes('standard')) planId = 'standard';
+        else if (planNameStr.includes('diamond')) planId = 'diamond';
+        else if (planNameStr.includes('pro')) planId = 'pro';
+        else if (planNameStr.includes('premium')) planId = 'premium';
+        else if (planNameStr.includes('legend')) planId = 'legend';
+
+        const earningsSettingTmp = await SystemSettings.findOne({ key: 'earnings_plans' }).lean();
+        const earningsPlansTmp = earningsSettingTmp && earningsSettingTmp.value ? earningsSettingTmp.value : [];
+        const planConfigTmp = earningsPlansTmp.find(p => p.id === planId) || { adWatchDays: 10 };
+        
+        adWatchDaysLeft = planConfigTmp.adWatchDays || 10;
+        user.adWatchDaysLeft = adWatchDaysLeft;
         await user.save();
       }
       if (adWatchDaysLeft <= 0) {
