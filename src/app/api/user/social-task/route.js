@@ -66,7 +66,6 @@ export async function POST(request) {
         user.balance = (user.balance || 0) + rewardPKR;
       }
       
-      user.earnBalance = (user.earnBalance || 0) + rewardPKR;
       user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
       if (user.customTotalEarnings !== undefined && user.customTotalEarnings !== null) {
         user.customTotalEarnings += rewardPKR;
