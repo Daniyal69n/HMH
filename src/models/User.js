@@ -58,6 +58,18 @@ const userSchema = new mongoose.Schema({
     type: Object,
     default: { date: '', tiktok: false, instagram: false, facebook: false, youtube: false, rewardClaimed: false }
   },
+  socialTaskSubmissions: {
+    type: [{
+      platform: String,
+      link: String,
+      screenshotBase64: String,
+      notes: String,
+      status: { type: String, enum: ['pending', 'reviewed'], default: 'pending' },
+      adminRemarks: String,
+      submittedAt: { type: Date, default: Date.now }
+    }],
+    default: []
+  },
   isBlocked: {
     type: Boolean,
     default: false

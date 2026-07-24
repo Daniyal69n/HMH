@@ -412,7 +412,54 @@ export default function AdminDashboard() {
     setBankSettingsSaving(false)
   }
 
+  // --- Social Tasks ---
+  const [socialTasks, setSocialTasks] = useState([])
+  const [socialTasksLoading, setSocialTasksLoading] = useState(false)
+  const [stRemarkModalOpen, setStRemarkModalOpen] = useState(false)
+  const [stCurrentSub, setStCurrentSub] = useState(null)
+  const [stRemark, setStRemark] = useState('')
+  const [stPreviewImage, setStPreviewImage] = useState(null)
+
+  const fetchSocialTasks = async () => {
+    setSocialTasksLoading(true)
+    try {
+      const res = await fetch('/api/admin/social-tasks')
+      if (res.ok) {
+        const data = await res.json()
+        setSocialTasks(data.submissions || [])
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSocialTasksLoading(false)
+    }
+  }
+
+  const updateSocialTaskStatus = async (phone, submissionId, status) => {
+    try {
+      const res = await fetch('/api/admin/social-tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, submissionId, status, adminRemarks: stRemark })
+      })
+      if (res.ok) {
+        showSuccess('Social task updated successfully')
+        setStRemarkModalOpen(false)
+        fetchSocialTasks()
+      } else {
+        const data = await res.json()
+        showError(data.message || 'Error updating task')
+      }
+    } catch (err) {
+      showError('Network error')
+    }
+  }
+
   useEffect(() => {
+    if (isAdminLoggedIn && activeTab === 'socialTasks') {
+      fetchSocialTasks()
+    }
+  }, [isAdminLoggedIn, activeTab])  useEffect(() => {
     if (isAdminLoggedIn && activeTab === 'ecommerce') {
       fetchEcommerceData()
     }
@@ -4263,6 +4310,111 @@ export default function AdminDashboard() {
                   <button className={`${styles.btn} ${styles.btnGold}`} onClick={confirmEditBox}>Confirm</button>
                   <button className={`${styles.btn} ${styles.btnOutline}`} onClick={() => setEditingBox(null)}>Cancel</button>
                 </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'socialTasks' && (
+        <div className={styles.usersPage}>
+          <div className={styles.pageHeadRow}>
+            <div>
+              <h2 className={styles.pageTitle}>Social Tasks Review</h2>
+              <p className={styles.pageSub}>Review users' social task submissions</p>
+            </div>
+            <button className={`${styles.btn} ${styles.btnOutline}`} onClick={fetchSocialTasks} disabled={socialTasksLoading}>
+              {socialTasksLoading ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
+
+          <div className={styles.grid}>
+            {socialTasks.length === 0 && !socialTasksLoading ? (
+              <div className={styles.empty}>No social task submissions found.</div>
+            ) : (
+              socialTasks.map((sub, idx) => (
+                <div key={idx} className={styles.card}>
+                  <div className={styles.cardTop}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <strong style={{ color: 'var(--gold)' }}>{sub.platform}</strong>
+                      <span style={{ fontSize: '13px', color: 'var(--text-dim)' }}>User: {sub.phone}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--text-faint)' }}>{new Date(sub.submittedAt).toLocaleString()}</span>
+                    </div>
+                    <span className={`${styles.status} ${sub.status === 'reviewed' ? styles.approved : styles.pending}`}>
+                      {sub.status || 'pending'}
+                    </span>
+                  </div>
+                  <div className={styles.detailGrid} style={{ marginTop: '12px' }}>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <div className={styles.detailLabel}>Link</div>
+                      <a href={sub.link} target="_blank" rel="noopener noreferrer" style={{ color: '#5b7fd6', fontSize: '14px', wordBreak: 'break-all' }}>{sub.link}</a>
+                    </div>
+                    {sub.notes && (
+                      <div style={{ gridColumn: '1 / -1' }}>
+                        <div className={styles.detailLabel}>User Notes</div>
+                        <div style={{ fontSize: '14px' }}>{sub.notes}</div>
+                      </div>
+                    )}
+                    {sub.screenshotBase64 && (
+                      <div style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
+                        <button className={`${styles.btn} ${styles.btnOutline}`} onClick={() => setStPreviewImage(sub.screenshotBase64)}>
+                          View Screenshot
+                        </button>
+                      </div>
+                    )}
+                    {sub.adminRemarks && (
+                      <div style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px', marginTop: '10px' }}>
+                        <div className={styles.detailLabel} style={{ color: 'var(--red)' }}>Your Remarks</div>
+                        <div style={{ fontSize: '14px' }}>{sub.adminRemarks}</div>
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.cardActions} style={{ marginTop: '16px' }}>
+                    <button className={`${styles.btn} ${styles.btnGold}`} onClick={() => {
+                      setStCurrentSub(sub)
+                      setStRemark(sub.adminRemarks || '')
+                      setStRemarkModalOpen(true)
+                    }}>
+                      Add Remarks & Review
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Social Task Review Modal */}
+          {stRemarkModalOpen && stCurrentSub && (
+            <div className={styles.modalOverlay}>
+              <div className={styles.modalContent}>
+                <div className={styles.modalHeader}>
+                  <h3>Review Social Task</h3>
+                  <button className={styles.modalClose} onClick={() => setStRemarkModalOpen(false)}>×</button>
+                </div>
+                <div style={{ padding: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-dim)' }}>Remarks for User</label>
+                  <textarea
+                    value={stRemark}
+                    onChange={(e) => setStRemark(e.target.value)}
+                    placeholder="Enter your remarks here..."
+                    style={{ width: '100%', minHeight: '100px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px', color: '#fff', marginBottom: '20px' }}
+                  />
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button className={`${styles.btn} ${styles.btnGreen}`} style={{ flex: 1 }} onClick={() => updateSocialTaskStatus(stCurrentSub.phone, stCurrentSub._id, 'reviewed')}>
+                      Mark as Reviewed
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Screenshot Preview Modal */}
+          {stPreviewImage && (
+            <div className={styles.modalOverlay} onClick={() => setStPreviewImage(null)}>
+              <div className={styles.modalContent} style={{ maxWidth: '90vw', maxHeight: '90vh', padding: '10px', background: 'transparent', border: 'none', boxShadow: 'none' }} onClick={e => e.stopPropagation()}>
+                <button className={styles.modalClose} onClick={() => setStPreviewImage(null)} style={{ position: 'absolute', top: '-40px', right: '0', color: '#fff', fontSize: '30px' }}>×</button>
+                <img src={stPreviewImage} alt="Task Screenshot" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' }} />
               </div>
             </div>
           )}

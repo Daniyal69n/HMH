@@ -1209,10 +1209,53 @@ export default function Page() {
 
     setStSubmitting(true)
     try {
+      const screenshotBase64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 800;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
+          };
+          img.onerror = () => reject(new Error('Failed to load image'));
+          img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(stScreenshot);
+      });
+
       const res = await fetch('/api/user/social-task', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: profile.phone, action: 'submit_link', link: stLink, platform: currentRequiredPlatform })
+        body: JSON.stringify({ 
+          phone: profile.phone, 
+          action: 'submit_link', 
+          link: stLink, 
+          platform: currentRequiredPlatform,
+          screenshotBase64,
+          notes: stNotes
+        })
       })
       const data = await res.json()
       if (res.ok) {
@@ -3236,7 +3279,7 @@ export default function Page() {
                     )}
                   </div>
 
-                  <div className="card">
+                  <div className="card" style={{ marginBottom: 18 }}>
                     <h3 style={{ margin: '0 0 10px', color: 'var(--red)' }}>📢 Important Rules</h3>
                     <ul style={{ paddingLeft: 20, color: 'var(--text-faint)', fontSize: 13 }}>
                       <li style={{ paddingBottom: 6 }}>Only original uploads are accepted.</li>
@@ -3245,6 +3288,34 @@ export default function Page() {
                       <li style={{ paddingBottom: 6 }}>Fake submissions will be rejected.</li>
                     </ul>
                   </div>
+
+                  {profile?.socialTaskSubmissions && profile.socialTaskSubmissions.length > 0 && (
+                    <div className="card">
+                      <h3 style={{ margin: '0 0 10px' }}>🕒 Submission History</h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {[...profile.socialTaskSubmissions].reverse().map((sub, idx) => (
+                          <div key={idx} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', fontSize: '13px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                              <strong style={{ color: 'var(--gold)' }}>{sub.platform}</strong>
+                              <span style={{ 
+                                padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold',
+                                background: sub.status === 'reviewed' ? 'rgba(79, 174, 130, 0.2)' : 'rgba(201, 160, 74, 0.2)',
+                                color: sub.status === 'reviewed' ? '#4fae82' : '#c9a04a'
+                              }}>
+                                {sub.status ? sub.status.toUpperCase() : 'PENDING'}
+                              </span>
+                            </div>
+                            <div style={{ color: 'var(--text-dim)', marginBottom: '4px' }}>{new Date(sub.submittedAt).toLocaleString()}</div>
+                            {sub.adminRemarks && (
+                              <div style={{ background: 'rgba(255,0,0,0.1)', padding: '8px', borderRadius: '4px', marginTop: '6px', borderLeft: '3px solid var(--red)' }}>
+                                <strong style={{ color: 'var(--red)' }}>Admin Remarks:</strong> <span style={{ color: 'var(--text)' }}>{sub.adminRemarks}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               );
             })()}

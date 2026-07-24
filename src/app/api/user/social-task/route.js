@@ -6,7 +6,7 @@ export async function POST(request) {
   try {
     await connectDB();
     const body = await request.json();
-    const { phone, link, platform, action } = body;
+    const { phone, link, platform, action, screenshotBase64, notes } = body;
     
     if (!phone) {
       return Response.json({ message: 'Phone number is required' }, { status: 400 });
@@ -149,6 +149,18 @@ export async function POST(request) {
       user.submittedSocialLinks = [];
     }
     user.submittedSocialLinks.push(link);
+    
+    if (!user.socialTaskSubmissions) {
+      user.socialTaskSubmissions = [];
+    }
+    user.socialTaskSubmissions.push({
+      platform: platform,
+      link: link,
+      screenshotBase64: screenshotBase64 || '',
+      notes: notes || '',
+      status: 'pending',
+      submittedAt: new Date()
+    });
     
     user.markModified('socialTasks');
     await user.save();
