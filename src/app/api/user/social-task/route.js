@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 import Transaction from '@/models/Transaction';
+import { processSocialTaskMilestones } from '@/lib/socialTaskMilestoneHelper';
 
 export async function POST(request) {
   try {
@@ -60,18 +61,16 @@ export async function POST(request) {
       const PKR_RATE = 300;
       const rewardPKR = rewardUSD * PKR_RATE;
       
-      const userLevel = (user.claimedLevels && user.claimedLevels.length > 0) ? Math.max(...user.claimedLevels) : 0;
-      
-      if (userLevel >= 5) {
-        user.balance = (user.balance || 0) + rewardPKR;
-      }
-      
       user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
+      user.earnBalance = (user.earnBalance || 0) + rewardPKR;
+      
       if (user.customTotalEarnings !== undefined && user.customTotalEarnings !== null) {
         user.customTotalEarnings += rewardPKR;
       }
       st.rewardClaimed = true;
       user.socialTasks = st;
+      user.lifetimeSocialTaskUSD = (user.lifetimeSocialTaskUSD || 0) + rewardUSD;
+
       
       const txnId = `TXN-SOCIAL-${Date.now()}`;
       await Transaction.create({
@@ -85,6 +84,8 @@ export async function POST(request) {
         description: `Social Task Completion Reward ($${rewardUSD})`,
         createdAt: new Date()
       });
+      
+      const bulkPayoutUSD = await processSocialTaskMilestones(user);
       
       user.markModified('socialTasks');
       await user.save();

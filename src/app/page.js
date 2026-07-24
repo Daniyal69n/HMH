@@ -3446,6 +3446,11 @@ export default function Page() {
                               🎁 {level.rewardLabel}
                             </span>
                           )}
+                          {[5, 10, 20, 30, 40, 50].includes(level.level) && (
+                            <span className="reward-chip" style={{ fontSize: 12.5, fontWeight: 700, background: 'rgba(59,130,246,0.12)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)', padding: '4px 10px', borderRadius: 20 }}>
+                              🔓 Unlocks Social Task Reward ${level.level === 5 ? 50 : level.level === 10 ? 100 : level.level === 20 ? 200 : level.level === 30 ? 300 : level.level === 40 ? 400 : 500}
+                            </span>
+                          )}
                         </div>
 
                         {/* Claim button */}

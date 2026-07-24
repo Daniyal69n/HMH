@@ -70,6 +70,14 @@ const userSchema = new mongoose.Schema({
     }],
     default: []
   },
+  lifetimeSocialTaskUSD: {
+    type: Number,
+    default: 0
+  },
+  paidSocialTaskMilestones: {
+    type: [Number],
+    default: []
+  },
   isBlocked: {
     type: Boolean,
     default: false
