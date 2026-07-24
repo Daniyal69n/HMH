@@ -4468,10 +4468,15 @@ export default function AdminDashboard() {
 
           {/* Screenshot Preview Modal */}
           {stPreviewImage && (
-            <div className={styles.modalOverlay} onClick={() => setStPreviewImage(null)}>
-              <div className={styles.modalContent} style={{ maxWidth: '90vw', maxHeight: '90vh', padding: '10px', background: 'transparent', border: 'none', boxShadow: 'none' }} onClick={e => e.stopPropagation()}>
-                <button className={styles.modalClose} onClick={() => setStPreviewImage(null)} style={{ position: 'absolute', top: '-40px', right: '0', color: '#fff', fontSize: '30px' }}>×</button>
-                <img src={stPreviewImage} alt="Task Screenshot" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' }} />
+            <div className={styles.modalOverlay} onClick={() => setStPreviewImage(null)} style={{ zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className={styles.modalContent} style={{ position: 'relative', width: '90vw', maxWidth: '500px', maxHeight: '90vh', padding: 0, background: '#111', border: '1px solid var(--gold)', borderRadius: '12px', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+                <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333' }}>
+                  <h3 style={{ margin: 0, fontSize: '16px', color: 'var(--gold)', fontWeight: '600' }}>Screenshot Preview</h3>
+                  <button onClick={() => setStPreviewImage(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%' }}>×</button>
+                </div>
+                <div style={{ flex: 1, overflow: 'auto', padding: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <img src={stPreviewImage} alt="Task Screenshot" style={{ maxWidth: '100%', maxHeight: '75vh', objectFit: 'contain', borderRadius: '4px' }} />
+                </div>
               </div>
             </div>
           )}
