@@ -62,7 +62,6 @@ export async function POST(request) {
       const rewardPKR = rewardUSD * PKR_RATE;
       
       user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
-      user.earnBalance = (user.earnBalance || 0) + rewardPKR;
       
       if (user.customTotalEarnings !== undefined && user.customTotalEarnings !== null) {
         user.customTotalEarnings += rewardPKR;

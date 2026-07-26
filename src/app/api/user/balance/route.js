@@ -135,7 +135,6 @@ export async function PUT(request) {
         const rewardPKR = rewardUSD * 300; // $1 = Rs 300
         
         user.balance = (user.balance || 0) + rewardPKR;
-        user.totalCommissionEarned = (user.totalCommissionEarned || 0) + rewardPKR;
         user.earnBalance = (user.earnBalance || 0) + rewardPKR;
         
         await user.save();
