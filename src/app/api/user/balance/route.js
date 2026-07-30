@@ -263,7 +263,7 @@ export async function PUT(request) {
         let levelCIncome = 0;
         
         // Level A members (direct referrals)
-        const levelAMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': 'active' }).select('-profilePicture -investmentPlans.screenshotData').lean();
+        const levelAMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': 'active' }).select('phone').lean();
         const levelAPhones = levelAMembers.map(m => m.phone);
         
         // Level A: Direct referrals (20% commission, if user has any active plan)
@@ -287,7 +287,7 @@ export async function PUT(request) {
         
         // Level B: Indirect referrals (5% commission, if user has any active plan)
         const levelBMembers = levelAPhones.length > 0 
-          ? await User.find({ referredBy: { $in: levelAPhones }, 'investmentPlans.status': 'active' }).select('-profilePicture -investmentPlans.screenshotData').lean()
+          ? await User.find({ referredBy: { $in: levelAPhones }, 'investmentPlans.status': 'active' }).select('phone').lean()
           : [];
         const levelBPhones = levelBMembers.map(m => m.phone);
         
@@ -312,7 +312,7 @@ export async function PUT(request) {
         
         // Level C: Downline referrals (5% commission, if user has active plan >= $40)
         const levelCMembers = levelBPhones.length > 0
-          ? await User.find({ referredBy: { $in: levelBPhones }, 'investmentPlans.status': 'active' }).select('-profilePicture -investmentPlans.screenshotData').lean()
+          ? await User.find({ referredBy: { $in: levelBPhones }, 'investmentPlans.status': 'active' }).select('phone').lean()
           : [];
           
         if (userPlanPrice >= 40) {

@@ -18,7 +18,7 @@ export async function GET(request) {
     
     // Find the user (excluding base64 profilePicture for speed)
     console.time("query1");
-    const user = await User.findOne({ phone: userId }).select('-profilePicture -investmentPlans.screenshotData').lean();
+    const user = await User.findOne({ phone: userId }).select('phone customDirectReferrals customIndirectReferrals referralCommission').lean();
     console.timeEnd("query1");
     if (!user) {
       return Response.json({ message: 'User not found' }, { status: 404 });
@@ -26,21 +26,21 @@ export async function GET(request) {
     
     // Get Level A members (direct referrals with active plans)
     console.time("query2");
-    const levelAMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': 'active' }).select('-profilePicture -investmentPlans.screenshotData').lean();
+    const levelAMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': 'active' }).select('name phone email balance earnBalance createdAt investmentPlans.status investmentPlans.planName').lean();
     const levelAPhones = levelAMembers.map(m => m.phone);
     
     // Get Pending members (direct referrals with NO active plan)
-    const pendingMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': { $ne: 'active' } }).select('-profilePicture -investmentPlans.screenshotData').lean();
+    const pendingMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': { $ne: 'active' } }).select('name phone email balance earnBalance createdAt investmentPlans.status investmentPlans.planName').lean();
  
     // Get Level B members (indirect referrals with active plans)
     const levelBMembers = levelAPhones.length > 0 
-      ? await User.find({ referredBy: { $in: levelAPhones }, 'investmentPlans.status': 'active' }).select('-profilePicture -investmentPlans.screenshotData').lean()
+      ? await User.find({ referredBy: { $in: levelAPhones }, 'investmentPlans.status': 'active' }).select('name phone email balance earnBalance createdAt investmentPlans.status investmentPlans.planName').lean()
       : [];
     const levelBPhones = levelBMembers.map(m => m.phone);
  
     // Get Level C members (downline referrals with active plans)
     const levelCMembers = levelBPhones.length > 0
-      ? await User.find({ referredBy: { $in: levelBPhones }, 'investmentPlans.status': 'active' }).select('-profilePicture -investmentPlans.screenshotData').lean()
+      ? await User.find({ referredBy: { $in: levelBPhones }, 'investmentPlans.status': 'active' }).select('name phone email balance earnBalance createdAt investmentPlans.status investmentPlans.planName').lean()
       : [];
 
     // Calculate actual earnings per level from Transaction history
