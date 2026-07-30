@@ -24,7 +24,7 @@ export async function POST(request) {
     }
     
     // Fetch direct referrals (Level A) to verify conditions
-    const referrals = await User.find({ referredBy: phone, 'investmentPlans.status': 'active' }).select('_id').lean();
+    const referrals = await User.find({ referredBy: phone, 'investmentPlans.status': 'active' }).select('investmentPlans.status investmentPlans.planName').lean();
     
     let pools = {
       basic: [], standard: [], diamond: [], pro: [], premium: [], legend: [], other: []
