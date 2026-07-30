@@ -6,7 +6,7 @@ export async function GET() {
     await connectDB();
     const users = await User.find({
       'socialTaskSubmissions': { $exists: true, $not: { $size: 0 } }
-    }, 'name email phone socialTaskSubmissions').lean();
+    }).select('name email phone socialTaskSubmissions.platform socialTaskSubmissions.link socialTaskSubmissions.notes socialTaskSubmissions.status socialTaskSubmissions.submittedAt socialTaskSubmissions.adminRemarks socialTaskSubmissions._id').lean();
 
     const usersWithSubmissions = users.map(user => {
       return {

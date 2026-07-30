@@ -4431,13 +4431,25 @@ export default function AdminDashboard() {
                                   <div style={{ fontSize: '14px' }}>{sub.notes}</div>
                                 </div>
                               )}
-                              {sub.screenshotBase64 && (
-                                <div style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
-                                  <button className={`${styles.btn} ${styles.btnOutline}`} onClick={() => setStPreviewImage(sub.screenshotBase64)}>
-                                    View Screenshot
-                                  </button>
-                                </div>
-                              )}
+                              <div style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
+                                <button className={`${styles.btn} ${styles.btnOutline}`} onClick={async (e) => {
+                                  const btn = e.target;
+                                  const oldText = btn.innerText;
+                                  btn.innerText = 'Loading...';
+                                  try {
+                                    const res = await fetch(`/api/admin/social-tasks/screenshot?phone=${user.phone}&id=${sub._id}`);
+                                    const data = await res.json();
+                                    if (data.screenshotBase64) setStPreviewImage(data.screenshotBase64);
+                                    else alert('No screenshot uploaded');
+                                  } catch (err) {
+                                    alert('Error loading screenshot');
+                                  } finally {
+                                    btn.innerText = oldText;
+                                  }
+                                }}>
+                                  View Screenshot
+                                </button>
+                              </div>
                               {sub.adminRemarks && (
                                 <div style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px', marginTop: '10px' }}>
                                   <div className={styles.detailLabel} style={{ color: 'var(--red)' }}>Your Remarks</div>
