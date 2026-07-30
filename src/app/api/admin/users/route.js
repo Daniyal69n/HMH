@@ -34,6 +34,7 @@ export async function GET(request) {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
+        .allowDiskUse(true)
         .lean(),
       User.collection.countDocuments(searchQuery),
       User.collection.countDocuments({ isBlocked: true }),
