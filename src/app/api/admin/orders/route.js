@@ -16,7 +16,7 @@ export async function GET(request) {
     // Use aggregation for faster queries with projection
     const orders = await Order.collection
       .aggregate([
-        { $sort: { createdAt: -1 } },
+        { $sort: { _id: -1 } },
         { $skip: skip },
         { $limit: limit },
         {

@@ -17,18 +17,18 @@ export async function GET(request) {
     const [recentUsers, recentInvestments, recentTransactions] = await Promise.all([
       User.collection.find({})
         .project({ name: 1, phone: 1, createdAt: 1 })
-        .sort({ createdAt: -1 })
+        .sort({ _id: -1 })
         .limit(limit)
         .toArray(),
       UserInvestment.collection.find({})
         .project({ planName: 1, createdAt: 1, investAmount: 1 })
-        .sort({ createdAt: -1 })
+        .sort({ _id: -1 })
         .limit(limit)
         .toArray(),
       Transaction.collection.find({
         type: { $in: ['recharge', 'withdraw', 'coupon_redeem', 'daily_income', 'referral_income'] }
       })
-        .sort({ createdAt: -1 })
+        .sort({ _id: -1 })
         .limit(limit)
         .toArray()
     ]);

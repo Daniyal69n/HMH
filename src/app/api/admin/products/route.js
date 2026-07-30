@@ -20,7 +20,7 @@ export async function GET(request) {
     // Only fetch essential fields - no base64 images
     const products = await Product.find({ isActive: true })
       .select('name price currency image _id')
-      .sort({ createdAt: -1 })
+      .sort({ _id: -1 })
       .limit(limit)
       .skip(skip)
       .lean()
