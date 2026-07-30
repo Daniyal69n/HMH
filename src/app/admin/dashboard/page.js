@@ -2180,7 +2180,7 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleStartEditUser = (user) => {
+  const handleStartEditUser = async (user) => {
     setEditUserTeamData(null)
     fetchEditingUserTeamData(user.phone)
     setEditingUserData(user)
@@ -2207,6 +2207,21 @@ export default function AdminDashboard() {
       customAdEarning: user.customAdEarning !== undefined && user.customAdEarning !== null ? String(user.customAdEarning) : '',
       customSpinReward: user.customSpinReward || 'nil'
     })
+    
+    // Fetch full user details asynchronously to get history arrays missing from list
+    try {
+      const res = await fetch(`/api/user/profile?phone=${user.phone}`)
+      if (res.ok) {
+        const fullUser = await res.json()
+        setEditForm(prev => ({
+          ...prev,
+          withdrawHistory: fullUser.withdrawHistory ? JSON.parse(JSON.stringify(fullUser.withdrawHistory)) : [],
+          rechargeHistory: fullUser.rechargeHistory ? JSON.parse(JSON.stringify(fullUser.rechargeHistory)) : []
+        }))
+      }
+    } catch (e) {
+      console.warn('Error fetching full user history', e)
+    }
   }
 
   const handleSaveEditUser = async () => {

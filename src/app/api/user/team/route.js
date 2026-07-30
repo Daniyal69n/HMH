@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 import UserInvestment from '@/models/UserInvestment';
+import Transaction from '@/models/Transaction';
 
 export async function GET(request) {
   try {
@@ -43,7 +44,6 @@ export async function GET(request) {
       : [];
 
     // Calculate actual earnings per level from Transaction history
-    const Transaction = (await import('@/models/Transaction')).default;
     const commissions = await Transaction.find({
       userId: user.phone,
       type: 'referral_income',
