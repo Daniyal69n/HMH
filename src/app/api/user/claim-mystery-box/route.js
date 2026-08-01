@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 import SystemSettings from '@/models/SystemSettings';
+import Transaction from '@/models/Transaction';
 
 export async function POST(request) {
   try {
@@ -58,6 +59,21 @@ export async function POST(request) {
     winners[winnerIndex].claimed = true;
     cycleState.markModified('value.winners');
     await cycleState.save();
+
+    // Create transaction record
+    try {
+      await Transaction.create({
+        userId: user.phone,
+        userName: user.name || 'User',
+        type: 'mystery_box_reward',
+        amount: pkrRewardAmount,
+        status: 'approved',
+        description: `Mystery Box Rank ${winner.rank} Cash Prize ($${rewardAmount})`,
+        transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
+      });
+    } catch (txErr) {
+      console.warn('Failed to record mystery box transaction:', txErr.message);
+    }
 
     return Response.json({
       message: 'Mystery Box claimed successfully',

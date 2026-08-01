@@ -21,6 +21,10 @@ export async function POST(request) {
 
     const cleanedTrxId = trxId.trim()
 
+    if (cleanedTrxId.length < 8 || cleanedTrxId.length > 30) {
+      return NextResponse.json({ message: 'TRX ID must be between 8 and 30 characters long' }, { status: 400 })
+    }
+
     // Check uniqueness across all users' investmentPlans (case-insensitive)
     const existingUserWithTrx = await User.findOne({
       'investmentPlans.trxId': { $regex: new RegExp(`^${cleanedTrxId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }

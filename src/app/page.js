@@ -2444,11 +2444,91 @@ export default function Page() {
                   Loading transactions...
                 </div>
               ) : (() => {
+                const formatTxTitle = (t) => {
+                  const type = (t.type || '').toLowerCase();
+                  const desc = (t.description || '').toLowerCase();
+                  const level = t.referralLevel;
+
+                  // Ads Earning ("earning from add")
+                  if (type === 'ad_reward' || type === 'ad_earning' || type === 'daily_income' || desc.includes('watch ad') || desc.includes('ad income') || desc.includes('daily income')) {
+                    return 'Ads Earning';
+                  }
+
+                  // Referral Income (Direct / Indirect / Downline)
+                  if (type === 'referral_income' || type === 'referral_commission' || type === 'referral') {
+                    if (level === 'A' || desc.includes('direct') || desc.includes('level 1') || desc.includes('level a')) {
+                      return 'Direct Referral';
+                    }
+                    if (level === 'B' || desc.includes('indirect') || desc.includes('level 2') || desc.includes('level b')) {
+                      return 'Indirect Referral';
+                    }
+                    if (level === 'C' || desc.includes('downline') || desc.includes('level 3') || desc.includes('level c')) {
+                      return 'Downline Income';
+                    }
+                    return 'Direct Referral';
+                  }
+
+                  // Spin Earning ("spin income")
+                  if (type === 'spin_reward' || type === 'spin_income' || type === 'spin_earning' || desc.includes('spin')) {
+                    return 'Spin Earning';
+                  }
+
+                  // Social Task Earning ("social task income")
+                  if (type === 'social_task' || type === 'social_task_reward' || type === 'social_task_earning' || desc.includes('social task')) {
+                    return 'Social Task Earning';
+                  }
+
+                  // Level Reward
+                  if (type === 'level_reward' || desc.includes('level reward')) {
+                    return 'Level Reward';
+                  }
+
+                  // Streak Reward
+                  if (type === 'streak_reward' || desc.includes('streak reward')) {
+                    return 'Streak Reward';
+                  }
+
+                  // Mystery Box Reward
+                  if (type === 'mystery_box_reward' || type === 'mystery_box' || desc.includes('mystery box')) {
+                    return 'Mystery Box Reward';
+                  }
+
+                  // Coupon Reward
+                  if (type === 'coupon_reward' || type === 'coupon' || desc.includes('coupon')) {
+                    return 'Coupon Reward';
+                  }
+
+                  // Daily Salary
+                  if (type === 'daily_salary' || type === 'salary') {
+                    return 'Daily Salary';
+                  }
+
+                  // Withdrawal
+                  if (type === 'withdraw' || type === 'withdrawal') {
+                    return 'Withdrawal';
+                  }
+
+                  // Recharge
+                  if (type === 'recharge' || type === 'deposit') {
+                    return 'Recharge';
+                  }
+
+                  // Plan Purchase
+                  if (type === 'plan_purchase' || type === 'membership_purchase') {
+                    return 'Plan Purchase';
+                  }
+
+                  // Fallback: Title Case without underscores
+                  return (t.type || 'Transaction')
+                    .replace(/_/g, ' ')
+                    .replace(/\b\w/g, l => l.toUpperCase());
+                };
+
                 const filtered = txHistory.filter(t => {
                   if (txTab === 'All') return true;
-                  if (txTab === 'Earnings') return t.type === 'ad_reward' || t.type === 'referral_commission' || t.type === 'level_reward' || t.type === 'spin_reward' || t.type === 'daily_salary' || t.type === 'coupon_reward' || t.type === 'bonus';
-                  if (txTab === 'Withdrawals') return t.type === 'withdraw';
-                  if (txTab === 'Rewards') return t.type === 'level_reward' || t.type === 'spin_reward' || t.type === 'coupon_reward' || t.type === 'bonus';
+                  if (txTab === 'Earnings') return t.type === 'ad_reward' || t.type === 'ad_earning' || t.type === 'daily_income' || t.type === 'referral_income' || t.type === 'referral_commission' || t.type === 'level_reward' || t.type === 'spin_reward' || t.type === 'spin_income' || t.type === 'social_task' || t.type === 'social_task_reward' || t.type === 'daily_salary' || t.type === 'coupon_reward' || t.type === 'streak_reward' || t.type === 'mystery_box_reward' || t.type === 'bonus';
+                  if (txTab === 'Withdrawals') return t.type === 'withdraw' || t.type === 'withdrawal';
+                  if (txTab === 'Rewards') return t.type === 'level_reward' || t.type === 'spin_reward' || t.type === 'spin_income' || t.type === 'social_task' || t.type === 'social_task_reward' || t.type === 'streak_reward' || t.type === 'mystery_box_reward' || t.type === 'coupon_reward' || t.type === 'bonus';
                   return true;
                 });
 
@@ -2466,16 +2546,7 @@ export default function Page() {
                       <div key={t._id || t.transactionId || Math.random()} style={{ padding: '16px', background: 'var(--input-bg)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                           <div style={{ fontWeight: 600, fontSize: '15px', color: '#fff', marginBottom: '4px' }}>
-                            {t.type === 'withdraw' ? 'Withdrawal' :
-                             t.type === 'ad_reward' ? 'Ad Reward' :
-                             t.type === 'referral_commission' ? 'Referral Commission' :
-                             t.type === 'level_reward' ? 'Level Reward' :
-                             t.type === 'spin_reward' ? 'Spin Reward' :
-                             t.type === 'daily_salary' ? 'Daily Salary' :
-                             t.type === 'recharge' ? 'Recharge' :
-                             t.type === 'plan_purchase' ? 'Plan Purchase' :
-                             t.type === 'coupon_reward' ? 'Coupon Reward' :
-                             (t.type || '').replace('_', ' ')}
+                            {formatTxTitle(t)}
                           </div>
                           <div style={{ fontSize: '12px', color: 'var(--text-faint)' }}>
                             {new Date(t.createdAt).toLocaleString()}
