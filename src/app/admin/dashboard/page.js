@@ -3871,6 +3871,27 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
+                {/* TRX ID Prominent Display Box */}
+                <div style={{
+                  margin: '12px 0 6px',
+                  padding: '10px 14px',
+                  background: 'rgba(201, 160, 74, 0.12)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(201, 160, 74, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '8px'
+                }}>
+                  <div style={{ fontSize: '12px', color: '#aaa', fontWeight: 600, letterSpacing: '0.05em' }}>
+                    💳 TRANSACTION ID (TRX ID):
+                  </div>
+                  <div style={{ fontSize: '15px', color: '#f1c40f', fontWeight: 'bold', fontFamily: 'monospace', letterSpacing: '1px' }}>
+                    {req.trxId ? req.trxId : <span style={{ color: '#888', fontStyle: 'italic', fontWeight: 'normal', fontSize: '13px' }}>Not Provided (Older Request)</span>}
+                  </div>
+                </div>
+
                 {/* Payment Receipt */}
                 {req.screenshotData ? (
                   <div style={{ margin: '14px 0', padding: '12px', background: 'rgba(255,255,255,0.04)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)' }}>
