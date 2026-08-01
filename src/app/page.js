@@ -2238,7 +2238,6 @@ export default function Page() {
                 <option value="Easy Paisa">Easy Paisa</option>
                 <option value="Jazzcash">Jazzcash</option>
                 <option value="SadaPay">SadaPay</option>
-                <option value="Bank transfer">Bank transfer</option>
                 <option value="Binance">Binance</option>
               </select>
 
