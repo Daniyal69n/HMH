@@ -2229,18 +2229,6 @@ export default function Page() {
                             </div>
                           </div>
                         </div>
-
-                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {w.claimed ? (
-                            <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(46, 204, 113, 0.15)', color: '#2ecc71', border: '1px solid rgba(46, 204, 113, 0.3)', fontWeight: '600' }}>
-                              ✅ Prize Claimed
-                            </span>
-                          ) : (
-                            <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(241, 196, 15, 0.15)', color: '#f1c40f', border: '1px solid rgba(241, 196, 15, 0.3)', fontWeight: '600' }}>
-                              ⏳ Claim Pending
-                            </span>
-                          )}
-                        </div>
                       </div>
                     );
                   })}
