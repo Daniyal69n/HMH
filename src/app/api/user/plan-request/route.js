@@ -9,10 +9,25 @@ export async function POST(request) {
     await connectDB()
 
     const body = await request.json()
-    const { userPhone, planName, amount, paymentMethod, screenshotUrl } = body
+    const { userPhone, planName, amount, paymentMethod, screenshotUrl, trxId } = body
 
     if (!userPhone || !planName) {
       return NextResponse.json({ message: 'User phone and plan name are required' }, { status: 400 })
+    }
+
+    if (!trxId || !trxId.trim()) {
+      return NextResponse.json({ message: 'TRX ID / Reference ID is required' }, { status: 400 })
+    }
+
+    const cleanedTrxId = trxId.trim()
+
+    // Check uniqueness across all users' investmentPlans (case-insensitive)
+    const existingUserWithTrx = await User.findOne({
+      'investmentPlans.trxId': { $regex: new RegExp(`^${cleanedTrxId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+    })
+
+    if (existingUserWithTrx) {
+      return NextResponse.json({ message: 'This TRX ID has already been used. Please enter a valid unique TRX ID.' }, { status: 400 })
     }
 
     // screenshotUrl must be a Cloudinary URL (not base64)
@@ -26,15 +41,16 @@ export async function POST(request) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 })
     }
 
-    // Add a pending investment plan record to the user (NO base64, only URLs)
+    // Add a pending investment plan record to the user
     user.investmentPlans = user.investmentPlans || []
     user.investmentPlans.push({
       planName: planName,
       amount: parseFloat(amount) || 0,
+      trxId: cleanedTrxId,
       status: 'pending',
       startDate: new Date(),
       paymentMethod: paymentMethod,
-      screenshotData: screenshotUrl || null  // Store ONLY Cloudinary URL, never base64
+      screenshotData: screenshotUrl || null
     })
 
     await user.save()
@@ -43,7 +59,8 @@ export async function POST(request) {
       message: 'Plan request submitted successfully. Admin will review and activate your plan.',
       planName,
       amount,
-      paymentMethod
+      paymentMethod,
+      trxId: cleanedTrxId
     })
   } catch (error) {
     console.error('Plan request error:', error)

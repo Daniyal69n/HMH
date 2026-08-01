@@ -36,6 +36,7 @@ export async function GET(request) {
           status: plan.status,
           startDate: plan.startDate,
           paymentMethod: plan.paymentMethod,
+          trxId: plan.trxId || '',
           screenshotData: plan.screenshotData || plan.screenshotUrl || null
         });
       }

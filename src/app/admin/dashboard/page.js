@@ -3860,6 +3860,12 @@ export default function AdminDashboard() {
                     <div className={styles.detailValue}>{req.paymentMethod || '-'}</div>
                   </div>
                   <div>
+                    <div className={styles.detailLabel}>TRX ID / Ref</div>
+                    <div className={styles.detailValue} style={{ color: '#c9a04a', fontWeight: 'bold', fontFamily: 'monospace', fontSize: '13.5px' }}>
+                      {req.trxId || 'N/A'}
+                    </div>
+                  </div>
+                  <div>
                     <div className={styles.detailLabel}>Requested on</div>
                     <div className={styles.detailValue}>{req.startDate ? new Date(req.startDate).toLocaleDateString() : '-'}</div>
                   </div>

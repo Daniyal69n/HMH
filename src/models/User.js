@@ -188,6 +188,7 @@ const userSchema = new mongoose.Schema({
       planId: String,
       planName: String,
       amount: Number,
+      trxId: String,
       startDate: Date,
       endDate: Date,
       paymentMethod: String,

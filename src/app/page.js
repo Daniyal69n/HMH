@@ -225,6 +225,9 @@ export default function Page() {
   const [planPaymentMethod, setPlanPaymentMethod] = useState('jazzcash')
   const [planScreenshot, setPlanScreenshot] = useState(null)
   const [planScreenshotName, setPlanScreenshotName] = useState('')
+  const [planTrxId, setPlanTrxId] = useState('')
+  const [showRegistrationSuccessModal, setShowRegistrationSuccessModal] = useState(false)
+  const [showApprovalNoticeModal, setShowApprovalNoticeModal] = useState(false)
   const [planSubmitting, setPlanSubmitting] = useState(false)
   const [planPaymentDetails, setPlanPaymentDetails] = useState({
     jazzcash: { number: '03715918754', accountName: 'Aqsa Shahid' },
@@ -752,6 +755,14 @@ export default function Page() {
           const planName = activePlan ? activePlan.planName : 'Free'
           setActivePlanName(planName)
           localStorage.setItem('hmh-active-plan', planName)
+
+          if (activePlan && activePlan.planName !== 'Free') {
+            const approvalKey = `hmh-approved-plan-notified-${data.phone}-${activePlan._id || activePlan.planName}`
+            if (!localStorage.getItem(approvalKey)) {
+              setShowApprovalNoticeModal(true)
+              localStorage.setItem(approvalKey, 'true')
+            }
+          }
         }
       } catch { }
     }
@@ -1048,6 +1059,10 @@ export default function Page() {
 
   const submitPlanRequest = async () => {
     if (!selectedPlanData) return
+    if (!planTrxId || !planTrxId.trim()) {
+      showToast('Please enter TRX ID / Reference ID')
+      return
+    }
     if (!planScreenshot) {
       showToast('Please upload a payment screenshot')
       return
@@ -1089,13 +1104,19 @@ export default function Page() {
               amount: amountToPay,
               fullPlanPKR: newPlanPKR,
               paymentMethod: planPaymentMethod === 'jazzcash' ? 'JazzCash' : (planPaymentMethod === 'easypaisa' ? 'EasyPaisa' : 'Binance'),
-              screenshotUrl: screenshotUrl
+              screenshotUrl: screenshotUrl,
+              trxId: planTrxId.trim()
             })
           })
 
+          const data = await res.json()
+
           if (res.ok) {
             setPlanModalOpen(false)
-            showToast('Plan request submitted! Admin will activate your plan shortly.')
+            setPlanTrxId('')
+            setPlanScreenshot(null)
+            setPlanScreenshotName('')
+            setShowRegistrationSuccessModal(true)
             try {
               const profileRes = await fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone || user.phone)}&_t=${Date.now()}`)
               if (profileRes.ok) {
@@ -1107,12 +1128,11 @@ export default function Page() {
               console.error('Error fetching fresh profile:', err)
             }
           } else {
-            const err = await res.json()
-            showToast(err.message || 'Error submitting request')
+            showToast(data.message || 'Failed to submit plan request')
           }
         } catch (err) {
           console.error(err)
-          showToast('Failed to submit plan request')
+          showToast(err.message || 'Error submitting request')
         } finally {
           setPlanSubmitting(false)
         }
@@ -4364,6 +4384,25 @@ export default function Page() {
               </select>
             </div>
 
+            {/* TRX ID Input */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', color: '#ccc', fontSize: 13, marginBottom: 6 }}>
+                TRX ID / Reference ID <span style={{ color: '#e74c3c' }}>*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Enter unique TRX ID (e.g. TRX12345678)"
+                value={planTrxId}
+                onChange={(e) => setPlanTrxId(e.target.value)}
+                style={{
+                  width: '100%', padding: '10px 14px', borderRadius: 10,
+                  background: '#252b3b', border: '1px solid #374151',
+                  color: '#fff', fontSize: 14, outline: 'none',
+                  fontFamily: 'monospace'
+                }}
+              />
+            </div>
+
             {/* Upload Screenshot */}
             <div style={{ marginBottom: 20 }}>
               <label style={{ display: 'block', color: '#ccc', fontSize: 13, marginBottom: 6 }}>Upload Payment Screenshot</label>
@@ -4404,6 +4443,185 @@ export default function Page() {
               }}
             >
               {planSubmitting ? 'Submitting...' : '⬆ Submit Request'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* REGISTRATION SUBMISSION SUCCESS VERIFICATION MODAL */}
+      {showRegistrationSuccessModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 99999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'linear-gradient(145deg, #1a1f2c, #111520)',
+            border: '1px solid rgba(201, 160, 74, 0.4)',
+            borderRadius: '16px',
+            maxWidth: '480px',
+            width: '100%',
+            padding: '28px 24px 24px',
+            color: '#fff',
+            position: 'relative',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
+          }}>
+            {/* Close Cross Button */}
+            <button
+              onClick={() => setShowRegistrationSuccessModal(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                color: '#aaa',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontSize: '16px',
+                lineHeight: '1'
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ fontSize: '42px', marginBottom: '8px' }}>✅</div>
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--gold-bright)', margin: 0 }}>
+                Registration Submitted Successfully!
+              </h2>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13.5px', color: '#d0d5e0', lineHeight: '1.5' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '10px 12px', borderRadius: '8px' }}>
+                <span>👋</span>
+                <span>Thank you for joining <strong>HMHProo</strong>.</span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '10px 12px', borderRadius: '8px' }}>
+                <span>🔍</span>
+                <span>Your registration and payment are currently under verification.</span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '10px 12px', borderRadius: '8px' }}>
+                <span>📝</span>
+                <span>Our team will review your TRX ID and payment details.</span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '10px 12px', borderRadius: '8px' }}>
+                <span>🔔</span>
+                <span>Please wait for approval. You will be notified as soon as your account is activated.</span>
+              </div>
+
+              <div style={{ background: 'rgba(201, 160, 74, 0.12)', border: '1px solid rgba(201, 160, 74, 0.3)', padding: '10px 12px', borderRadius: '8px', color: 'var(--gold)', fontWeight: '600', textAlign: 'center', marginTop: '4px' }}>
+                ⏱️ Estimated verification time: 5 minutes to 2 hours.
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowRegistrationSuccessModal(false)}
+              style={{
+                marginTop: '22px',
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #c9a04a, #e8c06a)',
+                color: '#181205',
+                fontWeight: 'bold',
+                fontSize: '14.5px',
+                cursor: 'pointer'
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ACCOUNT APPROVED & ACTIVATED NOTICE MODAL */}
+      {showApprovalNoticeModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 99999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'linear-gradient(145deg, #1b281f, #0d1a12)',
+            border: '1px solid rgba(46, 204, 113, 0.4)',
+            borderRadius: '16px',
+            maxWidth: '460px',
+            width: '100%',
+            padding: '28px 24px 24px',
+            color: '#fff',
+            position: 'relative',
+            textAlign: 'center',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
+          }}>
+            {/* Close Cross Button */}
+            <button
+              onClick={() => setShowApprovalNoticeModal(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                color: '#aaa',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontSize: '16px',
+                lineHeight: '1'
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{ fontSize: '48px', marginBottom: '12px' }}>🎉</div>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2ecc71', marginBottom: '14px' }}>
+              Account Activated!
+            </h2>
+            <p style={{ fontSize: '15px', color: '#e0e6ed', lineHeight: '1.6', marginBottom: '22px' }}>
+              🎉 Congratulations! Your account has been approved and activated successfully. Welcome to <strong>HMHProo</strong>!
+            </p>
+
+            <button
+              onClick={() => setShowApprovalNoticeModal(false)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #2ecc71, #27ae60)',
+                color: '#fff',
+                fontWeight: 'bold',
+                fontSize: '15px',
+                cursor: 'pointer'
+              }}
+            >
+              Start Earning Now 🚀
             </button>
           </div>
         </div>
