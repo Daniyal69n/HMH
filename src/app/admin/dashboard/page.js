@@ -2193,9 +2193,20 @@ export default function AdminDashboard() {
       ? String(user.customTotalWithdrawals)
       : String((user.withdrawHistory || []).filter(w => w.status === 'approved').reduce((sum, w) => sum + Number(w.amount || 0), 0))
 
+    let calcSalUSD = 0
+    const claimedLvs = user.claimedLevels || []
+    for (const lv of claimedLvs) {
+      if (lv >= 1 && lv <= 10) calcSalUSD += 10
+      else if (lv >= 11 && lv <= 20) calcSalUSD += 20
+      else if (lv >= 21 && lv <= 30) calcSalUSD += 30
+      else if (lv >= 31 && lv <= 40) calcSalUSD += 40
+      else if (lv >= 41 && lv <= 50) calcSalUSD += 50
+    }
+    const calcSalPKR = calcSalUSD * 300
+
     const initialSalary = (user.customMySalary !== undefined && user.customMySalary !== null && user.customMySalary !== '')
       ? String(user.customMySalary)
-      : '0'
+      : String(calcSalPKR)
 
     setEditForm({
       name: user.name || '',
@@ -2238,9 +2249,20 @@ export default function AdminDashboard() {
           ? String(fullUser.customTotalWithdrawals)
           : String(fullApprovedWdSum)
 
+        let fullSalUSD = 0
+        const fullClaimed = fullUser.claimedLevels || []
+        for (const lv of fullClaimed) {
+          if (lv >= 1 && lv <= 10) fullSalUSD += 10
+          else if (lv >= 11 && lv <= 20) fullSalUSD += 20
+          else if (lv >= 21 && lv <= 30) fullSalUSD += 30
+          else if (lv >= 31 && lv <= 40) fullSalUSD += 40
+          else if (lv >= 41 && lv <= 50) fullSalUSD += 50
+        }
+        const fullSalPKR = fullSalUSD * 300
+
         const fullSal = (fullUser.customMySalary !== undefined && fullUser.customMySalary !== null && fullUser.customMySalary !== '')
           ? String(fullUser.customMySalary)
-          : '0'
+          : String(fullSalPKR)
 
         setEditForm(prev => ({
           ...prev,
@@ -2805,15 +2827,6 @@ export default function AdminDashboard() {
                   placeholder="Enter my salary..."
                   value={editForm.customMySalary}
                   onChange={e => setEditForm(prev => ({ ...prev, customMySalary: e.target.value }))}
-                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
-                />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Recharge (Rs)</label>
-                <input
-                  type="number"
-                  value={editForm.totalRecharge}
-                  onChange={e => setEditForm(prev => ({ ...prev, totalRecharge: parseFloat(e.target.value) || 0 }))}
                   style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
                 />
               </div>
