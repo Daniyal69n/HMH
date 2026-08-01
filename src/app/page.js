@@ -2152,26 +2152,23 @@ export default function Page() {
                         <div className="mystery-title">{b.title}</div>
                         <div className="mystery-sub">{b.desc}</div>
 
-                        {isMyWin ? (
+                        {isMyWin && !isClaimed ? (
                           <button
                             className="lock-pill"
                             style={{
-                              background: isClaimed ? 'rgba(255,255,255,0.1)' : 'var(--gold)',
-                              color: isClaimed ? 'var(--text-dim)' : '#000',
-                              cursor: isClaimed ? 'default' : 'pointer',
+                              background: 'var(--gold)',
+                              color: '#000',
+                              cursor: 'pointer',
                               border: 'none',
                               width: '100%',
-                              padding: '6px'
+                              padding: '8px',
+                              fontWeight: 'bold'
                             }}
-                            onClick={isClaimed ? undefined : handleClaimMysteryBox}
-                            disabled={isClaimed || mysteryClaiming}
+                            onClick={handleClaimMysteryBox}
+                            disabled={mysteryClaiming}
                           >
-                            {isClaimed ? '✅ Claimed' : (mysteryClaiming ? 'Processing...' : '🎁 Claim Prize')}
+                            {mysteryClaiming ? 'Processing...' : '🎁 Claim Prize'}
                           </button>
-                        ) : winnerStatus ? (
-                          <div className="lock-pill" style={{ opacity: 0.7 }}>
-                            {isClaimed ? '✅ Claimed by Winner' : '🎉 Won by another'}
-                          </div>
                         ) : (
                           <div className="lock-pill">🔒 Locked (Top {rank} wins)</div>
                         )}
@@ -2181,6 +2178,75 @@ export default function Page() {
                 </div>
               </div>
             )}
+
+            {/* PREVIOUS CYCLE WINNERS CARD */}
+            <div className="card" style={{ marginBottom: 18 }}>
+              <h3 style={{ margin: '0 0 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                <span>🏆 Previous Mystery Box Winners</span>
+                <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 12, background: 'rgba(201,160,74,0.15)', color: 'var(--gold)', border: '1px solid rgba(201,160,74,0.3)', fontWeight: 'normal' }}>
+                  Last 15-Day Cycle
+                </span>
+              </h3>
+              <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
+                Top 3 leaderboard champions who won mystery boxes in the previous cycle
+              </p>
+
+              {(!mysteryWinners || mysteryWinners.length === 0) ? (
+                <div style={{ textAlign: 'center', padding: '24px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px dashed var(--border)', color: 'var(--text-dim)', fontSize: 13 }}>
+                  🎁 Current 15-day cycle in progress! Top 3 earners will win mystery box prizes after the cycle finishes.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {mysteryWinners.map((w, idx) => {
+                    const rank = w.rank || (idx + 1);
+                    const rankMedal = rank === 1 ? '🥇 1st Place' : rank === 2 ? '🥈 2nd Place' : '🥉 3rd Place';
+                    const rankClass = rank === 1 ? 'rank1' : rank === 2 ? 'rank2' : 'rank3';
+                    const defaultPrize = rank === 1 ? '$100 Cash Prize + Gold Badge' : rank === 2 ? '$50 Cash Prize + Silver Badge' : '$25 Cash Prize + Bronze Badge';
+                    const prizeText = w.prize || defaultPrize;
+
+                    return (
+                      <div key={w.phone || w.name || idx} className={`leader-row ${rankClass}`} style={{ flexWrap: 'wrap', gap: '10px 14px', padding: '14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 200px' }}>
+                          <div className="leader-rank" style={{ fontSize: '18px', width: 'auto' }}>
+                            {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
+                          </div>
+                          <div className="leader-avatar" style={{ width: '40px', height: '40px' }}>
+                            {w.profilePicture ? (
+                              <img src={w.profilePicture} alt={w.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              (w.name || 'W')[0]
+                            )}
+                          </div>
+                          <div>
+                            <div className="leader-name" style={{ fontSize: '14.5px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                              <span>{w.name || `Winner #${rank}`}</span>
+                              <span style={{ fontSize: '11px', color: 'var(--gold)', background: 'rgba(201,160,74,0.15)', padding: '1px 6px', borderRadius: '4px' }}>
+                                {rankMedal}
+                              </span>
+                            </div>
+                            <div className="leader-level" style={{ marginTop: '2px', color: 'var(--text-dim)' }}>
+                              Prize: <strong style={{ color: 'var(--gold-bright)' }}>{prizeText}</strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {w.claimed ? (
+                            <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(46, 204, 113, 0.15)', color: '#2ecc71', border: '1px solid rgba(46, 204, 113, 0.3)', fontWeight: '600' }}>
+                              ✅ Prize Claimed
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(241, 196, 15, 0.15)', color: '#f1c40f', border: '1px solid rgba(241, 196, 15, 0.3)', fontWeight: '600' }}>
+                              ⏳ Claim Pending
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             <div className="card">
               <h3 style={{ margin: '0 0 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

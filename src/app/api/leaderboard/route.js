@@ -117,12 +117,26 @@ export async function GET(request) {
 
     // Cycle check: If current time is past the end date, end cycle and set winners!
     if (Date.now() >= cycleEndDate.getTime()) {
-      // Pick top 3 winners with their ranks
-      const top3 = uniqueLeaders.slice(0, 3).map((u, index) => ({
-        phone: u.phone,
-        rank: index + 1,
-        claimed: false
-      }));
+      const defaultPrizes = {
+        1: '$100 Cash Prize + Gold Badge',
+        2: '$50 Cash Prize + Silver Badge',
+        3: '$25 Cash Prize + Bronze Badge'
+      };
+
+      // Pick top 3 winners with their details
+      const top3 = uniqueLeaders.slice(0, 3).map((u, index) => {
+        const rank = index + 1;
+        return {
+          phone: u.phone,
+          name: u.name,
+          profilePicture: u.profilePicture || '',
+          level: u.level || 1,
+          amt: u.amt || 0,
+          rank,
+          prize: defaultPrizes[rank] || '',
+          claimed: false
+        };
+      });
       cycleWinners = top3;
 
       // Reset cycle end date
@@ -140,6 +154,29 @@ export async function GET(request) {
       );
 
       cycleEndDate = newEndDate;
+    }
+
+    // Enrich cycleWinners if name or profilePicture is missing from past cycles
+    if (Array.isArray(cycleWinners) && cycleWinners.length > 0) {
+      const defaultPrizes = {
+        1: '$100 Cash Prize + Gold Badge',
+        2: '$50 Cash Prize + Silver Badge',
+        3: '$25 Cash Prize + Bronze Badge'
+      };
+      cycleWinners = cycleWinners.map(w => {
+        const matchedUser = realLeaders.find(l => l.phone === w.phone);
+        const rank = w.rank || 1;
+        return {
+          phone: w.phone,
+          rank: w.rank,
+          claimed: !!w.claimed,
+          name: w.name || (matchedUser ? matchedUser.name : `Winner #${w.rank}`),
+          profilePicture: w.profilePicture || (matchedUser ? matchedUser.profilePicture : ''),
+          level: w.level || (matchedUser ? matchedUser.level : 1),
+          amt: w.amt !== undefined ? w.amt : (matchedUser ? matchedUser.amt : 0),
+          prize: w.prize || defaultPrizes[rank] || ''
+        };
+      });
     }
 
     // Strip phone numbers from public leaderboard data
