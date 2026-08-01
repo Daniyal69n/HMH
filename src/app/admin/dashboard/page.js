@@ -2297,6 +2297,16 @@ export default function AdminDashboard() {
       .some((value) => String(value).toLowerCase().includes(q))
   })
 
+  const activeUsersCount = users.filter(u => {
+    const activePlan = [...(u.investmentPlans || [])].reverse().find((plan) => plan.status === 'active')?.planName || 'Free';
+    return activePlan !== 'Free';
+  }).length;
+
+  const pendingUsersCount = users.filter(u => {
+    const activePlan = [...(u.investmentPlans || [])].reverse().find((plan) => plan.status === 'active')?.planName || 'Free';
+    return activePlan === 'Free';
+  }).length;
+
   // Handle payment details update
   const handleUpdatePaymentDetails = (method, field, value) => {
     const updatedPaymentDetails = {
@@ -2465,9 +2475,15 @@ export default function AdminDashboard() {
         <div className={styles.usersPage}>
           <div className={styles.pageHeadRow}>
             <div>
-              <h2 className={styles.pageTitle}>All Users</h2>
+              <h2 className={styles.pageTitle}>
+                {userFilterStatus === 'all' ? 'All Users' : userFilterStatus === 'active' ? 'Active Users (Paid)' : 'Pending Users (Free)'}
+              </h2>
               <p className={styles.pageSub}>
-                {users.length} registered user{users.length === 1 ? '' : 's'}
+                {userFilterStatus === 'all'
+                  ? `${filteredUsers.length} registered user${filteredUsers.length === 1 ? '' : 's'}`
+                  : userFilterStatus === 'active'
+                    ? `${filteredUsers.length} active (paid) user${filteredUsers.length === 1 ? '' : 's'}`
+                    : `${filteredUsers.length} pending (free) user${filteredUsers.length === 1 ? '' : 's'}`}
               </p>
             </div>
             <button
@@ -2508,21 +2524,21 @@ export default function AdminDashboard() {
               onClick={() => setUserFilterStatus('all')}
               style={{ padding: '8px 16px', fontSize: '14px' }}
             >
-              All Users
+              All Users ({users.length})
             </button>
             <button 
               className={`${styles.btn} ${userFilterStatus === 'active' ? styles.btnGold : styles.btnOutline}`} 
               onClick={() => setUserFilterStatus('active')}
               style={{ padding: '8px 16px', fontSize: '14px' }}
             >
-              Active (Paid)
+              Active (Paid) ({activeUsersCount})
             </button>
             <button 
               className={`${styles.btn} ${userFilterStatus === 'pending' ? styles.btnGold : styles.btnOutline}`} 
               onClick={() => setUserFilterStatus('pending')}
               style={{ padding: '8px 16px', fontSize: '14px' }}
             >
-              Pending (Free)
+              Pending (Free) ({pendingUsersCount})
             </button>
           </div>
 
