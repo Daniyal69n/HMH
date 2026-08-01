@@ -66,6 +66,7 @@ export async function POST(request) {
       password,
       referredBy: resolvedParentPhone,
       referralLevel: level,
+      isDummyNetworkMember: true,
       balance: 0,
       earnBalance: 0,
       totalCommissionEarned: 0,

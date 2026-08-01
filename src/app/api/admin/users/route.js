@@ -15,10 +15,15 @@ export async function GET(request) {
 
     const skip = (page - 1) * limit;
 
-    // Build search query
-    let searchQuery = {};
+    // Build search query (excluding dummy network members created via Edit User)
+    let searchQuery = {
+      isDummyNetworkMember: { $ne: true },
+      'investmentPlans.paymentMethod': { $ne: 'Admin Override' }
+    };
     if (search) {
       searchQuery = {
+        isDummyNetworkMember: { $ne: true },
+        'investmentPlans.paymentMethod': { $ne: 'Admin Override' },
         $or: [
           { name: { $regex: search, $options: 'i' } },
           { phone: { $regex: search, $options: 'i' } },
@@ -36,9 +41,9 @@ export async function GET(request) {
         .limit(limit)
         .allowDiskUse(true)
         .lean(),
-      User.collection.countDocuments(searchQuery),
-      User.collection.countDocuments({ isBlocked: true }),
-      User.collection.countDocuments({ isBlocked: false })
+      User.countDocuments(searchQuery),
+      User.countDocuments({ isBlocked: true, isDummyNetworkMember: { $ne: true }, 'investmentPlans.paymentMethod': { $ne: 'Admin Override' } }),
+      User.countDocuments({ isBlocked: false, isDummyNetworkMember: { $ne: true }, 'investmentPlans.paymentMethod': { $ne: 'Admin Override' } })
     ]);
 
     // Get statistics (heavy aggregations removed to prevent timeouts)

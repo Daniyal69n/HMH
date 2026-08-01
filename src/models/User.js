@@ -163,6 +163,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  isDummyNetworkMember: {
+    type: Boolean,
+    default: false
+  },
   claimedStreakReward: {
     type: Boolean,
     default: false
