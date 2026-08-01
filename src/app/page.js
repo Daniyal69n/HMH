@@ -176,7 +176,7 @@ export default function Page() {
   const [watchAdModalOpen, setWatchAdModalOpen] = useState(false)
   const [collectSubmitting, setCollectSubmitting] = useState(false)
   const [showCollectAnimModal, setShowCollectAnimModal] = useState(false)
-  const [collectRewardAmount, setCollectRewardAmount] = useState({ usd: 0, pkr: 0 })
+  const [collectRewardAmount, setCollectRewardAmount] = useState({ usd: 0, pkr: 0, title: '', desc: '' })
 
   // Course states
   const [userCourses, setUserCourses] = useState([])
@@ -1565,7 +1565,13 @@ export default function Page() {
       })
       const data = await res.json()
       if (res.ok) {
-        showToast(data.message)
+        setCollectRewardAmount({
+          usd: 10,
+          pkr: 3000,
+          title: 'Reward Collected!',
+          desc: 'Congratulations! You have completed your 10-day streak and earned:'
+        })
+        setShowCollectAnimModal(true)
 
         // Update local profile state
         setProfile(prev => {
@@ -1597,7 +1603,14 @@ export default function Page() {
       })
       const data = await res.json()
       if (res.ok) {
-        showToast(data.message)
+        const usdVal = Number(data.rewardUSD || data.amount) || 5
+        setCollectRewardAmount({
+          usd: usdVal,
+          pkr: usdVal * PKR_RATE,
+          title: 'Reward Collected!',
+          desc: `Congratulations! You have unlocked Level ${level} reward and earned:`
+        })
+        setShowCollectAnimModal(true)
         // Refresh local React profile state with updated values
         setProfile(prev => {
           const next = {
@@ -1633,7 +1646,14 @@ export default function Page() {
       const data = await res.json()
 
       if (res.ok) {
-        showToast(`$${data.usdRewardAmount} Mystery Box claimed successfully!`)
+        const usdVal = Number(data.usdRewardAmount) || 0
+        setCollectRewardAmount({
+          usd: usdVal,
+          pkr: usdVal * PKR_RATE,
+          title: 'Reward Collected!',
+          desc: 'Congratulations! You have successfully claimed your mystery box prize and earned:'
+        })
+        setShowCollectAnimModal(true)
 
         // Mark as claimed locally
         setMysteryWinners(prev => prev.map(w => w.phone === profile.phone ? { ...w, claimed: true } : w))
@@ -4407,11 +4427,11 @@ export default function Page() {
                     letterSpacing: '1.5px',
                     fontFamily: 'var(--font-fraunces), serif'
                   }}>
-                    Reward Collected!
+                    {collectRewardAmount.title || 'Reward Collected!'}
                   </h2>
 
                   <p style={{ color: 'var(--text-dim)', fontSize: '15px', margin: '0 0 28px', lineHeight: 1.5 }}>
-                    Congratulations! You have successfully completed your daily tasks and earned:
+                    {collectRewardAmount.desc || 'Congratulations! You have successfully earned:'}
                   </p>
 
                   <div style={{
