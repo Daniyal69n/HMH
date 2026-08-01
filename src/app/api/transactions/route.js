@@ -35,22 +35,49 @@ export async function GET(request) {
       .lean();
     console.timeEnd("query1");
 
-    // Enrich transactions with userProfilePicture (skip fetching massive profilePicture to prevent OOM)
-    const userIds = [...new Set(transactions.map(t => t.userId))];
-    console.time("query2");
-    const users = await User.find({ phone: { $in: userIds } }).select('phone').lean();
-    console.timeEnd("query2");
-    console.time("processing");
-    const userPicMap = {};
-    users.forEach(u => {
-      userPicMap[u.phone] = ''; // We removed profilePicture to fix crashes
+    // Enrich transactions with user email, plan, and name
+    const userIds = [...new Set(transactions.map(t => t.userId))].filter(Boolean);
+    const objectIds = userIds.filter(id => typeof id === 'string' && id.match(/^[0-9a-fA-F]{24}$/));
 
+    const users = await User.find({
+      $or: [
+        { phone: { $in: userIds } },
+        { email: { $in: userIds } },
+        { _id: { $in: objectIds } }
+      ]
+    }).select('name phone email investmentPlans').lean();
+
+    const userMap = {};
+    users.forEach(u => {
+      let activePlanName = 'No Plan';
+      if (u.investmentPlans && Array.isArray(u.investmentPlans)) {
+        const active = [...u.investmentPlans].reverse().find(p => p.status === 'active');
+        if (active && active.planName) {
+          activePlanName = active.planName;
+        }
+      }
+
+      const userInfo = {
+        name: u.name || '',
+        email: u.email || '',
+        planName: activePlanName
+      };
+
+      if (u.phone) userMap[u.phone] = userInfo;
+      if (u.email) userMap[u.email] = userInfo;
+      if (u._id) userMap[u._id.toString()] = userInfo;
     });
 
-    const enrichedTransactions = transactions.map(t => ({
-      ...t,
-      userProfilePicture: userPicMap[t.userId] || ''
-    }));
+    const enrichedTransactions = transactions.map(t => {
+      const info = userMap[t.userId] || {};
+      return {
+        ...t,
+        userEmail: info.email || t.userEmail || '',
+        userPlan: info.planName || t.userPlan || 'No Plan',
+        userName: t.userName || info.name || 'Unknown User',
+        userProfilePicture: ''
+      };
+    });
     console.timeEnd("processing");
     
     console.time("response");

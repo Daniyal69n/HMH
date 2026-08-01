@@ -3947,16 +3947,10 @@ export default function AdminDashboard() {
                     <div>
                       <div className={styles.userName}>{request.userName || 'Unknown User'}</div>
                       <div className={styles.userEmail}>
-                        {(() => {
-                          const userObj = users.find(u => u.phone === request.userId);
-                          const activePlan = userObj?.investmentPlans ? [...userObj.investmentPlans].reverse().find(p => p.status === 'active')?.planName : null;
-                          return (
-                            <>
-                              <div>{userObj?.email || 'No email provided'}</div>
-                              {activePlan && <div style={{ fontSize: '11px', color: 'var(--gold-main)', marginTop: '2px', fontWeight: 'bold' }}>Plan: {activePlan}</div>}
-                            </>
-                          );
-                        })()}
+                        <div>{request.userEmail || users.find(u => u.phone === request.userId)?.email || 'No email provided'}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--gold-main)', marginTop: '2px', fontWeight: 'bold' }}>
+                          Plan: {request.userPlan || 'No Plan'}
+                        </div>
                       </div>
                     </div>
                   </div>
