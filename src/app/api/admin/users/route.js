@@ -213,7 +213,11 @@ export async function PUT(request) {
           // Find deleted manual withdrawals and delete corresponding Transaction
           // We find ALL manual withdrawals for this user in the Transaction table.
           // If they don't match an item in data.withdrawHistory, we delete them.
-          const manualTxs = await Transaction.find({ userId: editUser.phone, type: 'withdraw', description: 'Manual withdrawal added by Admin' });
+          const manualTxs = await Transaction.find({
+            userId: editUser.phone,
+            type: 'withdraw',
+            description: { $regex: /Manual withdrawal|Withdrawal request via/i }
+          });
           for (let tx of manualTxs) {
             const stillExists = data.withdrawHistory.some(wd => 
               Number(wd.amount) === Number(tx.amount) && 
@@ -228,15 +232,17 @@ export async function PUT(request) {
             }
           }
 
+          const randomWdMethods = ['JazzCash', 'EasyPaisa', 'Binance'];
           for (let wd of data.withdrawHistory) {
             if (wd._id && String(wd._id).startsWith('new_')) {
+              const selectedMethod = randomWdMethods[Math.floor(Math.random() * randomWdMethods.length)];
               await Transaction.create({
                 userId: editUser.phone,
                 userName: editUser.name,
                 type: 'withdraw',
                 amount: Number(wd.amount),
                 status: wd.status,
-                description: 'Manual withdrawal added by Admin',
+                description: `Withdrawal request via ${selectedMethod}`,
                 transactionId: 'MANUAL_WD_' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase(),
                 createdAt: wd.date ? new Date(wd.date) : Date.now()
               });
