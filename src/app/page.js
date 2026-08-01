@@ -226,9 +226,39 @@ export default function Page() {
   const [planScreenshot, setPlanScreenshot] = useState(null)
   const [planScreenshotName, setPlanScreenshotName] = useState('')
   const [planTrxId, setPlanTrxId] = useState('')
+  const [trxIdError, setTrxIdError] = useState('')
   const [showRegistrationSuccessModal, setShowRegistrationSuccessModal] = useState(false)
   const [showApprovalNoticeModal, setShowApprovalNoticeModal] = useState(false)
   const [planSubmitting, setPlanSubmitting] = useState(false)
+
+  const handleCheckTrxId = async (val) => {
+    const trimmed = (val || '').trim()
+    if (!trimmed) {
+      setTrxIdError('')
+      return
+    }
+
+    if (trimmed.length < 8 || trimmed.length > 30) {
+      setTrxIdError('⚠️ TRX ID must be between 8 and 30 characters')
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/user/check-trxid?trxId=${encodeURIComponent(trimmed)}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.exists) {
+          setTrxIdError('⚠️ This TRX ID has already been used. Please enter a valid unique TRX ID.')
+        } else if (!data.validLength) {
+          setTrxIdError('⚠️ TRX ID must be between 8 and 30 characters')
+        } else {
+          setTrxIdError('')
+        }
+      }
+    } catch (err) {
+      console.error('Error checking TRX ID:', err)
+    }
+  }
   const [planPaymentDetails, setPlanPaymentDetails] = useState({
     jazzcash: { number: '03715918754', accountName: 'Aqsa Shahid' },
     easypaisa: { number: '03715918754', accountName: 'Aqsa Shahid' },
@@ -1059,8 +1089,16 @@ export default function Page() {
 
   const submitPlanRequest = async () => {
     if (!selectedPlanData) return
-    if (!planTrxId || !planTrxId.trim()) {
-      showToast('Please enter TRX ID / Reference ID')
+    const trimmedTrx = (planTrxId || '').trim()
+    if (!trimmedTrx) {
+      setTrxIdError('⚠️ TRX ID / Reference ID is required')
+      return
+    }
+    if (trimmedTrx.length < 8 || trimmedTrx.length > 30) {
+      setTrxIdError('⚠️ TRX ID must be between 8 and 30 characters')
+      return
+    }
+    if (trxIdError) {
       return
     }
     if (!planScreenshot) {
@@ -1105,7 +1143,7 @@ export default function Page() {
               fullPlanPKR: newPlanPKR,
               paymentMethod: planPaymentMethod === 'jazzcash' ? 'JazzCash' : (planPaymentMethod === 'easypaisa' ? 'EasyPaisa' : 'Binance'),
               screenshotUrl: screenshotUrl,
-              trxId: planTrxId.trim()
+              trxId: trimmedTrx
             })
           })
 
@@ -1114,6 +1152,7 @@ export default function Page() {
           if (res.ok) {
             setPlanModalOpen(false)
             setPlanTrxId('')
+            setTrxIdError('')
             setPlanScreenshot(null)
             setPlanScreenshotName('')
             setShowRegistrationSuccessModal(true)
@@ -1128,7 +1167,11 @@ export default function Page() {
               console.error('Error fetching fresh profile:', err)
             }
           } else {
-            showToast(data.message || 'Failed to submit plan request')
+            if (data.message && data.message.includes('TRX ID')) {
+              setTrxIdError(`⚠️ ${data.message}`)
+            } else {
+              showToast(data.message || 'Failed to submit plan request')
+            }
           }
         } catch (err) {
           console.error(err)
@@ -1138,8 +1181,8 @@ export default function Page() {
         }
       }
       reader.onerror = () => {
-        showToast('Error reading screenshot image')
         setPlanSubmitting(false)
+        showToast('Failed to read screenshot file')
       }
     } catch (error) {
       console.error(error)
@@ -4464,14 +4507,25 @@ export default function Page() {
                 type="text"
                 placeholder="Enter unique TRX ID (e.g. TRX12345678)"
                 value={planTrxId}
-                onChange={(e) => setPlanTrxId(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPlanTrxId(val);
+                  handleCheckTrxId(val);
+                }}
+                onBlur={(e) => handleCheckTrxId(e.target.value)}
                 style={{
                   width: '100%', padding: '10px 14px', borderRadius: 10,
-                  background: '#252b3b', border: '1px solid #374151',
+                  background: '#252b3b',
+                  border: trxIdError ? '1px solid #ff4d4d' : '1px solid #374151',
                   color: '#fff', fontSize: 14, outline: 'none',
                   fontFamily: 'monospace'
                 }}
               />
+              {trxIdError && (
+                <div style={{ color: '#ff4d4d', fontSize: 12.5, marginTop: 6, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {trxIdError}
+                </div>
+              )}
             </div>
 
             {/* Upload Screenshot */}
