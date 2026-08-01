@@ -4507,14 +4507,14 @@ export default function AdminDashboard() {
 
           {/* Screenshot Preview Modal */}
           {stPreviewImage && (
-            <div className={styles.modalOverlay} onClick={() => setStPreviewImage(null)} style={{ zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div className={styles.modalContent} style={{ position: 'relative', width: '90vw', maxWidth: '500px', maxHeight: '90vh', padding: 0, background: '#111', border: '1px solid var(--gold)', borderRadius: '12px', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
-                <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333' }}>
+            <div className={styles.modalOverlay} onClick={() => setStPreviewImage(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh', zIndex: 99999, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+              <div className={styles.modalContent} style={{ position: 'relative', width: '90vw', maxWidth: '520px', maxHeight: '88vh', padding: 0, background: '#121826', border: '1px solid var(--gold)', borderRadius: '14px', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 48px rgba(0,0,0,0.9)', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+                <div style={{ padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', background: '#161d2e' }}>
                   <h3 style={{ margin: 0, fontSize: '16px', color: 'var(--gold)', fontWeight: '600' }}>Screenshot Preview</h3>
                   <button onClick={() => setStPreviewImage(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%' }}>×</button>
                 </div>
-                <div style={{ flex: 1, overflow: 'auto', padding: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <img src={stPreviewImage} alt="Task Screenshot" style={{ maxWidth: '100%', maxHeight: '75vh', objectFit: 'contain', borderRadius: '4px' }} />
+                <div style={{ flex: 1, overflow: 'auto', padding: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#0a0e17' }}>
+                  <img src={stPreviewImage} alt="Task Screenshot" style={{ maxWidth: '100%', maxHeight: '72vh', objectFit: 'contain', borderRadius: '8px' }} />
                 </div>
               </div>
             </div>
