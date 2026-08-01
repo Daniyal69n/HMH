@@ -2723,7 +2723,9 @@ export default function AdminDashboard() {
             </div>
 
             {/* Financial Fields */}
-            <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Financial Balances</div>
+            <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>
+              Financial Balances (User Dashboard Stats)
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Current Balance (Rs)</label>
@@ -2731,16 +2733,47 @@ export default function AdminDashboard() {
                   type="number"
                   value={editForm.balance}
                   onChange={e => setEditForm(prev => ({ ...prev, balance: parseFloat(e.target.value) || 0 }))}
-                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Earning Balance (Rs)</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Earnings (Rs)</label>
                 <input
                   type="number"
-                  value={editForm.earnBalance}
-                  onChange={e => setEditForm(prev => ({ ...prev, earnBalance: parseFloat(e.target.value) || 0 }))}
-                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  placeholder="Enter total earnings..."
+                  value={editForm.customTotalEarnings}
+                  onChange={e => setEditForm(prev => ({ ...prev, customTotalEarnings: e.target.value, earnBalance: parseFloat(e.target.value) || 0 }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>My Rewards (Rs)</label>
+                <input
+                  type="number"
+                  placeholder="Enter my rewards..."
+                  value={editForm.totalCommissionEarned}
+                  onChange={e => setEditForm(prev => ({ ...prev, totalCommissionEarned: parseFloat(e.target.value) || 0 }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Withdrawals (Rs)</label>
+                <input
+                  type="number"
+                  placeholder="Enter total withdrawals..."
+                  value={editForm.customTotalWithdrawals}
+                  onChange={e => setEditForm(prev => ({ ...prev, customTotalWithdrawals: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>My Salary (Rs)</label>
+                <input
+                  type="number"
+                  placeholder="Enter my salary..."
+                  value={editForm.customMySalary}
+                  onChange={e => setEditForm(prev => ({ ...prev, customMySalary: e.target.value }))}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -2749,53 +2782,14 @@ export default function AdminDashboard() {
                   type="number"
                   value={editForm.totalRecharge}
                   onChange={e => setEditForm(prev => ({ ...prev, totalRecharge: parseFloat(e.target.value) || 0 }))}
-                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Commission Earned (Rs)</label>
-                <input
-                  type="number"
-                  value={editForm.totalCommissionEarned}
-                  onChange={e => setEditForm(prev => ({ ...prev, totalCommissionEarned: parseFloat(e.target.value) || 0 }))}
-                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
                 />
               </div>
             </div>
 
-            {/* Custom Overrides */}
-            <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Dashboard Display Overrides (Leave empty to use actual data)</div>
+            {/* Additional Referrals Overrides */}
+            <div className={styles.editModalTitle} style={{ fontSize: '14px', marginTop: '24px', marginBottom: '12px' }}>Additional Team & Earning Overrides</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Earnings Override (Rs)</label>
-                <input
-                  type="number"
-                  placeholder="Use actual..."
-                  value={editForm.customTotalEarnings}
-                  onChange={e => setEditForm(prev => ({ ...prev, customTotalEarnings: e.target.value }))}
-                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>My Salary Override (Rs)</label>
-                <input
-                  type="number"
-                  placeholder="Use actual..."
-                  value={editForm.customMySalary}
-                  onChange={e => setEditForm(prev => ({ ...prev, customMySalary: e.target.value }))}
-                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Total Withdrawals Override (Rs)</label>
-                <input
-                  type="number"
-                  placeholder="Use actual..."
-                  value={editForm.customTotalWithdrawals}
-                  onChange={e => setEditForm(prev => ({ ...prev, customTotalWithdrawals: e.target.value }))}
-                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
-                />
-              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Direct Referrals Count Override</label>
                 <input
@@ -2803,7 +2797,7 @@ export default function AdminDashboard() {
                   placeholder="Use actual..."
                   value={editForm.customDirectReferrals}
                   onChange={e => setEditForm(prev => ({ ...prev, customDirectReferrals: e.target.value }))}
-                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -2813,7 +2807,7 @@ export default function AdminDashboard() {
                   placeholder="Use actual..."
                   value={editForm.customIndirectReferrals}
                   onChange={e => setEditForm(prev => ({ ...prev, customIndirectReferrals: e.target.value }))}
-                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
                 />
               </div>
             </div>
