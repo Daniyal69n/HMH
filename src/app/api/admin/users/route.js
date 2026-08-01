@@ -159,17 +159,33 @@ export async function PUT(request) {
         editUser.email = data.email;
         editUser.phone = data.phone;
         editUser.balance = parseFloat(data.balance) || 0;
-        editUser.earnBalance = parseFloat(data.earnBalance) || 0;
         editUser.totalCommissionEarned = parseFloat(data.totalCommissionEarned) || 0;
         editUser.totalRecharge = parseFloat(data.totalRecharge) || 0;
         editUser.status = data.status;
         editUser.isBlocked = data.isBlocked;
         editUser.isAdmin = data.isAdmin;
 
-        // Custom Overrides
-        editUser.customTotalEarnings = (data.customTotalEarnings !== undefined && data.customTotalEarnings !== null && data.customTotalEarnings !== "") ? parseFloat(data.customTotalEarnings) : null;
-        editUser.customMySalary = (data.customMySalary !== undefined && data.customMySalary !== null && data.customMySalary !== "") ? parseFloat(data.customMySalary) : null;
-        editUser.customTotalWithdrawals = (data.customTotalWithdrawals !== undefined && data.customTotalWithdrawals !== null && data.customTotalWithdrawals !== "") ? parseFloat(data.customTotalWithdrawals) : null;
+        // Financial & Dashboard Stats
+        if (data.customTotalEarnings !== undefined && data.customTotalEarnings !== null && data.customTotalEarnings !== "") {
+          const totEarnings = parseFloat(data.customTotalEarnings) || 0;
+          editUser.customTotalEarnings = totEarnings;
+          editUser.earnBalance = Math.max(0, totEarnings - editUser.totalCommissionEarned);
+        } else {
+          editUser.earnBalance = parseFloat(data.earnBalance) || 0;
+        }
+
+        if (data.customMySalary !== undefined && data.customMySalary !== null && data.customMySalary !== "") {
+          editUser.customMySalary = parseFloat(data.customMySalary) || 0;
+        } else {
+          editUser.customMySalary = null;
+        }
+
+        if (data.customTotalWithdrawals !== undefined && data.customTotalWithdrawals !== null && data.customTotalWithdrawals !== "") {
+          editUser.customTotalWithdrawals = parseFloat(data.customTotalWithdrawals) || 0;
+        } else {
+          editUser.customTotalWithdrawals = null;
+        }
+
         editUser.customDirectReferrals = (data.customDirectReferrals !== undefined && data.customDirectReferrals !== null && data.customDirectReferrals !== "") ? parseInt(data.customDirectReferrals) : null;
         editUser.customIndirectReferrals = (data.customIndirectReferrals !== undefined && data.customIndirectReferrals !== null && data.customIndirectReferrals !== "") ? parseInt(data.customIndirectReferrals) : null;
         editUser.customAdEarning = (data.customAdEarning !== undefined && data.customAdEarning !== null && data.customAdEarning !== "") ? parseFloat(data.customAdEarning) : null;

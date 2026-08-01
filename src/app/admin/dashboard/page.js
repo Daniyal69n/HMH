@@ -2184,6 +2184,19 @@ export default function AdminDashboard() {
     setEditUserTeamData(null)
     fetchEditingUserTeamData(user.phone)
     setEditingUserData(user)
+
+    const initialTotalEarnings = (user.customTotalEarnings !== undefined && user.customTotalEarnings !== null && user.customTotalEarnings !== '')
+      ? String(user.customTotalEarnings)
+      : String((user.earnBalance || 0) + (user.totalCommissionEarned || 0))
+
+    const initialWithdrawals = (user.customTotalWithdrawals !== undefined && user.customTotalWithdrawals !== null && user.customTotalWithdrawals !== '')
+      ? String(user.customTotalWithdrawals)
+      : String((user.withdrawHistory || []).filter(w => w.status === 'approved').reduce((sum, w) => sum + Number(w.amount || 0), 0))
+
+    const initialSalary = (user.customMySalary !== undefined && user.customMySalary !== null && user.customMySalary !== '')
+      ? String(user.customMySalary)
+      : '0'
+
     setEditForm({
       name: user.name || '',
       email: user.email || '',
@@ -2199,9 +2212,9 @@ export default function AdminDashboard() {
       investmentPlans: user.investmentPlans ? JSON.parse(JSON.stringify(user.investmentPlans)) : [],
       withdrawHistory: user.withdrawHistory ? JSON.parse(JSON.stringify(user.withdrawHistory)) : [],
       rechargeHistory: user.rechargeHistory ? JSON.parse(JSON.stringify(user.rechargeHistory)) : [],
-      customTotalEarnings: user.customTotalEarnings !== undefined && user.customTotalEarnings !== null ? String(user.customTotalEarnings) : '',
-      customMySalary: user.customMySalary !== undefined && user.customMySalary !== null ? String(user.customMySalary) : '',
-      customTotalWithdrawals: user.customTotalWithdrawals !== undefined && user.customTotalWithdrawals !== null ? String(user.customTotalWithdrawals) : '',
+      customTotalEarnings: initialTotalEarnings,
+      customMySalary: initialSalary,
+      customTotalWithdrawals: initialWithdrawals,
       customDirectReferrals: user.customDirectReferrals !== undefined && user.customDirectReferrals !== null ? String(user.customDirectReferrals) : '',
       customIndirectReferrals: user.customIndirectReferrals !== undefined && user.customIndirectReferrals !== null ? String(user.customIndirectReferrals) : '',
       customAdEarning: user.customAdEarning !== undefined && user.customAdEarning !== null ? String(user.customAdEarning) : '',
@@ -2213,10 +2226,29 @@ export default function AdminDashboard() {
       const res = await fetch(`/api/user/profile?phone=${user.phone}`)
       if (res.ok) {
         const fullUser = await res.json()
+        const fullApprovedWdSum = (fullUser.withdrawHistory || [])
+          .filter(w => w.status === 'approved')
+          .reduce((sum, w) => sum + Number(w.amount || 0), 0)
+
+        const fullTotEarn = (fullUser.customTotalEarnings !== undefined && fullUser.customTotalEarnings !== null && fullUser.customTotalEarnings !== '')
+          ? String(fullUser.customTotalEarnings)
+          : String((fullUser.earnBalance || 0) + (fullUser.totalCommissionEarned || 0))
+
+        const fullWd = (fullUser.customTotalWithdrawals !== undefined && fullUser.customTotalWithdrawals !== null && fullUser.customTotalWithdrawals !== '')
+          ? String(fullUser.customTotalWithdrawals)
+          : String(fullApprovedWdSum)
+
+        const fullSal = (fullUser.customMySalary !== undefined && fullUser.customMySalary !== null && fullUser.customMySalary !== '')
+          ? String(fullUser.customMySalary)
+          : '0'
+
         setEditForm(prev => ({
           ...prev,
           withdrawHistory: fullUser.withdrawHistory ? JSON.parse(JSON.stringify(fullUser.withdrawHistory)) : [],
-          rechargeHistory: fullUser.rechargeHistory ? JSON.parse(JSON.stringify(fullUser.rechargeHistory)) : []
+          rechargeHistory: fullUser.rechargeHistory ? JSON.parse(JSON.stringify(fullUser.rechargeHistory)) : [],
+          customTotalEarnings: fullTotEarn,
+          customTotalWithdrawals: fullWd,
+          customMySalary: fullSal
         }))
       }
     } catch (e) {
