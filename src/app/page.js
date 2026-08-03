@@ -2568,14 +2568,14 @@ export default function Page() {
 
                   // Referral Income (Direct / Indirect / Downline)
                   if (type === 'referral_income' || type === 'referral_commission' || type === 'referral') {
-                    if (level === 'A' || desc.includes('direct') || desc.includes('level 1') || desc.includes('level a')) {
-                      return 'Direct Referral';
+                    if (level === 'C' || desc.includes('downline') || desc.includes('level 3') || desc.includes('level c')) {
+                      return 'Downline Referral';
                     }
                     if (level === 'B' || desc.includes('indirect') || desc.includes('level 2') || desc.includes('level b')) {
                       return 'Indirect Referral';
                     }
-                    if (level === 'C' || desc.includes('downline') || desc.includes('level 3') || desc.includes('level c')) {
-                      return 'Downline Income';
+                    if (level === 'A' || desc.includes('direct') || desc.includes('level 1') || desc.includes('level a')) {
+                      return 'Direct Referral';
                     }
                     return 'Direct Referral';
                   }
