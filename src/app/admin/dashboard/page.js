@@ -1509,25 +1509,7 @@ export default function AdminDashboard() {
         loadImages()
       }, 500)
 
-      // Set up periodic refresh every 15 seconds for the active tab only
-      const refreshInterval = setInterval(() => {
-        if (activeTab === 'dashboard') {
-          loadDashboardStats()
-          loadRecentActivities()
-        } else if (activeTab === 'users') {
-          loadUsers()
-        } else if (activeTab === 'withdrawals') {
-          loadPendingRequests()
-          loadWithdrawHistory()
-        } else if (activeTab === 'planRequests') {
-          loadPendingRequests()
-          loadRechargeHistory()
-        }
-      }, 15000)
 
-      return () => {
-        clearInterval(refreshInterval)
-      }
     }
   }, [isAdminLoggedIn, isCheckingAuth, activeTab])
 
