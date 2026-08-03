@@ -37,6 +37,13 @@ export async function GET(request) {
       await user.save();
     }
 
+    // Auto-ensure adWatchDaysLeft is initialized for active plan holders
+    const hasActiveInvestment = (user.investmentPlans || []).some(p => p.status === 'active');
+    if (hasActiveInvestment && (!user.adWatchDaysLeft || user.adWatchDaysLeft <= 0)) {
+      user.adWatchDaysLeft = 10;
+      await user.save();
+    }
+
     console.time("processing");
     // Auto-reset claimedStreakReward if current streak is broken
     if (user.claimedStreakReward) {

@@ -2208,6 +2208,11 @@ export default function AdminDashboard() {
       ? String(user.customMySalary)
       : String(calcSalPKR)
 
+    const userHasActivePlan = (user.investmentPlans || []).some(p => p.status === 'active');
+    const initialAdDays = (user.adWatchDaysLeft !== undefined && user.adWatchDaysLeft !== null && user.adWatchDaysLeft > 0)
+      ? user.adWatchDaysLeft
+      : (userHasActivePlan ? 10 : 0);
+
     setEditForm({
       name: user.name || '',
       email: user.email || '',
@@ -2226,6 +2231,7 @@ export default function AdminDashboard() {
       customTotalEarnings: initialTotalEarnings,
       customMySalary: initialSalary,
       customTotalWithdrawals: initialWithdrawals,
+      adWatchDaysLeft: initialAdDays,
       customDirectReferrals: user.customDirectReferrals !== undefined && user.customDirectReferrals !== null ? String(user.customDirectReferrals) : '',
       customIndirectReferrals: user.customIndirectReferrals !== undefined && user.customIndirectReferrals !== null ? String(user.customIndirectReferrals) : '',
       customAdEarning: user.customAdEarning !== undefined && user.customAdEarning !== null ? String(user.customAdEarning) : '',
@@ -2264,13 +2270,19 @@ export default function AdminDashboard() {
           ? String(fullUser.customMySalary)
           : String(fullSalPKR)
 
+        const fullHasActive = (fullUser.investmentPlans || []).some(p => p.status === 'active');
+        const fullAdDays = (fullUser.adWatchDaysLeft !== undefined && fullUser.adWatchDaysLeft !== null && fullUser.adWatchDaysLeft > 0)
+          ? fullUser.adWatchDaysLeft
+          : (fullHasActive ? 10 : 0);
+
         setEditForm(prev => ({
           ...prev,
           withdrawHistory: fullUser.withdrawHistory ? JSON.parse(JSON.stringify(fullUser.withdrawHistory)) : [],
           rechargeHistory: fullUser.rechargeHistory ? JSON.parse(JSON.stringify(fullUser.rechargeHistory)) : [],
           customTotalEarnings: fullTotEarn,
           customTotalWithdrawals: fullWd,
-          customMySalary: fullSal
+          customMySalary: fullSal,
+          adWatchDaysLeft: fullAdDays
         }))
       }
     } catch (e) {
@@ -2874,9 +2886,12 @@ export default function AdminDashboard() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', color: 'var(--gold)' }}>Ads Earning Days Left</label>
-                <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px', height: '38px', display: 'flex', alignItems: 'center' }}>
-                  {editingUserData?.adWatchDaysLeft || 0} Days
-                </div>
+                <input
+                  type="number"
+                  value={editForm.adWatchDaysLeft}
+                  onChange={e => setEditForm(prev => ({ ...prev, adWatchDaysLeft: parseInt(e.target.value) || 0 }))}
+                  style={{ background: 'var(--bg)', border: '1px solid rgba(201,160,74,0.4)', padding: '8px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
+                />
                 <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Remaining days for user to earn from ads.</span>
               </div>
             </div>
