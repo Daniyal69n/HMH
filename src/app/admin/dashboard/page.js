@@ -1493,8 +1493,7 @@ export default function AdminDashboard() {
         loadPendingRequests()
         loadWithdrawHistory()
       } else if (activeTab === 'planRequests') {
-        loadPendingRequests()
-        loadRechargeHistory()
+        // Plan requests tab fetches its own data from /api/admin/plans
       }
 
       // Load settings-like data ASYNCHRONOUSLY to not block page render
