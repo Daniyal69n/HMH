@@ -2,23 +2,39 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 
-// GET all users who have pending investment plans
+// GET all users who have investment plans based on status filter (pending, approved, rejected, all)
 export async function GET(request) {
   try {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || 'pending';
+    const statusParam = (searchParams.get('status') || 'pending').toLowerCase();
 
-    // Find users who have investmentPlans with the given status
-    const users = await User.find({
-      'investmentPlans.status': status
-    }).select('-password').lean();
+    let targetDbStatus = statusParam;
+    let findQuery = {};
 
-    // Flatten to a list of plan requests with user info
+    if (statusParam === 'approved') {
+      targetDbStatus = 'active';
+      findQuery = { 'investmentPlans.status': 'active' };
+    } else if (statusParam === 'rejected') {
+      targetDbStatus = 'cancelled';
+      findQuery = { 'investmentPlans.status': 'cancelled' };
+    } else if (statusParam === 'all') {
+      findQuery = { 'investmentPlans.0': { $exists: true } };
+    } else {
+      targetDbStatus = 'pending';
+      findQuery = { 'investmentPlans.status': 'pending' };
+    }
+
+    const users = await User.find(findQuery).select('-password').lean();
+
     const planRequests = [];
     for (const user of users) {
-      const matchingPlans = user.investmentPlans.filter(p => p.status === status);
+      const matchingPlans = user.investmentPlans.filter(p => {
+        if (statusParam === 'all') return true;
+        return p.status === targetDbStatus;
+      });
+
       for (const plan of matchingPlans) {
         const activePlan = [...(user.investmentPlans || [])].reverse().find(p => p.status === 'active');
         const currentPlanName = activePlan ? activePlan.planName : 'Free';
@@ -33,7 +49,7 @@ export async function GET(request) {
           planName: plan.planName,
           userCurrentPlan: currentPlanName,
           amount: plan.amount,
-          status: plan.status,
+          status: plan.status === 'active' ? 'approved' : (plan.status === 'cancelled' ? 'rejected' : plan.status),
           startDate: plan.startDate,
           paymentMethod: plan.paymentMethod,
           trxId: plan.trxId || '',

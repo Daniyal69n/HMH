@@ -714,6 +714,7 @@ export default function AdminDashboard() {
   const [historyLoading, setHistoryLoading] = useState(false)
   const [rechargeFilter, setRechargeFilter] = useState('pending') // all, approved, rejected, pending
   const [withdrawFilter, setWithdrawFilter] = useState('pending') // all, approved, rejected, pending
+  const [planFilter, setPlanFilter] = useState('pending') // pending, approved, rejected, all
 
   // Sample plans data - in a real app, this would come from your backend
   const [samplePlans, setSamplePlans] = useState([])
@@ -1589,13 +1590,13 @@ export default function AdminDashboard() {
     }
   }, [isAdminLoggedIn, isCheckingAuth, activeTab])
 
-  // Load plan requests when tab is activated
+  // Load plan requests when tab or filter is activated
   useEffect(() => {
     if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'planRequests') {
       const loadPlanRequests = async () => {
         setPlanRequestsLoading(true)
         try {
-          const res = await fetch('/api/admin/plans?status=pending')
+          const res = await fetch(`/api/admin/plans?status=${planFilter}`)
           if (res.ok) {
             const data = await res.json()
             setPlanRequests(data)
@@ -1610,7 +1611,7 @@ export default function AdminDashboard() {
       }
       loadPlanRequests()
     }
-  }, [isAdminLoggedIn, isCheckingAuth, activeTab])
+  }, [isAdminLoggedIn, isCheckingAuth, activeTab, planFilter])
 
   const handlePlanAction = async (userId, planId, action) => {
     try {
@@ -3851,7 +3852,7 @@ export default function AdminDashboard() {
               type="button"
               onClick={() => {
                 setPlanRequestsLoading(true)
-                fetch('/api/admin/plans?status=pending')
+                fetch(`/api/admin/plans?status=${planFilter}`)
                   .then(r => r.ok ? r.json() : [])
                   .then(data => setPlanRequests(Array.isArray(data) ? data : []))
                   .catch(() => setPlanRequests([]))
@@ -3866,6 +3867,20 @@ export default function AdminDashboard() {
               <span>{planRequestsLoading ? 'Loading' : 'Refresh'}</span>
             </button>
           </div>
+
+          <div className={styles.tabs}>
+            {['pending', 'approved', 'rejected', 'all'].map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={`${styles.tab} ${planFilter === tab ? styles.tabActive : ''}`}
+                onClick={() => setPlanFilter(tab)}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+
           {planRequestsLoading ? (
             <div className={styles.empty}><p>Loading plan requests...</p></div>
           ) : planRequests.length === 0 ? (
@@ -3874,7 +3889,7 @@ export default function AdminDashboard() {
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 8v8M8 12l4-4 4 4" />
               </svg>
-              <p>No pending plan requests</p>
+              <p>No {planFilter === 'all' ? '' : planFilter} plan requests</p>
             </div>
           ) : (
             planRequests.map((req, i) => (
@@ -3896,7 +3911,7 @@ export default function AdminDashboard() {
                       <div className={styles.userEmail}>{req.userEmail || req.userPhone}</div>
                     </div>
                   </div>
-                  <span className={`${styles.status} ${styles.pending}`}>pending</span>
+                  <span className={`${styles.status} ${styles[req.status] || styles.pending}`}>{req.status}</span>
                 </div>
                 <div className={styles.detailGrid}>
                   <div>
@@ -3980,10 +3995,12 @@ export default function AdminDashboard() {
                   </div>
                 )}
 
-                <div className={styles.cardActions}>
-                  <button type="button" className={`${styles.btn} ${styles.btnGreen}`} onClick={() => handlePlanAction(req.userId, req.planId, 'approve')}>Approve</button>
-                  <button type="button" className={`${styles.btn} ${styles.btnReject}`} onClick={() => handlePlanAction(req.userId, req.planId, 'reject')}>Reject</button>
-                </div>
+                {req.status === 'pending' && (
+                  <div className={styles.cardActions}>
+                    <button type="button" className={`${styles.btn} ${styles.btnGreen}`} onClick={() => handlePlanAction(req.userId, req.planId, 'approve')}>Approve</button>
+                    <button type="button" className={`${styles.btn} ${styles.btnReject}`} onClick={() => handlePlanAction(req.userId, req.planId, 'reject')}>Reject</button>
+                  </div>
+                )}
               </div>
             ))
           )}
