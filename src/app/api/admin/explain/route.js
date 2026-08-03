@@ -57,9 +57,13 @@ export async function GET() {
       metrics.uniqueUsersCount = new Set(results.map(r => String(r._id))).size;
       metrics.plansCount = results.length;
 
+      // Screenshot statistics
+      let base64Count = 0;
+      let cloudinaryCount = 0;
+      let omittedCount = 0;
+
       // Mapping Step
       const mapStart = Date.now();
-      let rawBase64Found = false;
       const planRequests = (results || []).map(item => {
         if (!item || !item.plan || typeof item.plan !== 'object') return null;
         const user = item;
@@ -84,8 +88,16 @@ export async function GET() {
         }
 
         let receiptUrl = plan.screenshotData || plan.screenshotUrl || null;
-        if (receiptUrl && typeof receiptUrl === 'string' && receiptUrl.startsWith('data:image')) {
-          rawBase64Found = true;
+        
+        // Categorize screenshot data types
+        if (!receiptUrl) {
+          omittedCount++;
+        } else if (typeof receiptUrl === 'string' && receiptUrl.startsWith('data:image')) {
+          base64Count++;
+        } else if (typeof receiptUrl === 'string' && receiptUrl.includes('cloudinary')) {
+          cloudinaryCount++;
+        } else {
+          omittedCount++;
         }
 
         // Apply list sanitization to omit base64
@@ -127,32 +139,15 @@ export async function GET() {
       metrics.serializationTimeMs = Date.now() - serializeStart;
 
       metrics.sizeKb = (Buffer.byteLength(jsonPayload, 'utf8') / 1024).toFixed(2);
-      metrics.totalEndpointTimeMs = Date.now() - totalStart;
-      metrics.rawBase64Found = rawBase64Found;
+      metrics.totalExecutionTimeMs = Date.now() - totalStart;
+      
+      metrics.screenshotStats = {
+        base64Count,
+        cloudinaryCount,
+        omittedCount
+      };
 
       report[statusParam] = metrics;
-    }
-
-    // Explain query execution stats
-    report.explain = {};
-    const explainStatuses = ['pending', 'approved', 'all'];
-    for (const expStatus of explainStatuses) {
-      let match = {};
-      if (expStatus === 'approved') {
-        match = { 'investmentPlans.status': { $in: ['active', 'approved'] } };
-      } else if (expStatus === 'pending') {
-        match = { 'investmentPlans.status': 'pending' };
-      } else {
-        match = { 'investmentPlans.0': { $exists: true } };
-      }
-
-      const pipeline = [
-        { $match: match },
-        { $unwind: { path: '$investmentPlans', preserveNullAndEmptyArrays: false } }
-      ];
-
-      const explanation = await User.aggregate(pipeline).explain("executionStats");
-      report.explain[expStatus] = explanation.queryPlanner?.winningPlan || explanation[0]?.queryPlanner?.winningPlan || explanation;
     }
 
     return NextResponse.json({ success: true, report });
