@@ -56,6 +56,24 @@ export async function GET(request) {
           } catch { }
         }
 
+        let receiptUrl = plan.screenshotData || plan.screenshotUrl || null;
+        if (receiptUrl && receiptUrl.startsWith('data:image')) {
+          try {
+            const { uploadBase64ToCloudinary } = await import('@/lib/cloudinaryHelper');
+            const cUrl = await uploadBase64ToCloudinary(receiptUrl, 'plan-requests');
+            if (cUrl) {
+              receiptUrl = cUrl;
+              // Asynchronously update DB so MongoDB stays lightweight
+              User.updateOne(
+                { _id: user._id, 'investmentPlans._id': plan._id },
+                { $set: { 'investmentPlans.$.screenshotData': cUrl } }
+              ).catch(err => console.error('Failed to update DB image URL:', err));
+            }
+          } catch (err) {
+            console.error('Error migrating plan image:', err);
+          }
+        }
+
         planRequests.push({
           userId: user._id ? String(user._id) : '',
           userName: user.name || 'Unknown User',
@@ -70,7 +88,7 @@ export async function GET(request) {
           startDate: formattedDate,
           paymentMethod: plan.paymentMethod || 'N/A',
           trxId: plan.trxId || '',
-          screenshotData: plan.screenshotData || plan.screenshotUrl || null
+          screenshotData: receiptUrl
         });
       }
     }

@@ -34,9 +34,13 @@ export async function POST(request) {
       return NextResponse.json({ message: 'This TRX ID has already been used. Please enter a valid unique TRX ID.' }, { status: 400 })
     }
 
-    // screenshotUrl must be a Cloudinary URL (not base64)
-    if (screenshotUrl && !screenshotUrl.startsWith('http')) {
-      return NextResponse.json({ message: 'Screenshot must be a valid URL (uploaded to Cloudinary)' }, { status: 400 })
+    let finalScreenshotUrl = screenshotUrl || null;
+    if (screenshotUrl && screenshotUrl.startsWith('data:image')) {
+      const { uploadBase64ToCloudinary } = await import('@/lib/cloudinaryHelper');
+      const cUrl = await uploadBase64ToCloudinary(screenshotUrl, 'plan-requests');
+      if (cUrl) {
+        finalScreenshotUrl = cUrl;
+      }
     }
 
     // Find user
@@ -54,7 +58,7 @@ export async function POST(request) {
       status: 'pending',
       startDate: new Date(),
       paymentMethod: paymentMethod,
-      screenshotData: screenshotUrl || null
+      screenshotData: finalScreenshotUrl
     })
 
     await user.save()
