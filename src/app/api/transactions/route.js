@@ -17,7 +17,20 @@ export async function GET(request) {
     let query = {};
     
     if (userId) {
-      query.userId = userId;
+      // Find user to map both phone number and database ObjectId
+      const userDoc = await User.findOne({
+        $or: [
+          { phone: userId },
+          { email: userId },
+          { _id: userId.match(/^[0-9a-fA-F]{24}$/) ? userId : null }
+        ].filter(Boolean)
+      }).lean();
+
+      if (userDoc) {
+        query.userId = { $in: [userDoc.phone, String(userDoc._id), userDoc.email].filter(Boolean) };
+      } else {
+        query.userId = userId;
+      }
     }
     
     if (type) {
