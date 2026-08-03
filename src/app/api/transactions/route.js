@@ -231,30 +231,31 @@ export async function PUT(request) {
           await User.findOneAndUpdate(
             { phone: transaction.userId },
             { 
-              balance: user.balance,
-              totalRecharge: user.totalRecharge,
-              referralCommission: user.referralCommission,
-              totalCommissionEarned: user.totalCommissionEarned
-            },
-            { new: true }
+              balance: newBalance,
+              totalRecharge: newTotalRecharge
+            }
           );
-          
-          // Verify the update worked
-          const updatedUser = await User.findOne({ phone: transaction.userId });
-          console.log('User after save:', {
-            phone: updatedUser.phone,
-            balance: updatedUser.balance,
-            totalRecharge: updatedUser.totalRecharge,
-            referralCommission: updatedUser.referralCommission,
-            totalCommissionEarned: updatedUser.totalCommissionEarned,
-            balanceType: typeof updatedUser.balance,
-            totalRechargeType: typeof updatedUser.totalRecharge
-          });
+        } else if (transaction.type === 'withdraw') {
+          const user = await User.findOne({ phone: transaction.userId });
+          if (user && user.withdrawHistory && Array.isArray(user.withdrawHistory)) {
+            const item = user.withdrawHistory.find(w => 
+              (w._id && w._id.toString() === transaction._id.toString()) || 
+              w.transactionId === transaction.transactionId || 
+              (w.amount === transaction.amount && w.status === 'pending')
+            );
+            if (item) {
+              item.status = 'approved';
+            }
+            await user.save();
+          }
         }
         break;
         
       case 'reject':
         transaction.status = 'rejected';
+        if (body.reason || body.adminRemarks) {
+          transaction.adminRemarks = body.reason || body.adminRemarks;
+        }
         
         // For rejected withdrawals, refund the balance back to user
         if (transaction.type === 'withdraw') {
@@ -262,21 +263,21 @@ export async function PUT(request) {
           if (user) {
             const currentBalance = typeof user.balance === 'number' ? user.balance : 0;
             const newBalance = currentBalance + transaction.amount;
+            user.balance = newBalance;
             
-            await User.findOneAndUpdate(
-              { phone: transaction.userId },
-              { balance: newBalance }
-            );
-            
-            console.log('Rejecting withdrawal - refunding balance:', {
-              currentBalance: currentBalance,
-              newBalance: newBalance,
-              amount: transaction.amount
-            });
+            if (user.withdrawHistory && Array.isArray(user.withdrawHistory)) {
+              const item = user.withdrawHistory.find(w => 
+                (w._id && w._id.toString() === transaction._id.toString()) || 
+                w.transactionId === transaction.transactionId || 
+                (w.amount === transaction.amount && w.status === 'pending')
+              );
+              if (item) {
+                item.status = 'rejected';
+                item.adminRemarks = transaction.adminRemarks;
+              }
+            }
+            await user.save();
           }
-        } else {
-          // For other transaction types, no balance changes needed
-          console.log('Rejecting transaction - no balance change needed');
         }
         break;
         

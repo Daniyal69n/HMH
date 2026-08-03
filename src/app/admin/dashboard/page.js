@@ -1872,6 +1872,11 @@ export default function AdminDashboard() {
   // Handle withdraw approval
   const handleWithdrawApproval = async (requestId, approved) => {
     try {
+      let reason = '';
+      if (!approved) {
+        reason = prompt('Enter rejection reason for user (optional):') || 'Account details verification failed';
+      }
+
       // Call the API to update the transaction status
       const response = await fetch('/api/transactions', {
         method: 'PUT',
@@ -1880,7 +1885,8 @@ export default function AdminDashboard() {
         },
         body: JSON.stringify({
           transactionId: requestId,
-          action: approved ? 'approve' : 'reject'
+          action: approved ? 'approve' : 'reject',
+          reason: reason
         }),
       });
 

@@ -281,6 +281,7 @@ export default function Page() {
   const [txHistory, setTxHistory] = useState([])
   const [txLoading, setTxLoading] = useState(false)
   const [txTab, setTxTab] = useState('All')
+  const [activeWdPopup, setActiveWdPopup] = useState(null)
 
   const NAV = useMemo(
     () => [
@@ -930,6 +931,19 @@ export default function Page() {
 
   const topbarTitle = NAV.find((n) => n.id === page)?.label ?? 'HMHPro'
 
+  const closeNotificationWdPopup = () => {
+    if (activeWdPopup && activeWdPopup.id) {
+      try {
+        const storedSeen = JSON.parse(localStorage.getItem('hmh-seen-wd-popups') || '[]');
+        if (!storedSeen.includes(activeWdPopup.id)) {
+          storedSeen.push(activeWdPopup.id);
+          localStorage.setItem('hmh-seen-wd-popups', JSON.stringify(storedSeen));
+        }
+      } catch (e) { }
+    }
+    setActiveWdPopup(null);
+  }
+
   // Load real withdrawal history from transactions API
   useEffect(() => {
     if (!profile || !profile.phone) return
@@ -940,6 +954,32 @@ export default function Page() {
           const data = await res.json()
           const txns = Array.isArray(data) ? data : (data.transactions || [])
           setWithdrawHistory(txns)
+
+          // Check for unacknowledged withdrawal status popups
+          try {
+            const storedSeen = JSON.parse(localStorage.getItem('hmh-seen-wd-popups') || '[]')
+            
+            const unapprovedTx = txns.find(tx => tx.status === 'approved' && (tx._id || tx.transactionId) && !storedSeen.includes(tx._id || tx.transactionId))
+            if (unapprovedTx) {
+              setActiveWdPopup({
+                type: 'approved',
+                id: unapprovedTx._id || unapprovedTx.transactionId,
+                amount: unapprovedTx.amount
+              })
+              return
+            }
+
+            const unrejectedTx = txns.find(tx => tx.status === 'rejected' && (tx._id || tx.transactionId) && !storedSeen.includes(tx._id || tx.transactionId))
+            if (unrejectedTx) {
+              setActiveWdPopup({
+                type: 'rejected',
+                id: unrejectedTx._id || unrejectedTx.transactionId,
+                amount: unrejectedTx.amount,
+                reason: unrejectedTx.adminRemarks || unrejectedTx.reason || 'Account details verification failed'
+              })
+              return
+            }
+          } catch (e) { console.error('Error checking wd popups:', e) }
         }
       } catch (err) {
         console.warn('Failed to load withdraw history:', err)
@@ -1002,6 +1042,7 @@ export default function Page() {
       setWdMethod('')
       setWdName('')
       setWdAccount('')
+      setActiveWdPopup({ type: 'pending' })
       showToast('✅ Withdrawal request submitted. Pending admin approval.')
       // Reload withdrawal history
       try {
@@ -4953,6 +4994,140 @@ export default function Page() {
                 Apply Crop
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Withdrawal Status Popups */}
+      {activeWdPopup?.type === 'pending' && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999, padding: '16px'
+        }}>
+          <div style={{
+            background: 'linear-gradient(145deg, #1c1c24, #14141a)',
+            border: '1px solid rgba(245, 158, 11, 0.5)',
+            borderRadius: '16px', maxWidth: '440px', width: '100%', padding: '24px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.7)', color: '#fff', textAlign: 'center', position: 'relative'
+          }}>
+            <button
+              onClick={() => setActiveWdPopup(null)}
+              style={{
+                position: 'absolute', top: '14px', right: '14px', background: 'rgba(255,255,255,0.1)',
+                border: 'none', color: '#aaa', width: '28px', height: '28px', borderRadius: '50%',
+                cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{ fontSize: '42px', marginBottom: '8px' }}>🟡</div>
+            <h3 style={{ margin: '0 0 14px', fontSize: '19px', fontWeight: '700', color: '#f59e0b' }}>
+              Withdrawal Request Submitted
+            </h3>
+            <div style={{ fontSize: '13.5px', color: '#e2e8f0', lineHeight: 1.6, textAlign: 'left', background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ margin: '0 0 10px' }}>Your withdrawal request has been received successfully.</p>
+              <p style={{ margin: '0 0 10px' }}>Your request is currently under review by our finance team.</p>
+              <p style={{ margin: '0 0 10px' }}>Please wait while we verify your account and payment details.</p>
+              <p style={{ margin: '0 0 10px', fontWeight: 'bold', color: '#f59e0b' }}>Status: Pending ⏳</p>
+              <p style={{ margin: '0 0 10px' }}>Once approved, your payment will be transferred and you will receive a confirmation notification.</p>
+              <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>*Estimated processing time 5 minutes to 2 hours*</p>
+            </div>
+
+            <button
+              onClick={() => setActiveWdPopup(null)}
+              className="btn btn-gold"
+              style={{ marginTop: '20px', width: '100%', padding: '12px', fontSize: '15px', fontWeight: 'bold', borderRadius: '8px' }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeWdPopup?.type === 'approved' && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999, padding: '16px'
+        }}>
+          <div style={{
+            background: 'linear-gradient(145deg, #1c1c24, #14141a)',
+            border: '1px solid rgba(34, 197, 94, 0.5)',
+            borderRadius: '16px', maxWidth: '440px', width: '100%', padding: '24px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.7)', color: '#fff', textAlign: 'center', position: 'relative'
+          }}>
+            <button
+              onClick={closeNotificationWdPopup}
+              style={{
+                position: 'absolute', top: '14px', right: '14px', background: 'rgba(255,255,255,0.1)',
+                border: 'none', color: '#aaa', width: '28px', height: '28px', borderRadius: '50%',
+                cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{ fontSize: '42px', marginBottom: '8px' }}>✅</div>
+            <h3 style={{ margin: '0 0 14px', fontSize: '19px', fontWeight: '700', color: '#22c55e' }}>
+              Withdrawal Approved
+            </h3>
+            <div style={{ fontSize: '13.5px', color: '#e2e8f0', lineHeight: 1.6, textAlign: 'left', background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ margin: '0 0 10px', fontWeight: 'bold' }}>Congratulations! Your withdrawal request has been approved.</p>
+              <p style={{ margin: '0 0 10px' }}>Your payment has been sent successfully.</p>
+              <p style={{ margin: '0 0 10px' }}>Please check your JazzCash/EasyPaisa/Bank account.</p>
+              <p style={{ margin: 0, fontWeight: 'bold', color: '#22c55e' }}>Status: Approved ✅</p>
+            </div>
+
+            <button
+              onClick={closeNotificationWdPopup}
+              className="btn btn-gold"
+              style={{ marginTop: '20px', width: '100%', padding: '12px', fontSize: '15px', fontWeight: 'bold', borderRadius: '8px' }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeWdPopup?.type === 'rejected' && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999, padding: '16px'
+        }}>
+          <div style={{
+            background: 'linear-gradient(145deg, #1c1c24, #14141a)',
+            border: '1px solid rgba(239, 68, 68, 0.5)',
+            borderRadius: '16px', maxWidth: '440px', width: '100%', padding: '24px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.7)', color: '#fff', textAlign: 'center', position: 'relative'
+          }}>
+            <button
+              onClick={closeNotificationWdPopup}
+              style={{
+                position: 'absolute', top: '14px', right: '14px', background: 'rgba(255,255,255,0.1)',
+                border: 'none', color: '#aaa', width: '28px', height: '28px', borderRadius: '50%',
+                cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{ fontSize: '42px', marginBottom: '8px' }}>❌</div>
+            <h3 style={{ margin: '0 0 14px', fontSize: '19px', fontWeight: '700', color: '#ef4444' }}>
+              Withdrawal Rejected
+            </h3>
+            <div style={{ fontSize: '13.5px', color: '#e2e8f0', lineHeight: 1.6, textAlign: 'left', background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ margin: '0 0 10px', fontWeight: 'bold' }}>Unfortunately, your withdrawal request could not be approved.</p>
+              <p style={{ margin: '0 0 10px', color: '#ef4444' }}><strong>Reason:</strong> {activeWdPopup.reason || 'Account details verification failed'}</p>
+              <p style={{ margin: 0 }}>Please correct the issue and submit a new request.</p>
+            </div>
+
+            <button
+              onClick={closeNotificationWdPopup}
+              className="btn btn-gold"
+              style={{ marginTop: '20px', width: '100%', padding: '12px', fontSize: '15px', fontWeight: 'bold', borderRadius: '8px' }}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
