@@ -836,9 +836,19 @@ export default function Page() {
       const localTime = todayStart.getTime() - todayStart.getTimezoneOffset() * 60000
       const currentCycleIndex = Math.floor(localTime / (24 * 60 * 60 * 1000))
 
-      // Check if user has already spun in this calendar day
-      const lastSpunCycle = localStorage.getItem(`hmh-last-spin-cycle-${profile.phone}`)
-      setHasSpunThisCycle(lastSpunCycle === String(currentCycleIndex))
+      // Check number of spins used in this 24-hour cycle
+      const savedCycle = localStorage.getItem(`hmh-last-spin-cycle-${profile.phone}`)
+      let spinsUsed = 0
+      if (savedCycle === String(currentCycleIndex)) {
+        spinsUsed = parseInt(localStorage.getItem(`hmh-spins-used-${profile.phone}`) || '0', 10)
+      } else {
+        localStorage.setItem(`hmh-last-spin-cycle-${profile.phone}`, String(currentCycleIndex))
+        localStorage.setItem(`hmh-spins-used-${profile.phone}`, '0')
+      }
+
+      const totalEligibleSpins = Math.floor(cycleInvites / 3)
+      const remainingSpins = Math.max(0, totalEligibleSpins - spinsUsed)
+      setHasSpunThisCycle(remainingSpins <= 0)
     }
 
     updateCountdown()
@@ -1490,8 +1500,20 @@ export default function Page() {
         todayStart.setHours(0, 0, 0, 0)
         const localTime = todayStart.getTime() - todayStart.getTimezoneOffset() * 60000
         const currentCycleIndex = Math.floor(localTime / (24 * 60 * 60 * 1000))
+        
+        const savedCycle = localStorage.getItem(`hmh-last-spin-cycle-${profile.phone}`)
+        let spinsUsed = 0
+        if (savedCycle === String(currentCycleIndex)) {
+          spinsUsed = parseInt(localStorage.getItem(`hmh-spins-used-${profile.phone}`) || '0', 10)
+        }
+        spinsUsed += 1
+        
         localStorage.setItem(`hmh-last-spin-cycle-${profile.phone}`, String(currentCycleIndex))
-        setHasSpunThisCycle(true)
+        localStorage.setItem(`hmh-spins-used-${profile.phone}`, String(spinsUsed))
+        
+        const totalEligibleSpins = Math.floor(currentCycleInvites / 3)
+        const remainingSpins = Math.max(0, totalEligibleSpins - spinsUsed)
+        setHasSpunThisCycle(remainingSpins <= 0)
 
         // Award user balance on the database
         try {
