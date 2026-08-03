@@ -53,7 +53,14 @@ export async function GET(request) {
           phone: 1,
           email: 1,
           profilePicture: 1,
-          plan: '$investmentPlans'
+          'plan._id': '$investmentPlans._id',
+          'plan.planName': '$investmentPlans.planName',
+          'plan.amount': '$investmentPlans.amount',
+          'plan.status': '$investmentPlans.status',
+          'plan.paymentMethod': '$investmentPlans.paymentMethod',
+          'plan.trxId': '$investmentPlans.trxId',
+          'plan.startDate': '$investmentPlans.startDate',
+          'plan.screenshotUrl': '$investmentPlans.screenshotUrl'
         }
       }
     ];
@@ -85,7 +92,7 @@ export async function GET(request) {
         } catch { }
       }
 
-      let receiptUrl = plan.screenshotData || plan.screenshotUrl || null;
+      let receiptUrl = plan.screenshotUrl || null;
 
       // Ensure list response returns ONLY lightweight Cloudinary CDN URLs, omitting heavy legacy Base64 data
       if (receiptUrl && typeof receiptUrl === 'string' && (receiptUrl.startsWith('data:image') || receiptUrl.length > 500)) {
