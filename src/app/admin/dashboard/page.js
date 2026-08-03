@@ -3911,7 +3911,21 @@ export default function AdminDashboard() {
                       <div className={styles.userEmail}>{req.userEmail || req.userPhone}</div>
                     </div>
                   </div>
-                  <span className={`${styles.status} ${styles[req.status] || styles.pending}`}>{req.status}</span>
+                  <span
+                    className={`${styles.status} ${styles[req.status] || styles.pending}`}
+                    style={{
+                      background: req.status === 'approved' ? 'rgba(34, 197, 94, 0.2)' : (req.status === 'rejected' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'),
+                      color: req.status === 'approved' ? '#22c55e' : (req.status === 'rejected' ? '#ef4444' : '#f59e0b'),
+                      border: `1px solid ${req.status === 'approved' ? 'rgba(34, 197, 94, 0.4)' : (req.status === 'rejected' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(245, 158, 11, 0.4)')}`,
+                      padding: '3px 10px',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    {req.status}
+                  </span>
                 </div>
                 <div className={styles.detailGrid}>
                   <div>

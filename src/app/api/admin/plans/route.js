@@ -10,18 +10,10 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const statusParam = (searchParams.get('status') || 'pending').toLowerCase();
 
-    let dbFilter = {};
-    if (statusParam === 'approved') {
-      dbFilter = { 'investmentPlans.status': { $in: ['active', 'approved'] } };
-    } else if (statusParam === 'rejected') {
-      dbFilter = { 'investmentPlans.status': { $in: ['cancelled', 'rejected'] } };
-    } else if (statusParam === 'pending') {
-      dbFilter = { 'investmentPlans.status': 'pending' };
-    } else {
-      dbFilter = { 'investmentPlans.status': { $exists: true } };
-    }
-
-    const users = await User.find(dbFilter)
+    // Query all users who have non-empty investmentPlans array
+    const users = await User.find({
+      investmentPlans: { $exists: true, $ne: [] }
+    })
       .select('name phone email profilePicture investmentPlans')
       .lean();
 
