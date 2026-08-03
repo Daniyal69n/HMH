@@ -3312,7 +3312,7 @@ export default function AdminDashboard() {
                         <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}>
                           <div>
                             <strong>{m.name}</strong> ({m.phone})<br />
-                            <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Email: {m.email || 'N/A'}</span>
+                            <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Referred by: {m.referredByName || 'Referrer'}</span>
                           </div>
                           <div style={{ textAlign: 'right' }}>
                             <span className="badge" style={{ background: 'var(--gold-bg)', color: 'var(--gold-bright)', fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px' }}>{m.plan}</span>
@@ -3336,7 +3336,7 @@ export default function AdminDashboard() {
                         <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}>
                           <div>
                             <strong>{m.name}</strong> ({m.phone})<br />
-                            <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Email: {m.email || 'N/A'}</span>
+                            <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Referred by: {m.referredByName || 'Referrer'}</span>
                           </div>
                           <div style={{ textAlign: 'right' }}>
                             <span className="badge" style={{ background: 'var(--gold-bg)', color: 'var(--gold-bright)', fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px' }}>{m.plan}</span>
@@ -3360,7 +3360,7 @@ export default function AdminDashboard() {
                         <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '6px 10px', borderRadius: '4px', fontSize: '12px' }}>
                           <div>
                             <strong>{m.name}</strong> ({m.phone})<br />
-                            <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Email: {m.email || 'N/A'}</span>
+                            <span style={{ fontSize: '10.5px', color: 'var(--text-dim)' }}>Referred by: {m.referredByName || 'Referrer'}</span>
                           </div>
                           <div style={{ textAlign: 'right' }}>
                             <span className="badge" style={{ background: 'var(--gold-bg)', color: 'var(--gold-bright)', fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px' }}>{m.plan}</span>

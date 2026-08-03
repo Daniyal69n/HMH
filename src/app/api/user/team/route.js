@@ -18,7 +18,7 @@ export async function GET(request) {
     
     // Find the user (excluding base64 profilePicture for speed)
     console.time("query1");
-    const user = await User.findOne({ phone: userId }).select('phone customDirectReferrals customIndirectReferrals referralCommission').lean();
+    const user = await User.findOne({ phone: userId }).select('name phone customDirectReferrals customIndirectReferrals referralCommission').lean();
     console.timeEnd("query1");
     if (!user) {
       return Response.json({ message: 'User not found' }, { status: 404 });
@@ -26,22 +26,42 @@ export async function GET(request) {
     
     // Get Level A members (direct referrals with active plans)
     console.time("query2");
-    const levelAMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': 'active' }).select('name phone email balance earnBalance createdAt investmentPlans.status investmentPlans.planName').lean();
+    const levelAMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': 'active' }).select('name phone email referredBy balance earnBalance createdAt investmentPlans.status investmentPlans.planName').lean();
     const levelAPhones = levelAMembers.map(m => m.phone);
     
     // Get Pending members (direct referrals with NO active plan)
-    const pendingMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': { $ne: 'active' } }).select('name phone email balance earnBalance createdAt investmentPlans.status investmentPlans.planName').lean();
+    const pendingMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': { $ne: 'active' } }).select('name phone email referredBy balance earnBalance createdAt investmentPlans.status investmentPlans.planName').lean();
  
     // Get Level B members (indirect referrals with active plans)
     const levelBMembers = levelAPhones.length > 0 
-      ? await User.find({ referredBy: { $in: levelAPhones }, 'investmentPlans.status': 'active' }).select('name phone email balance earnBalance createdAt investmentPlans.status investmentPlans.planName').lean()
+      ? await User.find({ referredBy: { $in: levelAPhones }, 'investmentPlans.status': 'active' }).select('name phone email referredBy balance earnBalance createdAt investmentPlans.status investmentPlans.planName').lean()
       : [];
     const levelBPhones = levelBMembers.map(m => m.phone);
  
     // Get Level C members (downline referrals with active plans)
     const levelCMembers = levelBPhones.length > 0
-      ? await User.find({ referredBy: { $in: levelBPhones }, 'investmentPlans.status': 'active' }).select('name phone email balance earnBalance createdAt investmentPlans.status investmentPlans.planName').lean()
+      ? await User.find({ referredBy: { $in: levelBPhones }, 'investmentPlans.status': 'active' }).select('name phone email referredBy balance earnBalance createdAt investmentPlans.status investmentPlans.planName').lean()
       : [];
+
+    // Map phone numbers to user full names
+    const phoneToNameMap = {};
+    phoneToNameMap[user.phone] = user.name || 'User';
+    levelAMembers.forEach(m => { phoneToNameMap[m.phone] = m.name; });
+    pendingMembers.forEach(m => { phoneToNameMap[m.phone] = m.name; });
+    levelBMembers.forEach(m => { phoneToNameMap[m.phone] = m.name; });
+    levelCMembers.forEach(m => { phoneToNameMap[m.phone] = m.name; });
+
+    const missingPhones = [
+      ...levelAMembers.map(m => m.referredBy),
+      ...levelBMembers.map(m => m.referredBy),
+      ...levelCMembers.map(m => m.referredBy),
+      ...pendingMembers.map(m => m.referredBy)
+    ].filter(ph => ph && !phoneToNameMap[ph]);
+
+    if (missingPhones.length > 0) {
+      const missingUsers = await User.find({ phone: { $in: missingPhones } }).select('name phone').lean();
+      missingUsers.forEach(p => { phoneToNameMap[p.phone] = p.name; });
+    }
 
     // Calculate actual earnings per level from Transaction history
     const commissions = await Transaction.find({
@@ -88,6 +108,8 @@ export async function GET(request) {
             name: member.name,
             phone: member.phone,
             email: member.email,
+            referredBy: member.referredBy,
+            referredByName: phoneToNameMap[member.referredBy] || user.name || 'Referrer',
             balance: member.balance,
             earnBalance: member.earnBalance,
             joinDate: member.createdAt,
@@ -103,6 +125,8 @@ export async function GET(request) {
             name: member.name,
             phone: member.phone,
             email: member.email,
+            referredBy: member.referredBy,
+            referredByName: phoneToNameMap[member.referredBy] || 'Referrer',
             balance: member.balance,
             earnBalance: member.earnBalance,
             joinDate: member.createdAt,
@@ -118,6 +142,8 @@ export async function GET(request) {
             name: member.name,
             phone: member.phone,
             email: member.email,
+            referredBy: member.referredBy,
+            referredByName: phoneToNameMap[member.referredBy] || 'Referrer',
             balance: member.balance,
             earnBalance: member.earnBalance,
             joinDate: member.createdAt,
@@ -132,6 +158,8 @@ export async function GET(request) {
             name: member.name,
             phone: member.phone,
             email: member.email,
+            referredBy: member.referredBy,
+            referredByName: phoneToNameMap[member.referredBy] || user.name || 'Referrer',
             balance: member.balance,
             earnBalance: member.earnBalance,
             joinDate: member.createdAt,

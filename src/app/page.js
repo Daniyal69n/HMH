@@ -2999,7 +2999,7 @@ export default function Page() {
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)' }}>
                       <div>
                         <div style={{ fontWeight: 600, color: 'var(--text)' }}>{member.name}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{member.email || 'No email'}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>Referred by: {member.referredByName || profile.name || 'You'}</div>
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--text-dim)', alignSelf: 'center', textAlign: 'right' }}>
                         <div>Joined: {new Date(member.joinDate).toLocaleDateString()}</div>
@@ -3023,7 +3023,7 @@ export default function Page() {
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)' }}>
                       <div>
                         <div style={{ fontWeight: 600, color: 'var(--text)' }}>{member.name}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{member.email || 'No email'}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>Referred by: {member.referredByName || 'Direct Referral'}</div>
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--text-dim)', alignSelf: 'center', textAlign: 'right' }}>
                         <div>Joined: {new Date(member.joinDate).toLocaleDateString()}</div>
@@ -3047,7 +3047,7 @@ export default function Page() {
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)' }}>
                       <div>
                         <div style={{ fontWeight: 600, color: 'var(--text)' }}>{member.name}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{member.email || 'No email'}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>Referred by: {member.referredByName || 'Indirect Referral'}</div>
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--text-dim)', alignSelf: 'center', textAlign: 'right' }}>
                         <div>Joined: {new Date(member.joinDate).toLocaleDateString()}</div>
@@ -3071,7 +3071,7 @@ export default function Page() {
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)' }}>
                       <div>
                         <div style={{ fontWeight: 600, color: 'var(--text)' }}>{member.name}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{member.email || 'No email'}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>Referred by: {member.referredByName || profile.name || 'You'}</div>
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--text-dim)', alignSelf: 'center', textAlign: 'right' }}>
                         <div>Joined: {new Date(member.joinDate).toLocaleDateString()}</div>
