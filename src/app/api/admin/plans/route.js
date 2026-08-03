@@ -12,16 +12,22 @@ export async function GET(request) {
     const statusParam = (searchParams.get('status') || 'pending').toLowerCase();
 
     // Build MongoDB aggregation match criteria
-    let matchSubdocumentStatus = {};
+    let stage1Match = {};
+    let stage3Match = {};
+
     if (statusParam === 'approved') {
-      matchSubdocumentStatus = { 'investmentPlans.status': { $in: ['active', 'approved'] } };
+      stage1Match = { 'investmentPlans.status': { $in: ['active', 'approved'] } };
+      stage3Match = { 'investmentPlans.status': { $in: ['active', 'approved'] } };
     } else if (statusParam === 'rejected') {
-      matchSubdocumentStatus = { 'investmentPlans.status': { $in: ['cancelled', 'rejected'] } };
+      stage1Match = { 'investmentPlans.status': { $in: ['cancelled', 'rejected'] } };
+      stage3Match = { 'investmentPlans.status': { $in: ['cancelled', 'rejected'] } };
     } else if (statusParam === 'pending') {
-      matchSubdocumentStatus = { 'investmentPlans.status': 'pending' };
+      stage1Match = { 'investmentPlans.status': 'pending' };
+      stage3Match = { 'investmentPlans.status': 'pending' };
     } else {
-      // all
-      matchSubdocumentStatus = { 'investmentPlans.status': { $exists: true } };
+      // all: match documents with investmentPlans array elements
+      stage1Match = { 'investmentPlans.0': { $exists: true } };
+      stage3Match = { 'investmentPlans': { $exists: true, $ne: null } };
     }
 
     console.log(`GET /api/admin/plans aggregation statusParam="${statusParam}"`);
@@ -29,15 +35,13 @@ export async function GET(request) {
     // High-performance MongoDB Aggregation Pipeline ($match -> $unwind -> $match -> $project -> $sort)
     const pipeline = [
       {
-        $match: {
-          'investmentPlans.0': { $exists: true }
-        }
+        $match: stage1Match
       },
       {
         $unwind: '$investmentPlans'
       },
       {
-        $match: matchSubdocumentStatus
+        $match: stage3Match
       },
       {
         $project: {
@@ -58,7 +62,8 @@ export async function GET(request) {
     const results = await User.aggregate(pipeline);
     const dbQueryTimeMs = Date.now() - dbStartTime;
 
-    const planRequests = results.map(item => {
+    const planRequests = (results || []).map(item => {
+      if (!item) return null;
       const user = item;
       const plan = item.plan || {};
 
@@ -96,14 +101,14 @@ export async function GET(request) {
         trxId: plan.trxId || '',
         screenshotData: plan.screenshotData || plan.screenshotUrl || null
       };
-    });
+    }).filter(Boolean);
 
     const totalExecutionTimeMs = Date.now() - startTime;
 
     // Performance metrics logging
     console.log(`[PERF_METRICS] status: "${statusParam}"`);
     console.log(`[PERF_METRICS] Database pipeline execution time: ${dbQueryTimeMs}ms`);
-    console.log(`[PERF_METRICS] Number of plan records returned: ${results.length}`);
+    console.log(`[PERF_METRICS] Number of plan records returned: ${planRequests.length}`);
     console.log(`[PERF_METRICS] Total endpoint execution time: ${totalExecutionTimeMs}ms`);
 
     return NextResponse.json(planRequests, {
@@ -115,8 +120,16 @@ export async function GET(request) {
       }
     });
   } catch (error) {
-    console.error('Get plan requests error:', error);
-    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
+    console.error('=== GET /api/admin/plans ERROR TRACE ===');
+    console.error(error);
+    if (error && error.stack) {
+      console.error(error.stack);
+    }
+    return NextResponse.json({
+      error: 'Internal server error',
+      details: error?.message || String(error),
+      stack: error?.stack || null
+    }, { status: 500 });
   }
 }
 
