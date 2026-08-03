@@ -18,7 +18,7 @@ export async function GET(request) {
     } else if (statusParam === 'pending') {
       dbFilter = { 'investmentPlans.status': 'pending' };
     } else {
-      dbFilter = { 'investmentPlans.0': { $exists: true } };
+      dbFilter = { 'investmentPlans.status': { $exists: true } };
     }
 
     const users = await User.find(dbFilter)
@@ -27,7 +27,7 @@ export async function GET(request) {
 
     const planRequests = [];
     for (const user of users) {
-      if (!user || !Array.isArray(user.investmentPlans)) continue;
+      if (!user || !user.investmentPlans || !Array.isArray(user.investmentPlans)) continue;
 
       const activePlan = [...(user.investmentPlans)].reverse().find(p => p && (p.status === 'active' || p.status === 'approved'));
       const currentPlanName = activePlan ? activePlan.planName : 'Free';
@@ -35,7 +35,7 @@ export async function GET(request) {
       for (const plan of user.investmentPlans) {
         if (!plan) continue;
 
-        const pStatus = (plan.status || 'pending').toLowerCase();
+        const pStatus = String(plan.status || 'pending').toLowerCase();
 
         if (statusParam === 'approved' && pStatus !== 'active' && pStatus !== 'approved') {
           continue;
@@ -58,17 +58,19 @@ export async function GET(request) {
         if (plan.startDate) {
           try {
             const d = new Date(plan.startDate);
-            formattedDate = d.toISOString().split('T')[0];
+            if (!isNaN(d.getTime())) {
+              formattedDate = d.toISOString().split('T')[0];
+            }
           } catch { }
         }
 
         planRequests.push({
-          userId: user._id ? user._id.toString() : '',
+          userId: user._id ? String(user._id) : '',
           userName: user.name || 'Unknown User',
           userPhone: user.phone || '',
           userEmail: user.email || '',
           userProfilePicture: user.profilePicture || '',
-          planId: plan._id ? plan._id.toString() : (plan.id || Math.random().toString()),
+          planId: plan._id ? String(plan._id) : (plan.id ? String(plan.id) : Math.random().toString()),
           planName: plan.planName || 'Plan',
           userCurrentPlan: currentPlanName,
           amount: plan.amount || 0,
@@ -82,7 +84,11 @@ export async function GET(request) {
     }
 
     // Sort newest requests first
-    planRequests.sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0));
+    planRequests.sort((a, b) => {
+      const timeA = a.startDate !== '-' ? new Date(a.startDate).getTime() : 0;
+      const timeB = b.startDate !== '-' ? new Date(b.startDate).getTime() : 0;
+      return timeB - timeA;
+    });
 
     return NextResponse.json(planRequests);
   } catch (error) {
