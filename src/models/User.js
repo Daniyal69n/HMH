@@ -297,6 +297,9 @@ userSchema.pre('save', async function(next) {
 });
 
 // Method to compare password
+// Schema Indexes for fast query execution
+userSchema.index({ 'investmentPlans.status': 1 });
+
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };

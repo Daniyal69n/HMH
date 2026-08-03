@@ -4,18 +4,27 @@ import User from '@/models/User';
 
 // GET all users who have investment plans based on status filter (pending, approved, rejected, all)
 export async function GET(request) {
+  const startTime = Date.now();
   try {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
     const statusParam = (searchParams.get('status') || 'pending').toLowerCase();
 
-    // Query all users who have non-empty investmentPlans array
+    // 1. Log the request status
+    console.log("GET /api/admin/plans status:", statusParam);
+
+    // 2. Measure database query execution time
+    console.time("admin_plans_db_query");
+
+    // Query users with non-empty investmentPlans array using .lean() and select
     const users = await User.find({
       investmentPlans: { $exists: true, $ne: [] }
     })
       .select('name phone email profilePicture investmentPlans')
       .lean();
+
+    console.timeEnd("admin_plans_db_query");
 
     const planRequests = [];
     for (const user of users) {
@@ -84,7 +93,16 @@ export async function GET(request) {
       return timeB - timeA;
     });
 
-    return NextResponse.json(planRequests);
+    console.log(`GET /api/admin/plans status=${statusParam} completed in ${Date.now() - startTime}ms returning ${planRequests.length} items`);
+
+    // 3. Ensure response is always sent
+    return NextResponse.json(planRequests, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
   } catch (error) {
     console.error('Get plan requests error:', error);
     return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
