@@ -1531,9 +1531,9 @@ export default function AdminDashboard() {
     }
   }, [isAdminLoggedIn, isCheckingAuth, activeTab])
 
-  // Load recharge history when tab is activated
+  // Load recharge history when recharges tab is activated
   useEffect(() => {
-    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'planRequests') {
+    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'recharges') {
       const loadRechargeHistory = async () => {
         try {
           setHistoryLoading(true)
@@ -1581,26 +1581,57 @@ export default function AdminDashboard() {
     }
   }, [isAdminLoggedIn, isCheckingAuth, activeTab])
 
-  // Load plan requests when tab or filter is activated
+  // Single useEffect for fetching plan requests with AbortController cancellation & state sync
   useEffect(() => {
-    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'planRequests') {
-      const loadPlanRequests = async () => {
-        setPlanRequestsLoading(true)
-        try {
-          const res = await fetch(`/api/admin/plans?status=${planFilter}`)
-          if (res.ok) {
-            const data = await res.json()
-            setPlanRequests(data)
-          } else {
+    if (!isAdminLoggedIn || isCheckingAuth || activeTab !== 'planRequests') {
+      return
+    }
+
+    const controller = new AbortController()
+    const { signal } = controller
+    const currentTabFilter = planFilter
+
+    console.log(`[TAB_FETCH] Selected tab: "${currentTabFilter}"`)
+    console.log(`[TAB_FETCH] Request started for tab: "${currentTabFilter}"`)
+    setPlanRequestsLoading(true)
+
+    const loadPlanRequests = async () => {
+      try {
+        const res = await fetch(`/api/admin/plans?status=${currentTabFilter}`, { signal })
+        if (res.ok) {
+          const data = await res.json()
+          if (!signal.aborted) {
+            console.log(`[TAB_FETCH] Request completed for tab: "${currentTabFilter}"`)
+            console.log(`[TAB_FETCH] State updated for tab: "${currentTabFilter}" with ${Array.isArray(data) ? data.length : 0} items`)
+            setPlanRequests(Array.isArray(data) ? data : [])
+          }
+        } else {
+          if (!signal.aborted) {
+            console.warn(`[TAB_FETCH] Request failed for tab: "${currentTabFilter}" with status ${res.status}`)
             setPlanRequests([])
           }
-        } catch {
-          setPlanRequests([])
-        } finally {
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          console.log(`[TAB_FETCH] Request aborted for tab: "${currentTabFilter}"`)
+        } else {
+          console.error(`[TAB_FETCH] Request error for tab: "${currentTabFilter}":`, err)
+          if (!signal.aborted) {
+            setPlanRequests([])
+          }
+        }
+      } finally {
+        if (!signal.aborted) {
           setPlanRequestsLoading(false)
         }
       }
-      loadPlanRequests()
+    }
+
+    loadPlanRequests()
+
+    return () => {
+      console.log(`[TAB_FETCH] Aborting previous request for tab: "${currentTabFilter}"`)
+      controller.abort()
     }
   }, [isAdminLoggedIn, isCheckingAuth, activeTab, planFilter])
 
