@@ -11,104 +11,101 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const statusParam = (searchParams.get('status') || 'pending').toLowerCase();
 
-    // 1. Target MongoDB query to use investmentPlans.status index
-    let statusQuery = {};
+    // Build MongoDB aggregation match criteria
+    let matchSubdocumentStatus = {};
     if (statusParam === 'approved') {
-      statusQuery = { 'investmentPlans.status': { $in: ['active', 'approved'] } };
+      matchSubdocumentStatus = { 'investmentPlans.status': { $in: ['active', 'approved'] } };
     } else if (statusParam === 'rejected') {
-      statusQuery = { 'investmentPlans.status': { $in: ['cancelled', 'rejected'] } };
+      matchSubdocumentStatus = { 'investmentPlans.status': { $in: ['cancelled', 'rejected'] } };
     } else if (statusParam === 'pending') {
-      statusQuery = { 'investmentPlans.status': 'pending' };
+      matchSubdocumentStatus = { 'investmentPlans.status': 'pending' };
     } else {
-      statusQuery = { 'investmentPlans.0': { $exists: true } };
+      // all
+      matchSubdocumentStatus = { 'investmentPlans.status': { $exists: true } };
     }
 
-    console.log(`GET /api/admin/plans requested statusParam="${statusParam}"`);
+    console.log(`GET /api/admin/plans aggregation statusParam="${statusParam}"`);
 
-    // 2. Measure targeted database query execution time
+    // High-performance MongoDB Aggregation Pipeline ($match -> $unwind -> $match -> $project -> $sort)
+    const pipeline = [
+      {
+        $match: {
+          'investmentPlans.0': { $exists: true }
+        }
+      },
+      {
+        $unwind: '$investmentPlans'
+      },
+      {
+        $match: matchSubdocumentStatus
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          phone: 1,
+          email: 1,
+          profilePicture: 1,
+          plan: '$investmentPlans'
+        }
+      },
+      {
+        $sort: { 'plan.startDate': -1 }
+      }
+    ];
+
     const dbStartTime = Date.now();
-    const users = await User.find(statusQuery)
-      .select('name phone email profilePicture investmentPlans')
-      .lean();
+    const results = await User.aggregate(pipeline);
     const dbQueryTimeMs = Date.now() - dbStartTime;
 
-    const planRequests = [];
-    for (const user of users) {
-      if (!user || !user.investmentPlans || !Array.isArray(user.investmentPlans)) continue;
+    const planRequests = results.map(item => {
+      const user = item;
+      const plan = item.plan || {};
 
-      const activePlan = [...(user.investmentPlans)].reverse().find(p => p && (p.status === 'active' || p.status === 'approved'));
-      const currentPlanName = activePlan ? activePlan.planName : 'Free';
-
-      for (const plan of user.investmentPlans) {
-        if (!plan) continue;
-
-        const pStatus = String(plan.status || 'pending').toLowerCase();
-
-        if (statusParam === 'approved' && pStatus !== 'active' && pStatus !== 'approved') {
-          continue;
-        }
-        if (statusParam === 'rejected' && pStatus !== 'cancelled' && pStatus !== 'rejected') {
-          continue;
-        }
-        if (statusParam === 'pending' && pStatus !== 'pending') {
-          continue;
-        }
-
-        let displayStatus = 'pending';
-        if (pStatus === 'active' || pStatus === 'approved') {
-          displayStatus = 'approved';
-        } else if (pStatus === 'cancelled' || pStatus === 'rejected') {
-          displayStatus = 'rejected';
-        }
-
-        let formattedDate = '-';
-        if (plan.startDate) {
-          try {
-            const d = new Date(plan.startDate);
-            if (!isNaN(d.getTime())) {
-              formattedDate = d.toISOString().split('T')[0];
-            }
-          } catch { }
-        }
-
-        let receiptUrl = plan.screenshotData || plan.screenshotUrl || null;
-
-        planRequests.push({
-          userId: user._id ? String(user._id) : '',
-          userName: user.name || 'Unknown User',
-          userPhone: user.phone || '',
-          userEmail: user.email || '',
-          userProfilePicture: user.profilePicture || '',
-          planId: plan._id ? String(plan._id) : (plan.id ? String(plan.id) : Math.random().toString()),
-          planName: plan.planName || 'Plan',
-          userCurrentPlan: currentPlanName,
-          amount: plan.amount || 0,
-          status: displayStatus,
-          startDate: formattedDate,
-          paymentMethod: plan.paymentMethod || 'N/A',
-          trxId: plan.trxId || '',
-          screenshotData: receiptUrl
-        });
+      const pStatus = String(plan.status || 'pending').toLowerCase();
+      let displayStatus = 'pending';
+      if (pStatus === 'active' || pStatus === 'approved') {
+        displayStatus = 'approved';
+      } else if (pStatus === 'cancelled' || pStatus === 'rejected') {
+        displayStatus = 'rejected';
       }
-    }
 
-    // Sort newest requests first
-    planRequests.sort((a, b) => {
-      const timeA = a.startDate !== '-' ? new Date(a.startDate).getTime() : 0;
-      const timeB = b.startDate !== '-' ? new Date(b.startDate).getTime() : 0;
-      return timeB - timeA;
+      let formattedDate = '-';
+      if (plan.startDate) {
+        try {
+          const d = new Date(plan.startDate);
+          if (!isNaN(d.getTime())) {
+            formattedDate = d.toISOString().split('T')[0];
+          }
+        } catch { }
+      }
+
+      return {
+        userId: user._id ? String(user._id) : '',
+        userName: user.name || 'Unknown User',
+        userPhone: user.phone || '',
+        userEmail: user.email || '',
+        userProfilePicture: user.profilePicture || '',
+        planId: plan._id ? String(plan._id) : (plan.id ? String(plan.id) : Math.random().toString()),
+        planName: plan.planName || 'Plan',
+        userCurrentPlan: plan.planName || 'Plan',
+        amount: plan.amount || 0,
+        status: displayStatus,
+        startDate: formattedDate,
+        paymentMethod: plan.paymentMethod || 'N/A',
+        trxId: plan.trxId || '',
+        screenshotData: plan.screenshotData || plan.screenshotUrl || null
+      };
     });
 
     const totalExecutionTimeMs = Date.now() - startTime;
 
-    // Required logging metrics
+    // Performance metrics logging
     console.log(`[PERF_METRICS] status: "${statusParam}"`);
-    console.log(`[PERF_METRICS] Database query time: ${dbQueryTimeMs}ms`);
-    console.log(`[PERF_METRICS] Number of users returned: ${users.length}`);
-    console.log(`[PERF_METRICS] Number of plan requests processed: ${planRequests.length}`);
+    console.log(`[PERF_METRICS] Database pipeline execution time: ${dbQueryTimeMs}ms`);
+    console.log(`[PERF_METRICS] Number of plan records returned: ${results.length}`);
     console.log(`[PERF_METRICS] Total endpoint execution time: ${totalExecutionTimeMs}ms`);
 
-    // 3. Ensure response is always sent
     return NextResponse.json(planRequests, {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
