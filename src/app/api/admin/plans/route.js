@@ -10,58 +10,66 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const statusParam = (searchParams.get('status') || 'pending').toLowerCase();
 
-    let targetDbStatus = statusParam;
-    let findQuery = {};
-
-    if (statusParam === 'approved') {
-      targetDbStatus = 'active';
-      findQuery = { 'investmentPlans.status': 'active' };
-    } else if (statusParam === 'rejected') {
-      targetDbStatus = 'cancelled';
-      findQuery = { 'investmentPlans.status': 'cancelled' };
-    } else if (statusParam === 'all') {
-      findQuery = { 'investmentPlans.0': { $exists: true } };
-    } else {
-      targetDbStatus = 'pending';
-      findQuery = { 'investmentPlans.status': 'pending' };
-    }
-
-    const users = await User.find(findQuery).select('-password').lean();
+    // Find all users who have non-empty investmentPlans array
+    const users = await User.find({
+      investmentPlans: { $exists: true, $ne: [] }
+    }).select('-password').lean();
 
     const planRequests = [];
     for (const user of users) {
-      const matchingPlans = user.investmentPlans.filter(p => {
-        if (statusParam === 'all') return true;
-        return p.status === targetDbStatus;
-      });
+      if (!user || !Array.isArray(user.investmentPlans)) continue;
 
-      for (const plan of matchingPlans) {
-        const activePlan = [...(user.investmentPlans || [])].reverse().find(p => p.status === 'active');
-        const currentPlanName = activePlan ? activePlan.planName : 'Free';
+      const activePlan = [...(user.investmentPlans)].reverse().find(p => p && (p.status === 'active' || p.status === 'approved'));
+      const currentPlanName = activePlan ? activePlan.planName : 'Free';
+
+      for (const plan of user.investmentPlans) {
+        if (!plan) continue;
+
+        const pStatus = (plan.status || 'pending').toLowerCase();
+
+        if (statusParam === 'approved' && pStatus !== 'active' && pStatus !== 'approved') {
+          continue;
+        }
+        if (statusParam === 'rejected' && pStatus !== 'cancelled' && pStatus !== 'rejected') {
+          continue;
+        }
+        if (statusParam === 'pending' && pStatus !== 'pending') {
+          continue;
+        }
+
+        let displayStatus = 'pending';
+        if (pStatus === 'active' || pStatus === 'approved') {
+          displayStatus = 'approved';
+        } else if (pStatus === 'cancelled' || pStatus === 'rejected') {
+          displayStatus = 'rejected';
+        }
 
         planRequests.push({
-          userId: user._id,
-          userName: user.name,
-          userPhone: user.phone,
-          userEmail: user.email,
+          userId: user._id ? user._id.toString() : '',
+          userName: user.name || 'Unknown User',
+          userPhone: user.phone || '',
+          userEmail: user.email || '',
           userProfilePicture: user.profilePicture || '',
-          planId: plan._id,
-          planName: plan.planName,
+          planId: plan._id ? plan._id.toString() : (plan.id || Math.random().toString()),
+          planName: plan.planName || 'Plan',
           userCurrentPlan: currentPlanName,
-          amount: plan.amount,
-          status: plan.status === 'active' ? 'approved' : (plan.status === 'cancelled' ? 'rejected' : plan.status),
-          startDate: plan.startDate,
-          paymentMethod: plan.paymentMethod,
+          amount: plan.amount || 0,
+          status: displayStatus,
+          startDate: plan.startDate || null,
+          paymentMethod: plan.paymentMethod || 'N/A',
           trxId: plan.trxId || '',
           screenshotData: plan.screenshotData || plan.screenshotUrl || null
         });
       }
     }
 
+    // Sort newest requests first
+    planRequests.sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0));
+
     return NextResponse.json(planRequests);
   } catch (error) {
     console.error('Get plan requests error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
   }
 }
 
