@@ -13,18 +13,8 @@ export default function AdminDashboard() {
   const [isAppLoading, setIsAppLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-    const timer = setTimeout(() => setIsAppLoading(false), 800)
-    return () => clearTimeout(timer)
-  }, [])
   const { showSuccess, showError, showWarning, showInfo } = useNotification()
-  const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('admin_active_tab') || 'dashboard'
-    }
-    return 'dashboard'
-  })
+  const [activeTab, setActiveTab] = useState('dashboard')
   const [plans, setPlans] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [editUserTeamData, setEditUserTeamData] = useState(null)
@@ -40,12 +30,7 @@ export default function AdminDashboard() {
   })
   const [editingPlan, setEditingPlan] = useState(null)
   const [showAddPlan, setShowAddPlan] = useState(false)
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('isAdminLoggedIn') === 'true'
-    }
-    return false
-  })
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(false)
   const [uploadedImages, setUploadedImages] = useState({})
   const [pendingRechargeRequests, setPendingRechargeRequests] = useState([])
@@ -53,18 +38,24 @@ export default function AdminDashboard() {
   const [planRequests, setPlanRequests] = useState([])
   const [planRequestsLoading, setPlanRequestsLoading] = useState(false)
   const [previewReceiptUrl, setPreviewReceiptUrl] = useState(null)
-  const [users, setUsers] = useState(() => {
+  const [users, setUsers] = useState([])
+  const [isUsersLoading, setIsUsersLoading] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
     if (typeof window !== 'undefined') {
+      const storedTab = sessionStorage.getItem('admin_active_tab')
+      if (storedTab) setActiveTab(storedTab)
+      const loggedIn = sessionStorage.getItem('isAdminLoggedIn') === 'true'
+      setIsAdminLoggedIn(loggedIn)
       try {
         const cached = sessionStorage.getItem('admin_cached_users')
-        if (cached) return JSON.parse(cached)
-      } catch (e) {
-        console.warn('Error reading cached users:', e)
-      }
+        if (cached) setUsers(JSON.parse(cached))
+      } catch (e) { }
     }
-    return []
-  })
-  const [isUsersLoading, setIsUsersLoading] = useState(false)
+    const timer = setTimeout(() => setIsAppLoading(false), 300)
+    return () => clearTimeout(timer)
+  }, [])
 
   const updateUsersWithCache = (newUsers) => {
     setUsers(newUsers)
@@ -2528,9 +2519,16 @@ export default function AdminDashboard() {
     )
   }
 
-  // Don't render if not admin logged in
-  if (!isAdminLoggedIn) {
-    return null
+  // Don't render until mounted and authenticated
+  if (!mounted || !isAdminLoggedIn) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+          <p className="text-white">Loading Admin Panel...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
