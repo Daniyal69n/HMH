@@ -3942,7 +3942,7 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <div className={styles.detailLabel}>Requested on</div>
-                    <div className={styles.detailValue}>{req.startDate ? new Date(req.startDate).toLocaleDateString() : '-'}</div>
+                    <div className={styles.detailValue}>{req.startDate || '-'}</div>
                   </div>
                 </div>
 

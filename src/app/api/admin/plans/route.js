@@ -10,10 +10,20 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const statusParam = (searchParams.get('status') || 'pending').toLowerCase();
 
-    // Find all users who have non-empty investmentPlans array
-    const users = await User.find({
-      investmentPlans: { $exists: true, $ne: [] }
-    }).select('-password').lean();
+    let dbFilter = {};
+    if (statusParam === 'approved') {
+      dbFilter = { 'investmentPlans.status': { $in: ['active', 'approved'] } };
+    } else if (statusParam === 'rejected') {
+      dbFilter = { 'investmentPlans.status': { $in: ['cancelled', 'rejected'] } };
+    } else if (statusParam === 'pending') {
+      dbFilter = { 'investmentPlans.status': 'pending' };
+    } else {
+      dbFilter = { 'investmentPlans.0': { $exists: true } };
+    }
+
+    const users = await User.find(dbFilter)
+      .select('name phone email profilePicture investmentPlans')
+      .lean();
 
     const planRequests = [];
     for (const user of users) {
@@ -44,6 +54,14 @@ export async function GET(request) {
           displayStatus = 'rejected';
         }
 
+        let formattedDate = '-';
+        if (plan.startDate) {
+          try {
+            const d = new Date(plan.startDate);
+            formattedDate = d.toISOString().split('T')[0];
+          } catch { }
+        }
+
         planRequests.push({
           userId: user._id ? user._id.toString() : '',
           userName: user.name || 'Unknown User',
@@ -55,7 +73,7 @@ export async function GET(request) {
           userCurrentPlan: currentPlanName,
           amount: plan.amount || 0,
           status: displayStatus,
-          startDate: plan.startDate || null,
+          startDate: formattedDate,
           paymentMethod: plan.paymentMethod || 'N/A',
           trxId: plan.trxId || '',
           screenshotData: plan.screenshotData || plan.screenshotUrl || null
