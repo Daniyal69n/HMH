@@ -85,6 +85,13 @@ export async function GET(request) {
         } catch { }
       }
 
+      let receiptUrl = plan.screenshotData || plan.screenshotUrl || null;
+
+      // Ensure list response returns ONLY lightweight Cloudinary CDN URLs, omitting heavy legacy Base64 data
+      if (receiptUrl && typeof receiptUrl === 'string' && (receiptUrl.startsWith('data:image') || receiptUrl.length > 500)) {
+        receiptUrl = null;
+      }
+
       return {
         userId: user._id ? String(user._id) : '',
         userName: user.name || 'Unknown User',
@@ -99,7 +106,7 @@ export async function GET(request) {
         startDate: formattedDate,
         paymentMethod: plan.paymentMethod || 'N/A',
         trxId: plan.trxId || '',
-        screenshotData: plan.screenshotData || plan.screenshotUrl || null
+        screenshotData: receiptUrl
       };
     }).filter(Boolean);
 
@@ -112,10 +119,17 @@ export async function GET(request) {
 
     const totalExecutionTimeMs = Date.now() - startTime;
 
-    // Performance metrics logging
+    // Calculate exact JSON payload metrics
+    const jsonPayload = JSON.stringify(planRequests);
+    const payloadSizeBytes = Buffer.byteLength(jsonPayload, 'utf8');
+    const payloadSizeKb = (payloadSizeBytes / 1024).toFixed(2);
+    const payloadSizeMb = (payloadSizeBytes / (1024 * 1024)).toFixed(2);
+
+    // Performance & Payload metrics logging
     console.log(`[PERF_METRICS] status: "${statusParam}"`);
     console.log(`[PERF_METRICS] Database pipeline execution time: ${dbQueryTimeMs}ms`);
     console.log(`[PERF_METRICS] Number of plan records returned: ${planRequests.length}`);
+    console.log(`[PERF_METRICS] Total response payload size: ${payloadSizeKb} KB (${payloadSizeMb} MB)`);
     console.log(`[PERF_METRICS] Total endpoint execution time: ${totalExecutionTimeMs}ms`);
 
     return NextResponse.json(planRequests, {
@@ -123,7 +137,8 @@ export async function GET(request) {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0',
-        'X-Execution-Time-Ms': String(totalExecutionTimeMs)
+        'X-Execution-Time-Ms': String(totalExecutionTimeMs),
+        'X-Payload-Size-Kb': String(payloadSizeKb)
       }
     });
   } catch (error) {
