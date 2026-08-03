@@ -3404,6 +3404,36 @@ export default function Page() {
                   </div>
 
                   <div className="card" style={{ marginBottom: 18 }}>
+                    <h3 style={{ margin: '0 0 12px', color: 'var(--gold-bright)' }}>💰 Social Task Earning Rates by Plan</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '10px' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)', padding: '10px 8px', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Basic</div>
+                        <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--gold-bright)', marginTop: '2px' }}>$1.00</div>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)', padding: '10px 8px', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Standard</div>
+                        <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--gold-bright)', marginTop: '2px' }}>$1.50</div>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)', padding: '10px 8px', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Diamond</div>
+                        <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--gold-bright)', marginTop: '2px' }}>$2.00</div>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)', padding: '10px 8px', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Pro</div>
+                        <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--gold-bright)', marginTop: '2px' }}>$2.50</div>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)', padding: '10px 8px', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Premium</div>
+                        <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--gold-bright)', marginTop: '2px' }}>$3.00</div>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)', padding: '10px 8px', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Legend</div>
+                        <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--gold-bright)', marginTop: '2px' }}>$3.50</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="card" style={{ marginBottom: 18 }}>
                     <h3 style={{ margin: '0 0 4px', display: 'flex', justifyContent: 'space-between' }}>
                       <span>📋 Task Details</span>
                       <span style={{ fontSize: 14, color: 'var(--gold)' }}>{_completedCount}/4 Completed</span>

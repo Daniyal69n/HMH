@@ -46,16 +46,22 @@ export async function POST(request) {
       }
 
       const planName = activePlan.planName.toLowerCase().trim();
-      let rewardUSD = 0;
+      let rewardUSD = 1.00;
       
-      if (planName === 'basic' || planName === 'standard') {
-        rewardUSD = 2;
-      } else if (planName === 'diamond' || planName === 'pro') {
-        rewardUSD = 2;
-      } else if (planName === 'premium' || planName === 'legend') {
-        rewardUSD = 2;
+      if (planName.includes('basic')) {
+        rewardUSD = 1.00;
+      } else if (planName.includes('standard')) {
+        rewardUSD = 1.50;
+      } else if (planName.includes('diamond')) {
+        rewardUSD = 2.00;
+      } else if (planName.includes('pro')) {
+        rewardUSD = 2.50;
+      } else if (planName.includes('premium')) {
+        rewardUSD = 3.00;
+      } else if (planName.includes('legend')) {
+        rewardUSD = 3.50;
       } else {
-        return Response.json({ message: 'Your plan is not eligible for this task.' }, { status: 400 });
+        rewardUSD = 1.00;
       }
       
       const PKR_RATE = 300;
