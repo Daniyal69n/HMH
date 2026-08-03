@@ -13,8 +13,7 @@ export async function GET() {
 
     for (const statusParam of statuses) {
       const metrics = {};
-      const totalStart = Date.now();
-
+      
       let stage1Match = {};
       let stage3Match = {};
 
@@ -32,10 +31,30 @@ export async function GET() {
         stage3Match = { 'investmentPlans': { $ne: null } };
       }
 
-      const pipeline = [
+      // Step 1: Measure Quick Count
+      const countStart = Date.now();
+      let documentCount = 0;
+      try {
+        const countPipeline = [
+          { $match: stage1Match },
+          { $unwind: { path: '$investmentPlans', preserveNullAndEmptyArrays: false } },
+          { $match: stage3Match },
+          { $count: 'total' }
+        ];
+        const countResult = await User.aggregate(countPipeline);
+        documentCount = countResult[0]?.total || 0;
+      } catch (e) {
+        documentCount = -1; // failed to count
+      }
+      metrics.countTimeMs = Date.now() - countStart;
+      metrics.totalDocumentsCount = documentCount;
+
+      // Step 2: Run Aggregation with $limit: 5
+      const pipelineLimit = [
         { $match: stage1Match },
         { $unwind: { path: '$investmentPlans', preserveNullAndEmptyArrays: false } },
         { $match: stage3Match },
+        { $limit: 5 },
         {
           $project: {
             _id: 1,
@@ -48,19 +67,15 @@ export async function GET() {
         }
       ];
 
-      // Aggregation Query
       const aggStart = Date.now();
-      const results = await User.aggregate(pipeline);
+      const results = await User.aggregate(pipelineLimit);
       metrics.aggregationTimeMs = Date.now() - aggStart;
 
-      // Unique Users & Plans
-      metrics.uniqueUsersCount = new Set(results.map(r => String(r._id))).size;
-      metrics.plansCount = results.length;
-
-      // Screenshot statistics
+      // Screenshot statistics of limited sample
       let base64Count = 0;
       let cloudinaryCount = 0;
       let omittedCount = 0;
+      const samples = [];
 
       // Mapping Step
       const mapStart = Date.now();
@@ -88,17 +103,28 @@ export async function GET() {
         }
 
         let receiptUrl = plan.screenshotData || plan.screenshotUrl || null;
+        let type = 'omitted/null';
         
         // Categorize screenshot data types
         if (!receiptUrl) {
           omittedCount++;
         } else if (typeof receiptUrl === 'string' && receiptUrl.startsWith('data:image')) {
           base64Count++;
+          type = 'base64 (starts with data:image)';
         } else if (typeof receiptUrl === 'string' && receiptUrl.includes('cloudinary')) {
           cloudinaryCount++;
+          type = 'cloudinary url';
         } else {
           omittedCount++;
         }
+
+        samples.push({
+          planId: plan._id ? String(plan._id) : 'N/A',
+          planName: plan.planName || 'Plan',
+          amount: plan.amount || 0,
+          screenshotDataType: type,
+          screenshotLength: receiptUrl ? receiptUrl.length : 0
+        });
 
         // Apply list sanitization to omit base64
         if (receiptUrl && typeof receiptUrl === 'string' && (receiptUrl.startsWith('data:image') || receiptUrl.length > 500)) {
@@ -124,27 +150,18 @@ export async function GET() {
       }).filter(Boolean);
       metrics.mappingTimeMs = Date.now() - mapStart;
 
-      // Sorting Step
-      const sortStart = Date.now();
-      planRequests.sort((a, b) => {
-        const timeA = a.startDate !== '-' ? new Date(a.startDate).getTime() : 0;
-        const timeB = b.startDate !== '-' ? new Date(b.startDate).getTime() : 0;
-        return timeB - timeA;
-      });
-      metrics.sortingTimeMs = Date.now() - sortStart;
-
       // JSON Serialization Step
       const serializeStart = Date.now();
       const jsonPayload = JSON.stringify(planRequests);
       metrics.serializationTimeMs = Date.now() - serializeStart;
 
       metrics.sizeKb = (Buffer.byteLength(jsonPayload, 'utf8') / 1024).toFixed(2);
-      metrics.totalExecutionTimeMs = Date.now() - totalStart;
       
       metrics.screenshotStats = {
         base64Count,
         cloudinaryCount,
-        omittedCount
+        omittedCount,
+        samples
       };
 
       report[statusParam] = metrics;
