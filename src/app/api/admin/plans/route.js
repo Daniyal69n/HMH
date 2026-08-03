@@ -27,18 +27,21 @@ export async function GET(request) {
     } else {
       // all: match documents with investmentPlans array elements
       stage1Match = { 'investmentPlans.0': { $exists: true } };
-      stage3Match = { 'investmentPlans': { $exists: true, $ne: null } };
+      stage3Match = { 'investmentPlans': { $ne: null } };
     }
 
     console.log(`GET /api/admin/plans aggregation statusParam="${statusParam}"`);
 
-    // High-performance MongoDB Aggregation Pipeline ($match -> $unwind -> $match -> $project -> $sort)
+    // High-performance MongoDB Aggregation Pipeline ($match -> $unwind -> $match -> $project)
     const pipeline = [
       {
         $match: stage1Match
       },
       {
-        $unwind: '$investmentPlans'
+        $unwind: {
+          path: '$investmentPlans',
+          preserveNullAndEmptyArrays: false
+        }
       },
       {
         $match: stage3Match
@@ -52,9 +55,6 @@ export async function GET(request) {
           profilePicture: 1,
           plan: '$investmentPlans'
         }
-      },
-      {
-        $sort: { 'plan.startDate': -1 }
       }
     ];
 
@@ -63,9 +63,9 @@ export async function GET(request) {
     const dbQueryTimeMs = Date.now() - dbStartTime;
 
     const planRequests = (results || []).map(item => {
-      if (!item) return null;
+      if (!item || !item.plan || typeof item.plan !== 'object') return null;
       const user = item;
-      const plan = item.plan || {};
+      const plan = item.plan;
 
       const pStatus = String(plan.status || 'pending').toLowerCase();
       let displayStatus = 'pending';
@@ -102,6 +102,13 @@ export async function GET(request) {
         screenshotData: plan.screenshotData || plan.screenshotUrl || null
       };
     }).filter(Boolean);
+
+    // Sort newest requests first safely in JS memory
+    planRequests.sort((a, b) => {
+      const timeA = a.startDate !== '-' ? new Date(a.startDate).getTime() : 0;
+      const timeB = b.startDate !== '-' ? new Date(b.startDate).getTime() : 0;
+      return timeB - timeA;
+    });
 
     const totalExecutionTimeMs = Date.now() - startTime;
 
