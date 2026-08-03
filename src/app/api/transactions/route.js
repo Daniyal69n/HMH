@@ -196,58 +196,30 @@ export async function PUT(request) {
             
             user.balance = currentBalance + transaction.amount;
             user.totalRecharge = currentTotalRecharge + transaction.amount;
-            
-            console.log('Approving recharge - updating balance:', {
-              currentBalance: currentBalance,
-              newBalance: user.balance,
-              currentTotalRecharge: currentTotalRecharge,
-              newTotalRecharge: user.totalRecharge,
-              amount: transaction.amount
-            });
           } else if (transaction.type === 'withdraw') {
             // For withdrawal: balance was already deducted when user submitted the request
-            // But we need to reset team commission if the withdrawal included it
-            console.log('Approving withdrawal - balance already deducted when request was submitted');
-            
-            // Check if this withdrawal included team commission
-            // If the withdrawal amount is greater than or equal to the user's referral commission,
-            // then the team commission should be reset to 0
+            // Reset team commission if the withdrawal included it
             const currentReferralCommission = typeof user.referralCommission === 'number' ? user.referralCommission : 0;
             
             if (transaction.amount >= currentReferralCommission && currentReferralCommission > 0) {
-              // Reset team commission to 0 since it was withdrawn
               user.referralCommission = 0;
-              user.totalCommissionEarned = Math.max(0, user.totalCommissionEarned - currentReferralCommission);
-              
-              console.log('Resetting team commission after withdrawal:', {
-                withdrawalAmount: transaction.amount,
-                previousReferralCommission: currentReferralCommission,
-                newReferralCommission: 0
-              });
+              user.totalCommissionEarned = Math.max(0, (user.totalCommissionEarned || 0) - currentReferralCommission);
+            }
+
+            // Sync user.withdrawHistory status
+            if (user.withdrawHistory && Array.isArray(user.withdrawHistory)) {
+              const item = user.withdrawHistory.find(w => 
+                (w._id && w._id.toString() === transaction._id.toString()) || 
+                w.transactionId === transaction.transactionId || 
+                (w.amount === transaction.amount && w.status === 'pending')
+              );
+              if (item) {
+                item.status = 'approved';
+              }
             }
           }
           
-          // Use findOneAndUpdate to ensure the field is properly saved
-          await User.findOneAndUpdate(
-            { phone: transaction.userId },
-            { 
-              balance: newBalance,
-              totalRecharge: newTotalRecharge
-            }
-          );
-        } else if (transaction.type === 'withdraw') {
-          const user = await User.findOne({ phone: transaction.userId });
-          if (user && user.withdrawHistory && Array.isArray(user.withdrawHistory)) {
-            const item = user.withdrawHistory.find(w => 
-              (w._id && w._id.toString() === transaction._id.toString()) || 
-              w.transactionId === transaction.transactionId || 
-              (w.amount === transaction.amount && w.status === 'pending')
-            );
-            if (item) {
-              item.status = 'approved';
-            }
-            await user.save();
-          }
+          await user.save();
         }
         break;
         
