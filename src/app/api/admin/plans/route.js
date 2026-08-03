@@ -60,7 +60,8 @@ export async function GET(request) {
           'plan.paymentMethod': '$investmentPlans.paymentMethod',
           'plan.trxId': '$investmentPlans.trxId',
           'plan.startDate': '$investmentPlans.startDate',
-          'plan.screenshotUrl': '$investmentPlans.screenshotUrl'
+          'plan.screenshotUrl': '$investmentPlans.screenshotUrl',
+          'plan.screenshotData': '$investmentPlans.screenshotData'
         }
       }
     ];
@@ -92,11 +93,15 @@ export async function GET(request) {
         } catch { }
       }
 
-      let receiptUrl = plan.screenshotUrl || null;
+      let receiptUrl = plan.screenshotData || plan.screenshotUrl || null;
 
       // Ensure list response returns ONLY lightweight Cloudinary CDN URLs, omitting heavy legacy Base64 data
       if (receiptUrl && typeof receiptUrl === 'string' && (receiptUrl.startsWith('data:image') || receiptUrl.length > 500)) {
         receiptUrl = null;
+      }
+
+      if (!receiptUrl) {
+        receiptUrl = 'No Screenshot';
       }
 
       return {
