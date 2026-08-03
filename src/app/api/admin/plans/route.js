@@ -11,20 +11,26 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const statusParam = (searchParams.get('status') || 'pending').toLowerCase();
 
-    // 1. Log the request status
-    console.log("GET /api/admin/plans status:", statusParam);
+    // 1. Target MongoDB query to use investmentPlans.status index
+    let statusQuery = {};
+    if (statusParam === 'approved') {
+      statusQuery = { 'investmentPlans.status': { $in: ['active', 'approved'] } };
+    } else if (statusParam === 'rejected') {
+      statusQuery = { 'investmentPlans.status': { $in: ['cancelled', 'rejected'] } };
+    } else if (statusParam === 'pending') {
+      statusQuery = { 'investmentPlans.status': 'pending' };
+    } else {
+      statusQuery = { 'investmentPlans.0': { $exists: true } };
+    }
 
-    // 2. Measure database query execution time
-    console.time("admin_plans_db_query");
+    console.log(`GET /api/admin/plans requested statusParam="${statusParam}"`);
 
-    // Query users with non-empty investmentPlans array using .lean() and select
-    const users = await User.find({
-      investmentPlans: { $exists: true, $ne: [] }
-    })
+    // 2. Measure targeted database query execution time
+    const dbStartTime = Date.now();
+    const users = await User.find(statusQuery)
       .select('name phone email profilePicture investmentPlans')
       .lean();
-
-    console.timeEnd("admin_plans_db_query");
+    const dbQueryTimeMs = Date.now() - dbStartTime;
 
     const planRequests = [];
     for (const user of users) {
@@ -93,14 +99,22 @@ export async function GET(request) {
       return timeB - timeA;
     });
 
-    console.log(`GET /api/admin/plans status=${statusParam} completed in ${Date.now() - startTime}ms returning ${planRequests.length} items`);
+    const totalExecutionTimeMs = Date.now() - startTime;
+
+    // Required logging metrics
+    console.log(`[PERF_METRICS] status: "${statusParam}"`);
+    console.log(`[PERF_METRICS] Database query time: ${dbQueryTimeMs}ms`);
+    console.log(`[PERF_METRICS] Number of users returned: ${users.length}`);
+    console.log(`[PERF_METRICS] Number of plan requests processed: ${planRequests.length}`);
+    console.log(`[PERF_METRICS] Total endpoint execution time: ${totalExecutionTimeMs}ms`);
 
     // 3. Ensure response is always sent
     return NextResponse.json(planRequests, {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
-        'Expires': '0'
+        'Expires': '0',
+        'X-Execution-Time-Ms': String(totalExecutionTimeMs)
       }
     });
   } catch (error) {
