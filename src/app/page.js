@@ -1003,6 +1003,11 @@ export default function Page() {
       showToast('Please fill in every field')
       return
     }
+    const cleanAccount = wdAccount.trim()
+    if (!/^\d{11}$/.test(cleanAccount)) {
+      showToast('Account number / Wallet ID must be exactly 11 digits')
+      return
+    }
     const amtInPKR = currency === 'USD' ? Number(wdAmount) * PKR_RATE : Number(wdAmount)
     if (isNaN(amtInPKR) || amtInPKR <= 0) {
       showToast('Please enter a valid amount')
