@@ -95,8 +95,32 @@ export async function POST(request) {
 
     await newUser.save();
 
-    // Store shortId
-    newUser.shortId = newUser._id.toString().slice(-8);
+    // Store shortId in sequential format starting from HMH1000
+    const lastUser = await User.findOne({ shortId: /^HMH\d+$/ })
+      .sort({ shortId: -1 })
+      .lean();
+
+    let nextNumber = 1000;
+    if (lastUser && lastUser.shortId) {
+      const match = lastUser.shortId.match(/^HMH(\d+)$/);
+      if (match) {
+        nextNumber = parseInt(match[1]) + 1;
+      }
+    }
+    
+    let candidateShortId = `HMH${nextNumber}`;
+    let isUnique = false;
+    while (!isUnique) {
+      const existingUser = await User.findOne({ shortId: candidateShortId }).lean();
+      if (!existingUser) {
+        isUnique = true;
+      } else {
+        nextNumber++;
+        candidateShortId = `HMH${nextNumber}`;
+      }
+    }
+
+    newUser.shortId = candidateShortId;
     await newUser.save();
 
     // Add user to resolved parent's teamMembers

@@ -15,10 +15,25 @@ export async function GET() {
     );
     
     console.log(`Updated ${result.modifiedCount} users with totalRecharge field`);
+
+    // Migrate user shortIds to sequential format starting from HMH1000 ordered by creation date
+    const allUsers = await User.find({}).sort({ createdAt: 1 });
+    let migratedCount = 0;
+    for (let i = 0; i < allUsers.length; i++) {
+      const targetShortId = `HMH${1000 + i}`;
+      if (allUsers[i].shortId !== targetShortId) {
+        allUsers[i].shortId = targetShortId;
+        await allUsers[i].save();
+        migratedCount++;
+      }
+    }
+    
+    console.log(`Migrated ${migratedCount} users to sequential shortId starting from HMH1000`);
     
     return Response.json({ 
       message: 'Database initialized successfully',
-      usersUpdated: result.modifiedCount
+      usersUpdated: result.modifiedCount,
+      usersMigrated: migratedCount
     });
   } catch (error) {
     console.error('Database initialization error:', error);

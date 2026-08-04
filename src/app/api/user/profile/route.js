@@ -75,9 +75,33 @@ export async function GET(request) {
       }
     }
 
-    // Auto-populate shortId for existing users that don't have it yet
+    // Auto-populate shortId in sequential format starting from HMH1000
     if (!user.shortId) {
-      user.shortId = user._id.toString().slice(-8);
+      const lastUser = await User.findOne({ shortId: /^HMH\d+$/ })
+        .sort({ shortId: -1 })
+        .lean();
+
+      let nextNumber = 1000;
+      if (lastUser && lastUser.shortId) {
+        const match = lastUser.shortId.match(/^HMH(\d+)$/);
+        if (match) {
+          nextNumber = parseInt(match[1]) + 1;
+        }
+      }
+      
+      let candidateShortId = `HMH${nextNumber}`;
+      let isUnique = false;
+      while (!isUnique) {
+        const existingUser = await User.findOne({ shortId: candidateShortId }).lean();
+        if (!existingUser) {
+          isUnique = true;
+        } else {
+          nextNumber++;
+          candidateShortId = `HMH${nextNumber}`;
+        }
+      }
+
+      user.shortId = candidateShortId;
       await user.save();
     }
 

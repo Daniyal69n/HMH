@@ -2368,14 +2368,31 @@ export default function AdminDashboard() {
     const q = userSearchQuery.trim().toLowerCase()
     if (!q) return true
 
-    // Check if the user is referred by someone whose name, email, phone, referralCode or shortId matches 'q'
+    // Check if the search query is a specific Sponsor ID (e.g. starts with 'hmh' or is exactly a shortId)
+    const isSponsorIdSearch = q.startsWith('hmh') || /^[a-f0-9]{8}$/.test(q);
+
+    if (isSponsorIdSearch) {
+      // 1. Match if the user's own shortId matches exactly
+      const ownShortId = (user.shortId || '').toLowerCase();
+      if (ownShortId === q) return true;
+
+      // 2. Match if the user was referred by this Sponsor ID
+      const referrerPhone = user.referredBy;
+      const referrerUser = referrerPhone ? users.find(u => u.phone === referrerPhone) : null;
+      const referrerShortId = referrerUser ? (referrerUser.shortId || '').toLowerCase() : '';
+      if (referrerShortId === q) return true;
+
+      return false;
+    }
+
+    // Default search for name, email, phone, etc. (excluding referralCode so we don't get mismatching historical registration codes)
     const referrerPhone = user.referredBy;
     const referrerUser = referrerPhone ? users.find(u => u.phone === referrerPhone) : null;
-    const referrerMatch = referrerUser && [referrerUser.name, referrerUser.email, referrerUser.phone, referrerUser.referralCode, referrerUser.shortId]
+    const referrerMatch = referrerUser && [referrerUser.name, referrerUser.email, referrerUser.phone, referrerUser.shortId]
       .filter(Boolean)
       .some(val => String(val).toLowerCase().includes(q));
 
-    return [user.name, user.email, user.phone, user.referralCode, user.shortId, user._id, user.referredBy]
+    return [user.name, user.email, user.phone, user.shortId, user._id, user.referredBy]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(q)) || referrerMatch;
   })

@@ -68,8 +68,32 @@ export async function POST(request) {
 
     await user.save();
 
-    // Store shortId (last 8 chars of _id) for referral link lookups
-    user.shortId = user._id.toString().slice(-8);
+    // Store shortId in sequential format starting from HMH1000
+    const lastUser = await User.findOne({ shortId: /^HMH\d+$/ })
+      .sort({ shortId: -1 })
+      .lean();
+
+    let nextNumber = 1000;
+    if (lastUser && lastUser.shortId) {
+      const match = lastUser.shortId.match(/^HMH(\d+)$/);
+      if (match) {
+        nextNumber = parseInt(match[1]) + 1;
+      }
+    }
+    
+    let candidateShortId = `HMH${nextNumber}`;
+    let isUnique = false;
+    while (!isUnique) {
+      const existingUser = await User.findOne({ shortId: candidateShortId }).lean();
+      if (!existingUser) {
+        isUnique = true;
+      } else {
+        nextNumber++;
+        candidateShortId = `HMH${nextNumber}`;
+      }
+    }
+
+    user.shortId = candidateShortId;
     await user.save();
 
     // Add user to referrer's team if referral code was used
