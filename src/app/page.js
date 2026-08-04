@@ -4603,6 +4603,7 @@ export default function Page() {
               </label>
               <input
                 type="text"
+                autoComplete="off"
                 placeholder="Enter unique TRX ID (e.g. TRX12345678)"
                 value={planTrxId}
                 onChange={(e) => {
