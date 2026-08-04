@@ -2368,9 +2368,16 @@ export default function AdminDashboard() {
     const q = userSearchQuery.trim().toLowerCase()
     if (!q) return true
 
-    return [user.name, user.email, user.phone, user.referralCode, user._id]
+    // Check if the user is referred by someone whose name, email, phone, referralCode or shortId matches 'q'
+    const referrerPhone = user.referredBy;
+    const referrerUser = referrerPhone ? users.find(u => u.phone === referrerPhone) : null;
+    const referrerMatch = referrerUser && [referrerUser.name, referrerUser.email, referrerUser.phone, referrerUser.referralCode, referrerUser.shortId]
       .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(q))
+      .some(val => String(val).toLowerCase().includes(q));
+
+    return [user.name, user.email, user.phone, user.referralCode, user.shortId, user._id, user.referredBy]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(q)) || referrerMatch;
   })
 
   const activeUsersCount = users.filter(u => {
@@ -4135,8 +4142,31 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <div className={styles.detailLabel}>Referrer Sponsor ID</div>
-                    <div className={styles.detailValue} style={{ fontFamily: 'monospace', color: request.referrerCode ? '#c9a04a' : '#888' }}>
-                      {request.referrerCode || 'N/A'}
+                    <div className={styles.detailValue} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'monospace', color: request.referrerCode ? '#c9a04a' : '#888' }}>
+                      <span>{request.referrerCode || 'N/A'}</span>
+                      {request.referrerCode && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(request.referrerCode);
+                            showSuccess('Referrer Sponsor ID copied!');
+                          }}
+                          style={{
+                            background: 'rgba(201, 160, 74, 0.15)',
+                            border: '1px solid rgba(201, 160, 74, 0.3)',
+                            color: '#e2b968',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            fontWeight: 'bold'
+                          }}
+                          title="Copy ID"
+                        >
+                          Copy
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
