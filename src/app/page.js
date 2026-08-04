@@ -1679,10 +1679,12 @@ export default function Page() {
     }
   }
 
+  const streakClaimingRef = useRef(false)
   const [streakClaiming, setStreakClaiming] = useState(false)
 
   const claimStreakReward = async () => {
-    if (streakClaiming || !profile || !profile.phone || streakDays < 10) return
+    if (streakClaimingRef.current || !profile || !profile.phone || streakDays < 10) return
+    streakClaimingRef.current = true
     setStreakClaiming(true)
     try {
       const res = await fetch('/api/user/claim-streak', {
@@ -1717,6 +1719,7 @@ export default function Page() {
     } catch (err) {
       showToast('Network error')
     }
+    streakClaimingRef.current = false
     setStreakClaiming(false)
   }
 
