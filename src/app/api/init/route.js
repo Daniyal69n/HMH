@@ -17,15 +17,24 @@ export async function GET() {
     console.log(`Updated ${result.modifiedCount} users with totalRecharge field`);
 
     // Migrate user shortIds to sequential format starting from HMH1000 ordered by creation date
-    const allUsers = await User.find({}).sort({ createdAt: 1 });
+    const allUsers = await User.find({}).sort({ createdAt: 1 }).select('_id shortId').lean();
+    const bulkOps = [];
     let migratedCount = 0;
     for (let i = 0; i < allUsers.length; i++) {
       const targetShortId = `HMH${1000 + i}`;
       if (allUsers[i].shortId !== targetShortId) {
-        allUsers[i].shortId = targetShortId;
-        await allUsers[i].save();
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: allUsers[i]._id },
+            update: { $set: { shortId: targetShortId } }
+          }
+        });
         migratedCount++;
       }
+    }
+
+    if (bulkOps.length > 0) {
+      await User.bulkWrite(bulkOps);
     }
     
     console.log(`Migrated ${migratedCount} users to sequential shortId starting from HMH1000`);
