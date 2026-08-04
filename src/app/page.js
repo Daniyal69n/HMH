@@ -942,23 +942,38 @@ export default function Page() {
   const topbarTitle = NAV.find((n) => n.id === page)?.label ?? 'HMHPro'
 
   const closeNotificationWdPopup = () => {
-    if (activeWdPopup) {
-      try {
-        const storedSeen = JSON.parse(localStorage.getItem('hmh-seen-wd-popups') || '[]');
-        const idsToAdd = [activeWdPopup.id, activeWdPopup.transactionId, activeWdPopup._id].filter(Boolean);
-        let updated = false;
-        idsToAdd.forEach(id => {
+    try {
+      const storedSeen = JSON.parse(localStorage.getItem('hmh-seen-wd-popups') || '[]');
+      let updated = false;
+
+      // Mark all current withdraw history items as seen so no other old transaction pops up
+      if (Array.isArray(withdrawHistory)) {
+        withdrawHistory.forEach(tx => {
+          if (tx._id && !storedSeen.includes(String(tx._id))) {
+            storedSeen.push(String(tx._id));
+            updated = true;
+          }
+          if (tx.transactionId && !storedSeen.includes(String(tx.transactionId))) {
+            storedSeen.push(String(tx.transactionId));
+            updated = true;
+          }
+        });
+      }
+
+      if (activeWdPopup) {
+        [activeWdPopup.id, activeWdPopup.transactionId, activeWdPopup._id].filter(Boolean).forEach(id => {
           const strId = String(id);
           if (!storedSeen.includes(strId)) {
             storedSeen.push(strId);
             updated = true;
           }
         });
-        if (updated) {
-          localStorage.setItem('hmh-seen-wd-popups', JSON.stringify(storedSeen));
-        }
-      } catch (e) { }
-    }
+      }
+
+      if (updated) {
+        localStorage.setItem('hmh-seen-wd-popups', JSON.stringify(storedSeen));
+      }
+    } catch (e) { }
     setActiveWdPopup(null);
   }
 
@@ -972,41 +987,6 @@ export default function Page() {
           const data = await res.json()
           const txns = Array.isArray(data) ? data : (data.transactions || [])
           setWithdrawHistory(txns)
-
-          // Check for unacknowledged withdrawal status popups
-          try {
-            const storedSeen = JSON.parse(localStorage.getItem('hmh-seen-wd-popups') || '[]')
-            const isSeen = (tx) => {
-              const id1 = tx._id ? String(tx._id) : null;
-              const id2 = tx.transactionId ? String(tx.transactionId) : null;
-              return (id1 && storedSeen.includes(id1)) || (id2 && storedSeen.includes(id2));
-            };
-            
-            const unapprovedTx = txns.find(tx => tx.status === 'approved' && !isSeen(tx))
-            if (unapprovedTx) {
-              setActiveWdPopup({
-                type: 'approved',
-                id: unapprovedTx._id ? String(unapprovedTx._id) : String(unapprovedTx.transactionId),
-                transactionId: unapprovedTx.transactionId ? String(unapprovedTx.transactionId) : null,
-                _id: unapprovedTx._id ? String(unapprovedTx._id) : null,
-                amount: unapprovedTx.amount
-              })
-              return
-            }
-
-            const unrejectedTx = txns.find(tx => tx.status === 'rejected' && !isSeen(tx))
-            if (unrejectedTx) {
-              setActiveWdPopup({
-                type: 'rejected',
-                id: unrejectedTx._id ? String(unrejectedTx._id) : String(unrejectedTx.transactionId),
-                transactionId: unrejectedTx.transactionId ? String(unrejectedTx.transactionId) : null,
-                _id: unrejectedTx._id ? String(unrejectedTx._id) : null,
-                amount: unrejectedTx.amount,
-                reason: unrejectedTx.adminRemarks || unrejectedTx.reason || 'Account details verification failed'
-              })
-              return
-            }
-          } catch (e) { console.error('Error checking wd popups:', e) }
         }
       } catch (err) {
         console.warn('Failed to load withdraw history:', err)
