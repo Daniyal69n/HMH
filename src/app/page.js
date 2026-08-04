@@ -2379,6 +2379,13 @@ export default function Page() {
               <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
                 Ranked by current 15 days earnings.
               </p>
+              <div style={{ display: 'flex', padding: '0 14px 8px', fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>
+                <div style={{ flex: 1 }}></div>
+                <div style={{ display: 'flex', gap: '12px', textAlign: 'right' }}>
+                  <div style={{ width: '75px' }}>15 Days</div>
+                  <div style={{ width: '75px' }}>All Time</div>
+                </div>
+              </div>
               <div>
                 {leaders.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-dim)', fontSize: 13.5 }}>
@@ -2395,22 +2402,16 @@ export default function Page() {
                           u.name[0]
                         )}
                       </div>
-                      <div>
-                        <div className="leader-name">{u.name}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="leader-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</div>
                         <div className="leader-level">Level {u.level}</div>
                       </div>
-                      <div style={{ marginLeft: 'auto', display: 'flex', gap: '20px', alignItems: 'center', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                          <span style={{ fontSize: '9px', color: 'var(--gold)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>15 Days</span>
-                          <span style={{ color: 'var(--gold-bright)', fontFamily: 'monospace', fontWeight: 'bold', fontSize: '14px' }}>
-                            {currency === 'USD' ? `$${(u.fifteenDayAmt || 0).toFixed(2)}` : `Rs ${Math.round((u.fifteenDayAmt || 0) * PKR_RATE).toLocaleString()}`}
-                          </span>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ width: '75px', color: 'var(--gold-bright)', fontFamily: 'monospace', fontWeight: 'bold', fontSize: '14px' }}>
+                          {currency === 'USD' ? `$${(u.fifteenDayAmt || 0).toFixed(2)}` : `Rs ${Math.round((u.fifteenDayAmt || 0) * PKR_RATE).toLocaleString()}`}
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', opacity: 0.75 }}>
-                          <span style={{ fontSize: '9px', color: 'var(--text-dim)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>All Time</span>
-                          <span style={{ fontFamily: 'monospace', fontWeight: '600', fontSize: '12.5px' }}>
-                            {currency === 'USD' ? `$${u.amt.toFixed(2)}` : `Rs ${Math.round(u.amt * PKR_RATE).toLocaleString()}`}
-                          </span>
+                        <div style={{ width: '75px', fontFamily: 'monospace', fontWeight: '600', fontSize: '12.5px', opacity: 0.75 }}>
+                          {currency === 'USD' ? `$${u.amt.toFixed(2)}` : `Rs ${Math.round(u.amt * PKR_RATE).toLocaleString()}`}
                         </div>
                       </div>
                     </div>
