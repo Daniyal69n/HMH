@@ -2380,7 +2380,7 @@ export default function Page() {
                 )}
               </h3>
               <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
-                Ranked by total earnings.
+                Ranked by current 15 days earnings.
               </p>
               <div>
                 {leaders.length === 0 ? (
@@ -2402,7 +2402,20 @@ export default function Page() {
                         <div className="leader-name">{u.name}</div>
                         <div className="leader-level">Level {u.level}</div>
                       </div>
-                      <div className="leader-amt">{currency === 'USD' ? `$${u.amt.toFixed(2)}` : `Rs ${(u.amt * PKR_RATE).toLocaleString()}`}</div>
+                      <div style={{ marginLeft: 'auto', display: 'flex', gap: '20px', alignItems: 'center', textAlign: 'right' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                          <span style={{ fontSize: '9px', color: 'var(--gold)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>15 Days</span>
+                          <span style={{ color: 'var(--gold-bright)', fontFamily: 'monospace', fontWeight: 'bold', fontSize: '14px' }}>
+                            {currency === 'USD' ? `$${(u.fifteenDayAmt || 0).toFixed(2)}` : `Rs ${Math.round((u.fifteenDayAmt || 0) * PKR_RATE).toLocaleString()}`}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', opacity: 0.75 }}>
+                          <span style={{ fontSize: '9px', color: 'var(--text-dim)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>All Time</span>
+                          <span style={{ fontFamily: 'monospace', fontWeight: '600', fontSize: '12.5px' }}>
+                            {currency === 'USD' ? `$${u.amt.toFixed(2)}` : `Rs ${Math.round(u.amt * PKR_RATE).toLocaleString()}`}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   ))
                 )}

@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 import SystemSettings from '@/models/SystemSettings';
+import Transaction from '@/models/Transaction';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -47,9 +48,31 @@ export async function GET(request) {
       cycleWinners = cycleState.value.winners || [];
     }
 
-    // Always fetch dynamic leaderboard using MongoDB aggregation for performance
-    console.log("[Leaderboard] Fetching users via aggregation...");
-    console.time("query2");
+    const cycleStartDate = new Date(cycleEndDate.getTime() - FIFTEEN_DAYS_MS);
+
+    // Aggregate completed income transactions for each user during the current 15-day cycle
+    const fifteenDayEarnings = await Transaction.aggregate([
+      {
+        $match: {
+          status: 'completed',
+          type: { $in: ['daily_income', 'referral_income', 'coupon_redeem', 'signup_bonus', 'level_reward', 'social_task_reward'] },
+          createdAt: { $gte: cycleStartDate }
+        }
+      },
+      {
+        $group: {
+          _id: '$userId',
+          total: { $sum: '$amount' }
+        }
+      }
+    ]);
+
+    const fifteenDayMap = {};
+    fifteenDayEarnings.forEach(item => {
+      if (item._id) {
+        fifteenDayMap[item._id] = item.total;
+      }
+    });
 
     const topUsers = await User.aggregate([
       { $match: { isAdmin: { $ne: true }, isBlocked: { $ne: true } } },
@@ -69,10 +92,7 @@ export async function GET(request) {
             ]
           }
         }
-      },
-      { $match: { computedEarnings: { $gt: 0 } } },
-      { $sort: { computedEarnings: -1 } },
-      { $limit: 100 } // Fetch top 100 to find top 10 unique names
+      }
     ]);
 
     console.timeEnd("query2");
@@ -81,6 +101,9 @@ export async function GET(request) {
     const realLeaders = topUsers.map(user => {
       const level = (user.claimedLevels && user.claimedLevels.length > 0) ? Math.max(...user.claimedLevels) : 1;
       const amt = user.computedEarnings / 300.0; // convert PKR to USD
+      
+      const fifteenDayPKR = fifteenDayMap[user.phone] || 0;
+      const fifteenDayAmt = fifteenDayPKR / 300.0; // convert PKR to USD
 
       const nameParts = (user.name || '').trim().split(/\s+/);
       let displayName = user.name || 'Anonymous';
@@ -98,8 +121,17 @@ export async function GET(request) {
         name: displayName,
         level,
         amt,
+        fifteenDayAmt,
         profilePicture: user.profilePicture || ''
       };
+    });
+
+    // Sort by 15 days earnings descending, then by all time earnings descending
+    realLeaders.sort((a, b) => {
+      if (b.fifteenDayAmt !== a.fifteenDayAmt) {
+        return b.fifteenDayAmt - a.fifteenDayAmt;
+      }
+      return b.amt - a.amt;
     });
 
     // Take top 10 unique names
@@ -132,6 +164,7 @@ export async function GET(request) {
           profilePicture: u.profilePicture || '',
           level: u.level || 1,
           amt: u.amt || 0,
+          fifteenDayAmt: u.fifteenDayAmt || 0,
           rank,
           prize: defaultPrizes[rank] || '',
           claimed: false
@@ -174,6 +207,7 @@ export async function GET(request) {
           profilePicture: w.profilePicture || (matchedUser ? matchedUser.profilePicture : ''),
           level: w.level || (matchedUser ? matchedUser.level : 1),
           amt: w.amt !== undefined ? w.amt : (matchedUser ? matchedUser.amt : 0),
+          fifteenDayAmt: w.fifteenDayAmt !== undefined ? w.fifteenDayAmt : (matchedUser ? matchedUser.fifteenDayAmt : 0),
           prize: w.prize || defaultPrizes[rank] || ''
         };
       });
@@ -184,6 +218,7 @@ export async function GET(request) {
       name: u.name,
       level: u.level,
       amt: u.amt,
+      fifteenDayAmt: u.fifteenDayAmt,
       profilePicture: u.profilePicture
     }));
 
