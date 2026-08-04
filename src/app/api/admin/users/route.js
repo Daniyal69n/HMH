@@ -35,7 +35,7 @@ export async function GET(request) {
     // Run all database operations in parallel using raw collection queries
     const [users, totalUsers, blockedUsers, activeUsers] = await Promise.all([
       User.find(searchQuery)
-        .select('name phone email status isBlocked isAdmin balance earnBalance totalCommissionEarned totalRecharge customTotalEarnings customMySalary customTotalWithdrawals adWatchDaysLeft customAdEarning customSpinReward claimedLevels withdrawHistory createdAt referralCode shortId investmentPlans.status investmentPlans.planName investmentPlans.amount investmentPlans.startDate investmentPlans._id')
+        .select('name phone email status isBlocked isAdmin balance earnBalance totalCommissionEarned totalRecharge customTotalEarnings customMySalary customTotalWithdrawals adWatchDaysLeft customAdEarning customSpinReward claimedLevels withdrawHistory createdAt referralCode shortId investmentPlans.status investmentPlans.planName investmentPlans.amount investmentPlans.startDate investmentPlans._id referredBy')
         .sort({ _id: -1 })
         .skip(skip)
         .limit(limit)
@@ -46,12 +46,37 @@ export async function GET(request) {
       User.countDocuments({ isBlocked: false, isDummyNetworkMember: { $ne: true }, 'investmentPlans.paymentMethod': { $ne: 'Admin Override' } })
     ]);
 
+    // Enrich users with referrer name, phone, and sponsor/referral code
+    const referrerPhones = [...new Set(users.map(u => u.referredBy))].filter(Boolean);
+    const referrers = await User.find({ phone: { $in: referrerPhones } })
+      .select('name phone referralCode shortId')
+      .lean();
+    
+    const referrerMap = {};
+    referrers.forEach(r => {
+      referrerMap[r.phone] = {
+        name: r.name || '',
+        phone: r.phone || '',
+        referralCode: r.shortId || r.referralCode || r.phone || ''
+      };
+    });
+
+    const enrichedUsers = users.map(u => {
+      const referrerInfo = u.referredBy ? referrerMap[u.referredBy] : null;
+      return {
+        ...u,
+        referrerName: referrerInfo ? referrerInfo.name : null,
+        referrerPhone: referrerInfo ? referrerInfo.phone : null,
+        referrerCode: referrerInfo ? referrerInfo.referralCode : null
+      };
+    });
+
     // Get statistics (heavy aggregations removed to prevent timeouts)
     const totalDepositsVal = 0;
     const totalWithdrawalsVal = 0;
 
     return NextResponse.json({
-      users,
+      users: enrichedUsers,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(totalUsers / limit),

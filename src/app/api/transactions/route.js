@@ -72,7 +72,7 @@ export async function GET(request) {
         name: r.name || '',
         phone: r.phone || '',
         email: r.email || '',
-        referralCode: r.referralCode || r.shortId || r.phone || ''
+        referralCode: r.shortId || r.referralCode || r.phone || ''
       };
     });
 

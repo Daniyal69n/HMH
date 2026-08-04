@@ -2708,6 +2708,41 @@ export default function AdminDashboard() {
                     <div className={styles.detailLabel}>User ID</div>
                     <div className={styles.detailValue}>{user.shortId || (user._id ? user._id.toString().substring(user._id.toString().length - 8) : 'N/A')}</div>
                   </div>
+                  <div>
+                    <div className={styles.detailLabel}>Referred By</div>
+                    <div className={styles.detailValue} style={{ color: user.referrerName ? '#e2b968' : '#888' }}>
+                      {user.referrerName ? `${user.referrerName} (${user.referrerPhone || user.referredBy})` : 'Direct Signup'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className={styles.detailLabel}>Referrer Sponsor ID</div>
+                    <div className={styles.detailValue} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'monospace', color: user.referrerCode ? '#c9a04a' : '#888' }}>
+                      <span>{user.referrerCode || 'N/A'}</span>
+                      {user.referrerCode && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(user.referrerCode);
+                            showSuccess('Referrer Sponsor ID copied!');
+                          }}
+                          style={{
+                            background: 'rgba(201, 160, 74, 0.15)',
+                            border: '1px solid rgba(201, 160, 74, 0.3)',
+                            color: '#e2b968',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            fontWeight: 'bold'
+                          }}
+                          title="Copy ID"
+                        >
+                          Copy
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className={styles.cardActions}>
                   <button
