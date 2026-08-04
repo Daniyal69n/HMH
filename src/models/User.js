@@ -171,6 +171,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  lastStreakClaimedAt: {
+    type: Date,
+    default: null
+  },
   claimedLevels: {
     type: [Number],
     default: []

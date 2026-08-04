@@ -1955,11 +1955,15 @@ export default function Page() {
       return Math.floor(localTime / (24 * 60 * 60 * 1000));
     }
 
-    // Group referrals by their local calendar day index
+    // Group referrals by their local calendar day index (only referrals since last claimed streak)
+    const lastClaimedTime = profile.lastStreakClaimedAt ? new Date(profile.lastStreakClaimedAt).getTime() : 0
     const activeDays = new Set()
     for (const m of teamData.levelA.members) {
-      const mDay = getLocalDayIndex(m.joinDate)
-      activeDays.add(mDay)
+      const memberJoinTime = new Date(m.joinDate).getTime()
+      if (memberJoinTime > lastClaimedTime) {
+        const mDay = getLocalDayIndex(m.joinDate)
+        activeDays.add(mDay)
+      }
     }
 
     const todayDay = getLocalDayIndex(Date.now())

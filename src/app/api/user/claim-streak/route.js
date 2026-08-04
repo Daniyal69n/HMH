@@ -16,8 +16,12 @@ export async function POST(request) {
       return Response.json({ message: 'User not found' }, { status: 404 });
     }
 
-    // Calculate current streak
-    const levelAMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': 'active' }).select('createdAt').lean();
+    // Calculate current streak (only referrals since last claimed streak)
+    const levelAQuery = { referredBy: user.phone, 'investmentPlans.status': 'active' };
+    if (user.lastStreakClaimedAt) {
+      levelAQuery.createdAt = { $gt: user.lastStreakClaimedAt };
+    }
+    const levelAMembers = await User.find(levelAQuery).select('createdAt').lean();
     const getLocalDayIndex = (dateVal) => {
       const d = new Date(dateVal);
       const localTime = d.getTime() + 5 * 60 * 60 * 1000; // PKT
@@ -57,6 +61,7 @@ export async function POST(request) {
       user.customTotalEarnings += rewardPKR;
     }
     user.claimedStreakReward = true;
+    user.lastStreakClaimedAt = new Date();
 
     // Create a transaction log
     const txnId = `TXN-STREAK-${Date.now()}`;
