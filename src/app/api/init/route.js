@@ -16,8 +16,8 @@ export async function GET() {
     
     console.log(`Updated ${result.modifiedCount} users with totalRecharge field`);
 
-    // Migrate user shortIds to sequential format starting from HMH1000 ordered by creation date
-    const allUsers = await User.find({}).sort({ createdAt: 1 }).select('_id shortId').lean();
+    // Migrate user shortIds to sequential format starting from HMH1000 ordered by creation date (using indexed _id sort)
+    const allUsers = await User.find({}, { _id: 1, shortId: 1 }).sort({ _id: 1 }).lean();
     const bulkOps = [];
     let migratedCount = 0;
     for (let i = 0; i < allUsers.length; i++) {
