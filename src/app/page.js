@@ -942,11 +942,19 @@ export default function Page() {
   const topbarTitle = NAV.find((n) => n.id === page)?.label ?? 'HMHPro'
 
   const closeNotificationWdPopup = () => {
-    if (activeWdPopup && activeWdPopup.id) {
+    if (activeWdPopup) {
       try {
         const storedSeen = JSON.parse(localStorage.getItem('hmh-seen-wd-popups') || '[]');
-        if (!storedSeen.includes(activeWdPopup.id)) {
-          storedSeen.push(activeWdPopup.id);
+        const idsToAdd = [activeWdPopup.id, activeWdPopup.transactionId, activeWdPopup._id].filter(Boolean);
+        let updated = false;
+        idsToAdd.forEach(id => {
+          const strId = String(id);
+          if (!storedSeen.includes(strId)) {
+            storedSeen.push(strId);
+            updated = true;
+          }
+        });
+        if (updated) {
           localStorage.setItem('hmh-seen-wd-popups', JSON.stringify(storedSeen));
         }
       } catch (e) { }
@@ -968,22 +976,31 @@ export default function Page() {
           // Check for unacknowledged withdrawal status popups
           try {
             const storedSeen = JSON.parse(localStorage.getItem('hmh-seen-wd-popups') || '[]')
+            const isSeen = (tx) => {
+              const id1 = tx._id ? String(tx._id) : null;
+              const id2 = tx.transactionId ? String(tx.transactionId) : null;
+              return (id1 && storedSeen.includes(id1)) || (id2 && storedSeen.includes(id2));
+            };
             
-            const unapprovedTx = txns.find(tx => tx.status === 'approved' && (tx._id || tx.transactionId) && !storedSeen.includes(tx._id || tx.transactionId))
+            const unapprovedTx = txns.find(tx => tx.status === 'approved' && !isSeen(tx))
             if (unapprovedTx) {
               setActiveWdPopup({
                 type: 'approved',
-                id: unapprovedTx._id || unapprovedTx.transactionId,
+                id: unapprovedTx._id ? String(unapprovedTx._id) : String(unapprovedTx.transactionId),
+                transactionId: unapprovedTx.transactionId ? String(unapprovedTx.transactionId) : null,
+                _id: unapprovedTx._id ? String(unapprovedTx._id) : null,
                 amount: unapprovedTx.amount
               })
               return
             }
 
-            const unrejectedTx = txns.find(tx => tx.status === 'rejected' && (tx._id || tx.transactionId) && !storedSeen.includes(tx._id || tx.transactionId))
+            const unrejectedTx = txns.find(tx => tx.status === 'rejected' && !isSeen(tx))
             if (unrejectedTx) {
               setActiveWdPopup({
                 type: 'rejected',
-                id: unrejectedTx._id || unrejectedTx.transactionId,
+                id: unrejectedTx._id ? String(unrejectedTx._id) : String(unrejectedTx.transactionId),
+                transactionId: unrejectedTx.transactionId ? String(unrejectedTx.transactionId) : null,
+                _id: unrejectedTx._id ? String(unrejectedTx._id) : null,
                 amount: unrejectedTx.amount,
                 reason: unrejectedTx.adminRemarks || unrejectedTx.reason || 'Account details verification failed'
               })
