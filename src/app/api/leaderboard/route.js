@@ -54,7 +54,7 @@ export async function GET(request) {
     const fifteenDayEarnings = await Transaction.aggregate([
       {
         $match: {
-          status: 'completed',
+          status: { $in: ['completed', 'approved'] },
           type: { $in: ['daily_income', 'referral_income', 'coupon_redeem', 'signup_bonus', 'level_reward', 'social_task_reward'] },
           createdAt: { $gte: cycleStartDate }
         }
@@ -78,6 +78,7 @@ export async function GET(request) {
       { $match: { isAdmin: { $ne: true }, isBlocked: { $ne: true } } },
       {
         $project: {
+          _id: 0,
           name: 1,
           phone: 1,
           profilePicture: 1,
