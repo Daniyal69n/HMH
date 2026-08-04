@@ -46,7 +46,11 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Database initialization error:', error);
-    return Response.json({ error: 'Database initialization failed' }, { status: 500 });
+    return Response.json({ 
+      error: 'Database initialization failed',
+      message: error.message,
+      stack: error.stack
+    }, { status: 500 });
   }
 }
 
