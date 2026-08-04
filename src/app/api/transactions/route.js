@@ -58,7 +58,23 @@ export async function GET(request) {
         { email: { $in: userIds } },
         { _id: { $in: objectIds } }
       ]
-    }).select('name phone email investmentPlans').lean();
+    }).select('name phone email investmentPlans referredBy referralCode shortId').lean();
+
+    // Find the referrers of all these users
+    const referrerPhones = [...new Set(users.map(u => u.referredBy))].filter(Boolean);
+    const referrers = await User.find({
+      phone: { $in: referrerPhones }
+    }).select('name phone email referralCode shortId').lean();
+
+    const referrerMap = {};
+    referrers.forEach(r => {
+      referrerMap[r.phone] = {
+        name: r.name || '',
+        phone: r.phone || '',
+        email: r.email || '',
+        referralCode: r.referralCode || r.shortId || r.phone || ''
+      };
+    });
 
     const userMap = {};
     users.forEach(u => {
@@ -70,10 +86,17 @@ export async function GET(request) {
         }
       }
 
+      const referrerInfo = u.referredBy ? (referrerMap[u.referredBy] || { phone: u.referredBy }) : null;
+
       const userInfo = {
         name: u.name || '',
         email: u.email || '',
-        planName: activePlanName
+        planName: activePlanName,
+        referredBy: u.referredBy || null,
+        referrerName: referrerInfo ? (referrerInfo.name || 'Unknown Referrer') : null,
+        referrerPhone: referrerInfo ? referrerInfo.phone : null,
+        referrerEmail: referrerInfo ? referrerInfo.email : null,
+        referrerCode: referrerInfo ? referrerInfo.referralCode : null
       };
 
       if (u.phone) userMap[u.phone] = userInfo;
@@ -88,7 +111,12 @@ export async function GET(request) {
         userEmail: info.email || t.userEmail || '',
         userPlan: info.planName || t.userPlan || 'No Plan',
         userName: t.userName || info.name || 'Unknown User',
-        userProfilePicture: ''
+        userProfilePicture: '',
+        referredBy: info.referredBy || null,
+        referrerName: info.referrerName || null,
+        referrerPhone: info.referrerPhone || null,
+        referrerEmail: info.referrerEmail || null,
+        referrerCode: info.referrerCode || null
       };
     });
     console.timeEnd("processing");

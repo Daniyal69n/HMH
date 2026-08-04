@@ -4127,6 +4127,18 @@ export default function AdminDashboard() {
                     <div className={styles.detailLabel}>Account</div>
                     <div className={styles.detailValue}>{getWithdrawalAccount(request)}</div>
                   </div>
+                  <div>
+                    <div className={styles.detailLabel}>Referred By</div>
+                    <div className={styles.detailValue} style={{ color: request.referrerName ? '#e2b968' : '#888' }}>
+                      {request.referrerName ? `${request.referrerName} (${request.referrerPhone || request.referredBy})` : 'Direct Signup'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className={styles.detailLabel}>Referrer Sponsor ID</div>
+                    <div className={styles.detailValue} style={{ fontFamily: 'monospace', color: request.referrerCode ? '#c9a04a' : '#888' }}>
+                      {request.referrerCode || 'N/A'}
+                    </div>
+                  </div>
                 </div>
                 {request.status === 'pending' && (
                   <div className={styles.cardActions}>
