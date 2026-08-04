@@ -48,10 +48,6 @@ export async function POST(request) {
       return Response.json({ message: 'Streak is not complete. You need a 10-day referral streak to claim this reward.' }, { status: 400 });
     }
 
-    if (user.claimedStreakReward) {
-      return Response.json({ message: 'You have already claimed your 10-day streak reward.' }, { status: 400 });
-    }
-
     // Award $10 (Rs 3000)
     const rewardPKR = 10 * 300; // $10 converted to PKR
 
@@ -60,7 +56,6 @@ export async function POST(request) {
     if (user.customTotalEarnings !== undefined && user.customTotalEarnings !== null) {
       user.customTotalEarnings += rewardPKR;
     }
-    user.claimedStreakReward = true;
     user.lastStreakClaimedAt = new Date();
 
     // Create a transaction log

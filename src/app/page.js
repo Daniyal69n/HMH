@@ -1704,7 +1704,7 @@ export default function Page() {
         setProfile(prev => {
           const next = {
             ...prev,
-            claimedStreakReward: true,
+            lastStreakClaimedAt: new Date().toISOString(),
             totalCommissionEarned: data.totalCommissionEarned,
             earnBalance: data.earnBalance
           }
@@ -2236,8 +2236,8 @@ export default function Page() {
 
               <div style={{ marginTop: '16px' }}>
                 <button
-                  className={`btn ${streakDays === 10 && !profile.claimedStreakReward ? 'btn-gold' : 'btn-outline'}`}
-                  disabled={streakDays < 10 || profile.claimedStreakReward || streakClaiming}
+                  className={`btn ${streakDays === 10 ? 'btn-gold' : 'btn-outline'}`}
+                  disabled={streakDays < 10 || streakClaiming}
                   onClick={claimStreakReward}
                   style={{
                     width: '100%',
@@ -2245,15 +2245,13 @@ export default function Page() {
                     fontSize: '13.5px',
                     fontWeight: '700',
                     borderRadius: '8px',
-                    cursor: (streakDays < 10 || profile.claimedStreakReward || streakClaiming) ? 'not-allowed' : 'pointer',
-                    opacity: (streakDays < 10 || profile.claimedStreakReward) ? 0.5 : 1
+                    cursor: (streakDays < 10 || streakClaiming) ? 'not-allowed' : 'pointer',
+                    opacity: (streakDays < 10) ? 0.5 : 1
                   }}
                 >
-                  {profile.claimedStreakReward
-                    ? '✅ Reward Claimed ($10)'
-                    : streakDays === 10
-                      ? '🎁 Claim $10 Reward'
-                      : '🔒 Claim $10 Reward (Reach Day 10)'
+                  {streakDays === 10
+                    ? '🎁 Claim $10 Reward'
+                    : '🔒 Claim $10 Reward (Reach Day 10)'
                   }
                 </button>
               </div>
