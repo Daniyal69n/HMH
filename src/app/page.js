@@ -2138,7 +2138,7 @@ export default function Page() {
               <div className="profile-meta">
                 <div className="eyebrow">Welcome to HMHPro</div>
                 <h2>{profile.name || 'Member'}</h2>
-                <div className="uid">ID: {profile._id ? profile._id.substring(profile._id.length - 8) : (profile.phone ? profile.phone.substring(Math.max(0, profile.phone.length - 8)) : '7f19c3e2')}</div>
+                <div className="uid">ID: {profile.shortId || (profile._id ? profile._id.substring(profile._id.length - 8) : (profile.phone ? profile.phone.substring(Math.max(0, profile.phone.length - 8)) : '7f19c3e2'))}</div>
                 <div className="badge-row">
                   <span className="badge gold" style={{ background: activePlanName === 'Free' ? 'rgba(255,255,255,0.08)' : 'rgba(201,160,74,0.18)', color: activePlanName === 'Free' ? 'var(--text-dim)' : 'var(--gold-bright)', border: activePlanName === 'Free' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(201,160,74,0.4)' }}>
                     {activePlanName === 'Free' ? '🆓 Free' : `⭐ ${activePlanName} Plan`}
