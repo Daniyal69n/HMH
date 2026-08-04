@@ -7,10 +7,11 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET(request) {
+  const tTotalStart = performance.now();
   try {
-    console.time("connectDB");
+    const tConnectStart = performance.now();
     await connectDB();
-    console.timeEnd("connectDB");
+    const connectTime = (performance.now() - tConnectStart).toFixed(2);
 
     const { searchParams } = new URL(request.url);
     const force = searchParams.get('force') === 'true';
@@ -19,18 +20,14 @@ export async function GET(request) {
     const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
 
     // Check cycle state
-    console.log("[Leaderboard] Starting DB query for cycle state");
-    console.time("query1");
+    const tSettingsStart = performance.now();
     let cycleState = await SystemSettings.findOne({ key: 'mystery_box_cycle' }).lean();
-    console.timeEnd("query1");
-    console.log("[Leaderboard] Cycle state fetched:", !!cycleState);
+    const settingsTime = (performance.now() - tSettingsStart).toFixed(2);
 
     let cycleEndDate = null;
     let cycleWinners = [];
 
     if (!cycleState || !cycleState.value) {
-      console.log("[Leaderboard] Initializing cycle state");
-      // Initialize cycle
       cycleEndDate = new Date(Date.now() + FIFTEEN_DAYS_MS);
       await SystemSettings.findOneAndUpdate(
         { key: 'mystery_box_cycle' },
@@ -51,6 +48,7 @@ export async function GET(request) {
     const cycleStartDate = new Date(cycleEndDate.getTime() - FIFTEEN_DAYS_MS);
 
     // Aggregate completed income transactions for each user during the current 15-day cycle
+    const tTxStart = performance.now();
     const fifteenDayEarnings = await Transaction.aggregate([
       {
         $match: {
@@ -66,14 +64,9 @@ export async function GET(request) {
         }
       }
     ]);
+    const transactionsTime = (performance.now() - tTxStart).toFixed(2);
 
-    const fifteenDayMap = {};
-    fifteenDayEarnings.forEach(item => {
-      if (item._id) {
-        fifteenDayMap[item._id] = item.total;
-      }
-    });
-
+    const tUsersStart = performance.now();
     const topUsers = await User.aggregate([
       { $match: { isAdmin: { $ne: true }, isBlocked: { $ne: true } } },
       {
@@ -95,10 +88,16 @@ export async function GET(request) {
         }
       }
     ]);
+    const usersTime = (performance.now() - tUsersStart).toFixed(2);
 
-    console.timeEnd("query2");
+    const tMapStart = performance.now();
+    const fifteenDayMap = {};
+    fifteenDayEarnings.forEach(item => {
+      if (item._id) {
+        fifteenDayMap[item._id] = item.total;
+      }
+    });
 
-    console.time("processing");
     const realLeaders = topUsers.map(user => {
       const level = (user.claimedLevels && user.claimedLevels.length > 0) ? Math.max(...user.claimedLevels) : 1;
       const amt = user.computedEarnings / 300.0; // convert PKR to USD
@@ -126,7 +125,9 @@ export async function GET(request) {
         profilePicture: user.profilePicture || ''
       };
     });
+    const mappingTime = (performance.now() - tMapStart).toFixed(2);
 
+    const tSortStart = performance.now();
     // Sort by 15 days earnings descending, then by all time earnings descending
     realLeaders.sort((a, b) => {
       if (b.fifteenDayAmt !== a.fifteenDayAmt) {
@@ -222,8 +223,7 @@ export async function GET(request) {
       fifteenDayAmt: u.fifteenDayAmt,
       profilePicture: u.profilePicture
     }));
-
-    console.timeEnd("processing");
+    const sortingTime = (performance.now() - tSortStart).toFixed(2);
 
     // Include cycle info in the response
     const responseData = {
@@ -232,17 +232,27 @@ export async function GET(request) {
       winners: cycleWinners
     };
 
-    console.time("response");
+    const tSerStart = performance.now();
+    const totalTime = (performance.now() - tTotalStart).toFixed(2);
+    const serializationTime = (performance.now() - tSerStart).toFixed(2);
 
-    const res = Response.json(responseData, {
+    console.log(`[Leaderboard Audit] Connect: ${connectTime}ms | SystemSettings: ${settingsTime}ms | Transactions: ${transactionsTime}ms | Users: ${usersTime}ms | Mapping: ${mappingTime}ms | Sorting: ${sortingTime}ms | Serialization: ${serializationTime}ms | Total: ${totalTime}ms`);
+
+    return Response.json(responseData, {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
-        'Expires': '0'
+        'Expires': '0',
+        'X-Connect-Time': `${connectTime}ms`,
+        'X-SystemSettings-Time': `${settingsTime}ms`,
+        'X-Transactions-Time': `${transactionsTime}ms`,
+        'X-Users-Time': `${usersTime}ms`,
+        'X-Mapping-Time': `${mappingTime}ms`,
+        'X-Sorting-Time': `${sortingTime}ms`,
+        'X-Serialization-Time': `${serializationTime}ms`,
+        'X-Total-Time': `${totalTime}ms`
       }
     });
-    console.timeEnd("response");
-    return res;
 
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
