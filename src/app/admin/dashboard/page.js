@@ -4027,10 +4027,28 @@ export default function AdminDashboard() {
                     <div className={styles.detailLabel}>Requested on</div>
                     <div className={styles.detailValue}>{req.startDate || '-'}</div>
                   </div>
-                  <div style={{ gridColumn: 'span 2' }}>
-                    <div className={styles.detailLabel}>Referred By (Sponsor ID)</div>
-                    <div className={styles.detailValue} style={{ color: '#aaa', fontSize: '13px' }}>
-                      {req.referredBy === 'None' || !req.referredBy ? 'No Sponsor (Direct)' : req.referredBy}
+                  <div>
+                    <div className={styles.detailLabel}>Referred By</div>
+                    <div className={styles.detailValue} style={{ color: '#c9a04a' }}>
+                      {(!req.sponsorName || req.sponsorName === 'Unknown') ? 'No Sponsor (Direct)' : `${req.sponsorName} (${req.sponsorPhone})`}
+                    </div>
+                  </div>
+                  <div>
+                    <div className={styles.detailLabel}>Referrer Sponsor ID</div>
+                    <div className={styles.detailValue} style={{ color: '#c9a04a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {req.sponsorId || 'None'}
+                      {req.sponsorId && req.sponsorId !== 'None' && (
+                        <button 
+                          onClick={() => { 
+                            navigator.clipboard.writeText(req.sponsorId); 
+                            // Using standard browser alert or a tiny UI popup if possible, we'll just use clipboard API natively
+                          }}
+                          style={{ background: 'rgba(201, 160, 74, 0.1)', border: '1px solid rgba(201, 160, 74, 0.3)', color: '#c9a04a', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                          title="Copy Sponsor ID"
+                        >
+                          Copy
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -157,19 +157,18 @@ export async function GET(request) {
         userPic = '';
       }
 
-      let sponsorDisplay = user.referredBy || 'None';
+      let sName = 'Unknown';
+      let sPhone = user.referredBy || 'None';
+      let sId = 'UNKNOWN';
+
       if (user.referredBy && user.referredBy !== 'None') {
         const sponsor = sponsorsMap[user.referredBy];
         if (sponsor) {
-          const sName = sponsor.name || 'Unknown';
+          sName = sponsor.name || 'Unknown';
+          sPhone = sponsor.phone ? String(sponsor.phone) : user.referredBy;
           const sObjIdStr = sponsor._id ? String(sponsor._id) : '';
-          const sPhoneStr = sponsor.phone ? String(sponsor.phone) : user.referredBy;
-          const fallbackId = sObjIdStr ? sObjIdStr.substring(Math.max(0, sObjIdStr.length - 8)) : (sPhoneStr ? sPhoneStr.substring(Math.max(0, sPhoneStr.length - 8)) : '');
-          const sId = sponsor.shortId || fallbackId;
-          sponsorDisplay = `${sName} (${sId.toUpperCase()})`;
-        } else {
-          // Sponsor deleted or not found
-          sponsorDisplay = `Unknown (HMH-UNKNOWN)`;
+          const fallbackId = sObjIdStr ? sObjIdStr.substring(Math.max(0, sObjIdStr.length - 8)) : (sPhone ? sPhone.substring(Math.max(0, sPhone.length - 8)) : '');
+          sId = sponsor.shortId || fallbackId;
         }
       }
 
@@ -179,7 +178,9 @@ export async function GET(request) {
         userPhone: user.phone || '',
         userEmail: user.email || '',
         userProfilePicture: userPic,
-        referredBy: sponsorDisplay,
+        sponsorName: sName,
+        sponsorPhone: sPhone,
+        sponsorId: sId !== 'UNKNOWN' ? `HMH${sId.toUpperCase()}` : 'None',
         planId: plan._id ? String(plan._id) : (plan.id ? String(plan.id) : Math.random().toString()),
         planName: plan.planName || 'Plan',
         userCurrentPlan: plan.planName || 'Plan',
