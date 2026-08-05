@@ -43,9 +43,21 @@ export async function GET(request) {
           name: 1,
           phone: 1,
           email: 1,
-          profilePicture: 1,
           referredBy: 1,
-          investmentPlans: 1
+          investmentPlans: 1,
+          // Strip massive Base64 profile pictures at the database level!
+          profilePicture: {
+            $cond: {
+              if: {
+                $and: [
+                  { $eq: [{ $type: "$profilePicture" }, "string"] },
+                  { $lt: [{ $strLenCP: { $ifNull: ["$profilePicture", ""] } }, 1000] }
+                ]
+              },
+              then: "$profilePicture",
+              else: ""
+            }
+          }
         }
       },
       {
@@ -73,7 +85,19 @@ export async function GET(request) {
           'plan.trxId': '$investmentPlans.trxId',
           'plan.startDate': '$investmentPlans.startDate',
           'plan.screenshotUrl': '$investmentPlans.screenshotUrl',
-          'plan.screenshotData': '$investmentPlans.screenshotData'
+          // Strip massive Base64 receipts at the database level!
+          'plan.screenshotData': {
+            $cond: {
+              if: {
+                $and: [
+                  { $eq: [{ $type: "$investmentPlans.screenshotData" }, "string"] },
+                  { $lt: [{ $strLenCP: { $ifNull: ["$investmentPlans.screenshotData", ""] } }, 1000] }
+                ]
+              },
+              then: "$investmentPlans.screenshotData",
+              else: null
+            }
+          }
         }
       }
     ];
@@ -142,7 +166,7 @@ export async function GET(request) {
           const sPhoneStr = sponsor.phone ? String(sponsor.phone) : user.referredBy;
           const fallbackId = sObjIdStr ? sObjIdStr.substring(Math.max(0, sObjIdStr.length - 8)) : (sPhoneStr ? sPhoneStr.substring(Math.max(0, sPhoneStr.length - 8)) : '');
           const sId = sponsor.shortId || fallbackId;
-          sponsorDisplay = `${sName} (HMH-${sId.toUpperCase()})`;
+          sponsorDisplay = `${sName} (${sId.toUpperCase()})`;
         } else {
           // Sponsor deleted or not found
           sponsorDisplay = `Unknown (HMH-UNKNOWN)`;
