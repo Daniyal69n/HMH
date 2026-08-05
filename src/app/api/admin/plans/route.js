@@ -38,20 +38,6 @@ export async function GET(request) {
         $match: stage1Match
       },
       {
-        $lookup: {
-          from: 'users',
-          localField: 'referredBy',
-          foreignField: 'phone',
-          as: 'sponsor'
-        }
-      },
-      {
-        $unwind: {
-          path: '$sponsor',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
         $project: {
           _id: 1,
           name: 1,
@@ -59,10 +45,6 @@ export async function GET(request) {
           email: 1,
           profilePicture: 1,
           referredBy: 1,
-          sponsorName: '$sponsor.name',
-          sponsorId: '$sponsor.shortId',
-          sponsorObjId: '$sponsor._id',
-          sponsorPhone: '$sponsor.phone',
           investmentPlans: 1
         }
       },
@@ -83,10 +65,6 @@ export async function GET(request) {
           email: 1,
           profilePicture: 1,
           referredBy: 1,
-          sponsorName: 1,
-          sponsorId: 1,
-          sponsorObjId: 1,
-          sponsorPhone: 1,
           'plan._id': '$investmentPlans._id',
           'plan.planName': '$investmentPlans.planName',
           'plan.amount': '$investmentPlans.amount',
@@ -103,6 +81,18 @@ export async function GET(request) {
     const dbStartTime = Date.now();
     const results = await User.aggregate(pipeline);
     const dbQueryTimeMs = Date.now() - dbStartTime;
+
+    // Batch fetch sponsors in a single fast query
+    const sponsorPhones = [...new Set(results.map(r => r.referredBy).filter(p => p && p !== 'None'))];
+    let sponsorsMap = {};
+    if (sponsorPhones.length > 0) {
+      const sponsors = await User.find({ phone: { $in: sponsorPhones } })
+        .select('name phone shortId _id')
+        .lean();
+      for (const s of sponsors) {
+        sponsorsMap[s.phone] = s;
+      }
+    }
 
     const planRequests = (results || []).map(item => {
       if (!item || !item.plan || typeof item.plan !== 'object') return null;
@@ -145,12 +135,18 @@ export async function GET(request) {
 
       let sponsorDisplay = user.referredBy || 'None';
       if (user.referredBy && user.referredBy !== 'None') {
-        const sName = user.sponsorName || 'Unknown';
-        const sObjIdStr = user.sponsorObjId ? String(user.sponsorObjId) : '';
-        const sPhoneStr = user.sponsorPhone ? String(user.sponsorPhone) : user.referredBy;
-        const fallbackId = sObjIdStr ? sObjIdStr.substring(Math.max(0, sObjIdStr.length - 8)) : (sPhoneStr ? sPhoneStr.substring(Math.max(0, sPhoneStr.length - 8)) : '');
-        const sId = user.sponsorId || fallbackId;
-        sponsorDisplay = `${sName} (${sId.toUpperCase()})`;
+        const sponsor = sponsorsMap[user.referredBy];
+        if (sponsor) {
+          const sName = sponsor.name || 'Unknown';
+          const sObjIdStr = sponsor._id ? String(sponsor._id) : '';
+          const sPhoneStr = sponsor.phone ? String(sponsor.phone) : user.referredBy;
+          const fallbackId = sObjIdStr ? sObjIdStr.substring(Math.max(0, sObjIdStr.length - 8)) : (sPhoneStr ? sPhoneStr.substring(Math.max(0, sPhoneStr.length - 8)) : '');
+          const sId = sponsor.shortId || fallbackId;
+          sponsorDisplay = `${sName} (HMH-${sId.toUpperCase()})`;
+        } else {
+          // Sponsor deleted or not found
+          sponsorDisplay = `Unknown (HMH-UNKNOWN)`;
+        }
       }
 
       return {
