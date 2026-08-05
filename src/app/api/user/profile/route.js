@@ -117,13 +117,53 @@ export async function GET(request) {
     if (userData.totalRecharge === undefined || userData.totalRecharge === null) {
       userData.totalRecharge = 0;
     }
-    
-    console.log('User data being returned:', {
-      phone: userData.phone,
-      balance: userData.balance,
-      earnBalance: userData.earnBalance,
-      totalRecharge: userData.totalRecharge
-    });
+
+    // Populate user's withdrawal history from Transaction collection
+    try {
+      const { default: Transaction } = await import('@/models/Transaction');
+      const userPhoneClean = (user.phone || '').replace(/^(\+?92|0)/, '');
+      const dbTransactions = await Transaction.find({
+        type: 'withdraw',
+        $or: [
+          { userId: user.phone },
+          { userId: String(user._id) },
+          { userId: user.email },
+          { userId: { $regex: new RegExp(userPhoneClean + '$') } }
+        ].filter(Boolean)
+      }).sort({ createdAt: -1 }).lean();
+
+      if (dbTransactions && dbTransactions.length > 0) {
+        const mappedTxns = dbTransactions.map(t => ({
+          _id: t._id.toString(),
+          amount: t.amount,
+          status: t.status,
+          date: t.createdAt || t.date || Date.now(),
+          paymentMethod: t.withdrawalMethod || t.paymentMethod || 'JazzCash',
+          withdrawalMethod: t.withdrawalMethod,
+          withdrawalAccountName: t.withdrawalAccountName,
+          withdrawalNumber: t.withdrawalNumber,
+          description: t.description,
+          transactionId: t.transactionId
+        }));
+        
+        // Merge with any embedded items not present in mappedTxns
+        const mergedHistory = [...mappedTxns];
+        if (Array.isArray(userData.withdrawHistory)) {
+          for (const item of userData.withdrawHistory) {
+            const exists = mergedHistory.some(m => 
+              (item._id && m._id === String(item._id)) || 
+              (Number(m.amount) === Number(item.amount) && m.status === item.status)
+            );
+            if (!exists) {
+              mergedHistory.push(item);
+            }
+          }
+        }
+        userData.withdrawHistory = mergedHistory;
+      }
+    } catch (txErr) {
+      console.warn('Failed to populate withdrawHistory in profile:', txErr);
+    }
 
     console.time("response");
     const res = NextResponse.json(userData, {

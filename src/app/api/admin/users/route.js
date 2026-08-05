@@ -260,13 +260,11 @@ export async function PUT(request) {
         if (data.withdrawHistory && Array.isArray(data.withdrawHistory)) {
           const { default: Transaction } = await import('@/models/Transaction');
           
-          // Find deleted manual withdrawals and delete corresponding Transaction
-          // We find ALL manual withdrawals for this user in the Transaction table.
-          // If they don't match an item in data.withdrawHistory, we delete them.
+          // Find deleted manual withdrawals (added by admin) and delete corresponding Transaction
           const manualTxs = await Transaction.find({
             userId: editUser.phone,
             type: 'withdraw',
-            description: { $regex: /Manual withdrawal|Withdrawal request via/i }
+            description: { $regex: /^Manual withdrawal/i }
           });
           for (let tx of manualTxs) {
             const stillExists = data.withdrawHistory.some(wd => 

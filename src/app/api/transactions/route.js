@@ -15,21 +15,34 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit')) || 500;
     
     let query = {};
+    let matchedUserDoc = null;
     
     if (userId) {
-      // Find user to map both phone number and database ObjectId
-      const userDoc = await User.findOne({
+      const cleanPhone = userId.replace(/^(\+?92|0)/, '');
+      matchedUserDoc = await User.findOne({
         $or: [
           { phone: userId },
+          { phone: { $regex: new RegExp(cleanPhone + '$') } },
           { email: userId },
+          { username: userId },
           { _id: userId.match(/^[0-9a-fA-F]{24}$/) ? userId : null }
         ].filter(Boolean)
       }).lean();
 
-      if (userDoc) {
-        query.userId = { $in: [userDoc.phone, String(userDoc._id), userDoc.email].filter(Boolean) };
+      if (matchedUserDoc) {
+        const uClean = (matchedUserDoc.phone || '').replace(/^(\+?92|0)/, '');
+        query.$or = [
+          { userId: matchedUserDoc.phone },
+          { userId: String(matchedUserDoc._id) },
+          { userId: matchedUserDoc.email },
+          { userId: userId },
+          { userId: { $regex: new RegExp(uClean + '$') } }
+        ].filter(Boolean);
       } else {
-        query.userId = userId;
+        query.$or = [
+          { userId: userId },
+          { userId: { $regex: new RegExp(cleanPhone + '$') } }
+        ];
       }
     }
     
@@ -42,11 +55,33 @@ export async function GET(request) {
     }
     
     console.time("query1");
-    const transactions = await Transaction.find(query)
+    let transactions = await Transaction.find(query)
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean();
     console.timeEnd("query1");
+
+    // Merge embedded user withdrawHistory items if type === 'withdraw' and missing from DB transactions
+    if ((!type || type === 'withdraw') && matchedUserDoc && Array.isArray(matchedUserDoc.withdrawHistory) && matchedUserDoc.withdrawHistory.length > 0) {
+      for (const item of matchedUserDoc.withdrawHistory) {
+        const exists = transactions.some(t => 
+          (item._id && String(t._id) === String(item._id)) ||
+          (Number(t.amount) === Number(item.amount) && t.status === item.status)
+        );
+        if (!exists) {
+          transactions.push({
+            _id: item._id ? item._id.toString() : 'synthetic_' + Date.now(),
+            userId: matchedUserDoc.phone,
+            userName: matchedUserDoc.name || 'Unknown User',
+            type: 'withdraw',
+            amount: Number(item.amount),
+            status: item.status || 'approved',
+            description: item.description || 'Withdrawal request',
+            createdAt: item.date ? new Date(item.date) : new Date()
+          });
+        }
+      }
+    }
 
     // Enrich transactions with user email, plan, and name
     const userIds = [...new Set(transactions.map(t => t.userId))].filter(Boolean);

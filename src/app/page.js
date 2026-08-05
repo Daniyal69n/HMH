@@ -979,10 +979,14 @@ export default function Page() {
 
   // Load real withdrawal history from transactions API
   useEffect(() => {
-    if (!profile || !profile.phone) return
+    const userPhone = profile?.phone || profile?.username
+    if (profile?.withdrawHistory && Array.isArray(profile.withdrawHistory) && profile.withdrawHistory.length > 0) {
+      setWithdrawHistory(profile.withdrawHistory)
+    }
+    if (!userPhone) return
     const loadWithdrawHistory = async () => {
       try {
-        const res = await fetch(`/api/transactions?userId=${encodeURIComponent(profile.phone)}&type=withdraw`)
+        const res = await fetch(`/api/transactions?userId=${encodeURIComponent(userPhone)}&type=withdraw`)
         if (res.ok) {
           const data = await res.json()
           const txns = Array.isArray(data) ? data : (data.transactions || [])
@@ -993,7 +997,7 @@ export default function Page() {
       }
     }
     loadWithdrawHistory()
-  }, [profile.phone])
+  }, [profile?.phone, profile?.username, page])
 
   const submitWithdrawal = async () => {
     if (!wdAmount || !wdMethod || !wdName || !wdAccount) {

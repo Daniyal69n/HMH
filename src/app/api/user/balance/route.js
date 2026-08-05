@@ -101,7 +101,19 @@ export async function PUT(request) {
         
         await User.findOneAndUpdate(
           { phone: userId },
-          { balance: newBalance }
+          { 
+            balance: newBalance,
+            $push: {
+              withdrawHistory: {
+                amount: data.amount,
+                status: 'pending',
+                date: new Date(),
+                paymentMethod: data.withdrawalMethod,
+                withdrawalAccountName: data.withdrawalAccountName,
+                withdrawalNumber: data.withdrawalNumber
+              }
+            }
+          }
         );
         
         // Create withdrawal transaction (pending — requires admin approval)
