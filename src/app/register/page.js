@@ -121,12 +121,12 @@ export default function RegisterPage() {
             <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', color: 'var(--text-bright)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '18px' }}>📺</span> How to Register (Tutorial)
             </h3>
-            <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+            <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border)', backgroundColor: '#000' }}>
               <video 
                 controls 
                 playsInline
                 poster="/tutorial-thumb.jpeg" 
-                style={{ width: '100%', display: 'block', backgroundColor: '#000', borderRadius: '12px' }}
+                style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', display: 'block', borderRadius: '12px' }}
               >
                 <source src="/tutorial.mp4.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
