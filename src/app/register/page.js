@@ -125,10 +125,10 @@ export default function RegisterPage() {
               <video 
                 controls 
                 playsInline
-                poster="/tutorial-thumb.jpg" 
+                poster="/tutorial-thumb.jpeg" 
                 style={{ width: '100%', display: 'block', backgroundColor: '#000', borderRadius: '12px' }}
               >
-                <source src="/tutorial.mp4" type="video/mp4" />
+                <source src="/tutorial.mp4.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
             </div>
