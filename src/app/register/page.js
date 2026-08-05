@@ -117,6 +117,23 @@ export default function RegisterPage() {
             <p style={{ margin: '10px 0 0', color: 'var(--text-dim)', fontSize: '14px' }}>Set up your profile and continue to the HMHPro flow.</p>
           </div>
 
+          <div className="card" style={{ marginBottom: '18px', padding: '16px', background: 'var(--surface)' }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', color: 'var(--text-bright)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>📺</span> How to Register (Tutorial)
+            </h3>
+            <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+              <video 
+                controls 
+                playsInline
+                poster="/tutorial-thumb.jpg" 
+                style={{ width: '100%', display: 'block', backgroundColor: '#000', borderRadius: '12px' }}
+              >
+                <source src="/tutorial.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
+
           <div className="card" style={{ borderRadius: '16px' }}>
             <form onSubmit={handleSubmit}>
               <label htmlFor="name">Full name</label>
