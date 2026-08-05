@@ -150,7 +150,7 @@ export async function GET(request) {
         const sPhoneStr = user.sponsorPhone ? String(user.sponsorPhone) : user.referredBy;
         const fallbackId = sObjIdStr ? sObjIdStr.substring(Math.max(0, sObjIdStr.length - 8)) : (sPhoneStr ? sPhoneStr.substring(Math.max(0, sPhoneStr.length - 8)) : '');
         const sId = user.sponsorId || fallbackId;
-        sponsorDisplay = `${sName} (HMH-${sId.toUpperCase()})`;
+        sponsorDisplay = `${sName} (${sId.toUpperCase()})`;
       }
 
       return {
