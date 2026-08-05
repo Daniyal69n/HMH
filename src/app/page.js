@@ -4243,7 +4243,22 @@ export default function Page() {
                   }
                 })()
 
-                const joinYear = profile.createdAt ? new Date(profile.createdAt).getFullYear() : 2026
+                const rawId = profile.shortId || profile.referralCode || (profile._id ? profile._id.substring(profile._id.length - 8).toUpperCase() : '');
+                let formattedId = 'HMH1000';
+                if (rawId) {
+                  const upper = String(rawId).toUpperCase();
+                  formattedId = upper.startsWith('HMH') ? upper : `HMH${upper}`;
+                }
+
+                let formattedJoinDate = '05 Aug 2026';
+                if (profile.createdAt) {
+                  try {
+                    const d = new Date(profile.createdAt);
+                    if (!isNaN(d.getTime())) {
+                      formattedJoinDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                    }
+                  } catch (e) {}
+                }
 
                 return (
                   <div className="mem-card" style={{ background: theme.background, borderColor: theme.border, boxShadow: theme.boxShadow }}>
@@ -4253,7 +4268,7 @@ export default function Page() {
                     </div>
 
                     <div className="mem-name">{profile.name || 'Member'}</div>
-                    <div className="mem-id">{profile._id ? `HMH-${profile._id.substring(profile._id.length - 8).toUpperCase()}` : (profile.phone ? `HMH-${profile.phone.substring(Math.max(0, profile.phone.length - 8))}` : '7F19 C3E2 0091')}</div>
+                    <div className="mem-id">{formattedId}</div>
 
                     <div className="mem-bottom">
                       <div className="mem-col">
@@ -4266,7 +4281,7 @@ export default function Page() {
                       </div>
                       <div className="mem-col">
                         <div className="mem-label">Member since</div>
-                        <div className="mem-val">{joinYear}</div>
+                        <div className="mem-val">{formattedJoinDate}</div>
                       </div>
                     </div>
                   </div>
