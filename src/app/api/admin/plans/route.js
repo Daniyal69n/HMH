@@ -116,12 +116,17 @@ export async function GET(request) {
         receiptUrl = 'No Screenshot';
       }
 
+      let userPic = user.profilePicture || '';
+      if (userPic && typeof userPic === 'string' && (userPic.startsWith('data:image') || userPic.length > 500)) {
+        userPic = '';
+      }
+
       return {
         userId: user._id ? String(user._id) : '',
         userName: user.name || 'Unknown User',
         userPhone: user.phone || '',
         userEmail: user.email || '',
-        userProfilePicture: user.profilePicture || '',
+        userProfilePicture: userPic,
         referredBy: user.referredBy || 'None',
         planId: plan._id ? String(plan._id) : (plan.id ? String(plan.id) : Math.random().toString()),
         planName: plan.planName || 'Plan',
