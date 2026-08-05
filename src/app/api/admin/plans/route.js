@@ -38,6 +38,20 @@ export async function GET(request) {
         $match: stage1Match
       },
       {
+        $lookup: {
+          from: 'users',
+          localField: 'referredBy',
+          foreignField: 'phone',
+          as: 'sponsor'
+        }
+      },
+      {
+        $unwind: {
+          path: '$sponsor',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
         $project: {
           _id: 1,
           name: 1,
@@ -45,6 +59,10 @@ export async function GET(request) {
           email: 1,
           profilePicture: 1,
           referredBy: 1,
+          sponsorName: '$sponsor.name',
+          sponsorId: '$sponsor.shortId',
+          sponsorObjId: '$sponsor._id',
+          sponsorPhone: '$sponsor.phone',
           investmentPlans: 1
         }
       },
@@ -65,6 +83,10 @@ export async function GET(request) {
           email: 1,
           profilePicture: 1,
           referredBy: 1,
+          sponsorName: 1,
+          sponsorId: 1,
+          sponsorObjId: 1,
+          sponsorPhone: 1,
           'plan._id': '$investmentPlans._id',
           'plan.planName': '$investmentPlans.planName',
           'plan.amount': '$investmentPlans.amount',
@@ -121,13 +143,23 @@ export async function GET(request) {
         userPic = '';
       }
 
+      let sponsorDisplay = user.referredBy || 'None';
+      if (user.referredBy && user.referredBy !== 'None') {
+        const sName = user.sponsorName || 'Unknown';
+        const sObjIdStr = user.sponsorObjId ? String(user.sponsorObjId) : '';
+        const sPhoneStr = user.sponsorPhone ? String(user.sponsorPhone) : user.referredBy;
+        const fallbackId = sObjIdStr ? sObjIdStr.substring(Math.max(0, sObjIdStr.length - 8)) : (sPhoneStr ? sPhoneStr.substring(Math.max(0, sPhoneStr.length - 8)) : '');
+        const sId = user.sponsorId || fallbackId;
+        sponsorDisplay = `${sName} (HMH-${sId.toUpperCase()})`;
+      }
+
       return {
         userId: user._id ? String(user._id) : '',
         userName: user.name || 'Unknown User',
         userPhone: user.phone || '',
         userEmail: user.email || '',
         userProfilePicture: userPic,
-        referredBy: user.referredBy || 'None',
+        referredBy: sponsorDisplay,
         planId: plan._id ? String(plan._id) : (plan.id ? String(plan.id) : Math.random().toString()),
         planName: plan.planName || 'Plan',
         userCurrentPlan: plan.planName || 'Plan',
