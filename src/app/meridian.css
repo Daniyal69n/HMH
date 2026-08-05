@@ -425,6 +425,12 @@
   .meridian .mem-id{ font-size:15px; letter-spacing:.14em; }
   .meridian .mem-bottom{ margin-top:40px; gap:14px; }
   .meridian .mem-val{ font-size:14px; }
+  .meridian .leader-row{ gap:8px !important; padding:10px 8px !important; }
+  .meridian .leader-rank{ width:18px !important; font-size:11.5px !important; }
+  .meridian .leader-avatar{ width:30px !important; height:30px !important; }
+  .meridian .leader-name{ font-size:13px !important; }
+  .meridian .leader-col-header{ width:58px !important; font-size:9px !important; }
+  .meridian .leader-amt-15, .meridian .leader-amt-all{ width:58px !important; font-size:11px !important; }
 }
 
 /* ===== Spin ===== */

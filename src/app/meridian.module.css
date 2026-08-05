@@ -264,3 +264,12 @@
 :global(.meridian ::-webkit-scrollbar){ width:8px; height:8px; }
 :global(.meridian ::-webkit-scrollbar-thumb){ background:var(--border); border-radius:10px; }
 
+@media (max-width: 640px){
+  :global(.meridian .leader-row){ gap:8px !important; padding:10px 8px !important; }
+  :global(.meridian .leader-rank){ width:18px !important; font-size:11.5px !important; }
+  :global(.meridian .leader-avatar){ width:30px !important; height:30px !important; }
+  :global(.meridian .leader-name){ font-size:13px !important; }
+  :global(.meridian .leader-col-header){ width:58px !important; font-size:9px !important; }
+  :global(.meridian .leader-amt-15), :global(.meridian .leader-amt-all){ width:58px !important; font-size:11px !important; }
+}
+

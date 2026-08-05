@@ -116,16 +116,7 @@ export async function GET(request) {
       const fifteenDayPKR = fifteenDayMap[user.phone] || 0;
       const fifteenDayAmt = fifteenDayPKR / 300.0; // convert PKR to USD
 
-      const nameParts = (user.name || '').trim().split(/\s+/);
-      let displayName = user.name || 'Anonymous';
-      if (nameParts.length > 1) {
-        const firstName = nameParts[0];
-        const lastPart = nameParts[nameParts.length - 1];
-        if (lastPart && lastPart.length > 0) {
-          const lastInitial = lastPart[0].toUpperCase();
-          displayName = `${firstName} ${lastInitial}.`;
-        }
-      }
+      const displayName = user.name || 'Anonymous';
 
       return {
         phone: user.phone,

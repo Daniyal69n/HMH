@@ -2380,11 +2380,11 @@ export default function Page() {
               <p style={{ margin: '0 0 16px', color: 'var(--text-dim)', fontSize: 13 }}>
                 Ranked by current 15 days earnings.
               </p>
-              <div style={{ display: 'flex', padding: '0 14px 8px', fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>
+              <div style={{ display: 'flex', padding: '0 10px 8px', fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>
                 <div style={{ flex: 1 }}></div>
-                <div style={{ display: 'flex', gap: '12px', textAlign: 'right' }}>
-                  <div style={{ width: '75px' }}>15 Days</div>
-                  <div style={{ width: '75px' }}>All Time</div>
+                <div className="leader-header-amounts" style={{ display: 'flex', gap: '8px', textAlign: 'right' }}>
+                  <div className="leader-col-header" style={{ width: '68px' }}>15 Days</div>
+                  <div className="leader-col-header" style={{ width: '68px' }}>All Time</div>
                 </div>
               </div>
               <div>
@@ -2407,11 +2407,11 @@ export default function Page() {
                         <div className="leader-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</div>
                         <div className="leader-level">Level {u.level}</div>
                       </div>
-                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ width: '75px', color: 'var(--gold-bright)', fontFamily: 'monospace', fontWeight: 'bold', fontSize: '14px' }}>
+                      <div className="leader-amounts-wrap" style={{ display: 'flex', gap: '8px', alignItems: 'center', textAlign: 'right', flexShrink: 0 }}>
+                        <div className="leader-amt-15" style={{ width: '68px', color: 'var(--gold-bright)', fontFamily: 'monospace', fontWeight: 'bold', fontSize: '13px' }}>
                           {currency === 'USD' ? `$${(u.fifteenDayAmt || 0).toFixed(2)}` : `Rs ${Math.round((u.fifteenDayAmt || 0) * PKR_RATE).toLocaleString()}`}
                         </div>
-                        <div style={{ width: '75px', fontFamily: 'monospace', fontWeight: '600', fontSize: '12.5px', opacity: 0.75 }}>
+                        <div className="leader-amt-all" style={{ width: '68px', fontFamily: 'monospace', fontWeight: '600', fontSize: '11.5px', opacity: 0.75 }}>
                           {currency === 'USD' ? `$${u.amt.toFixed(2)}` : `Rs ${Math.round(u.amt * PKR_RATE).toLocaleString()}`}
                         </div>
                       </div>
