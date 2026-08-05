@@ -74,7 +74,18 @@ export async function GET(request) {
           _id: 0,
           name: 1,
           phone: 1,
-          profilePicture: 1,
+          profilePicture: {
+            $cond: {
+              if: {
+                $and: [
+                  { $eq: [{ $type: "$profilePicture" }, "string"] },
+                  { $lt: [{ $strLenCP: { $ifNull: ["$profilePicture", ""] } }, 1000] }
+                ]
+              },
+              then: "$profilePicture",
+              else: ""
+            }
+          },
           claimedLevels: 1,
           customTotalEarnings: 1,
           earnBalance: 1,
