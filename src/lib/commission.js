@@ -282,7 +282,7 @@ export async function activateUserPlan(user, planToApprove) {
   const selectedConfig = configPlans.find(p => p.id === foundPlanId) || { adWatchDays: 10 };
   const initialDays = selectedConfig.adWatchDays || 10;
 
-  if (!user.adWatchDaysLeft || user.adWatchDaysLeft <= 0) {
+  if (user.adWatchDaysLeft === undefined || user.adWatchDaysLeft === null) {
     user.adWatchDaysLeft = initialDays;
   }
   await user.save();

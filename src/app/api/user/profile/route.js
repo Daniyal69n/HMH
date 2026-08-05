@@ -37,9 +37,9 @@ export async function GET(request) {
       await user.save();
     }
 
-    // Auto-ensure adWatchDaysLeft is initialized for active plan holders
+    // Auto-ensure adWatchDaysLeft is initialized for active plan holders (only if undefined/null)
     const hasActiveInvestment = (user.investmentPlans || []).some(p => p.status === 'active');
-    if (hasActiveInvestment && (!user.adWatchDaysLeft || user.adWatchDaysLeft <= 0)) {
+    if (hasActiveInvestment && (user.adWatchDaysLeft === undefined || user.adWatchDaysLeft === null)) {
       user.adWatchDaysLeft = 10;
       await user.save();
     }

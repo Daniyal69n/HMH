@@ -2219,7 +2219,7 @@ export default function AdminDashboard() {
       : String(calcSalPKR)
 
     const userHasActivePlan = (user.investmentPlans || []).some(p => p.status === 'active');
-    const initialAdDays = (user.adWatchDaysLeft !== undefined && user.adWatchDaysLeft !== null && user.adWatchDaysLeft > 0)
+    const initialAdDays = (user.adWatchDaysLeft !== undefined && user.adWatchDaysLeft !== null)
       ? user.adWatchDaysLeft
       : (userHasActivePlan ? 10 : 0);
 
@@ -2281,7 +2281,7 @@ export default function AdminDashboard() {
           : String(fullSalPKR)
 
         const fullHasActive = (fullUser.investmentPlans || []).some(p => p.status === 'active');
-        const fullAdDays = (fullUser.adWatchDaysLeft !== undefined && fullUser.adWatchDaysLeft !== null && fullUser.adWatchDaysLeft > 0)
+        const fullAdDays = (fullUser.adWatchDaysLeft !== undefined && fullUser.adWatchDaysLeft !== null)
           ? fullUser.adWatchDaysLeft
           : (fullHasActive ? 10 : 0);
 
