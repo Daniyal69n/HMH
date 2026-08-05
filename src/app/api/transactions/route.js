@@ -12,7 +12,7 @@ export async function GET(request) {
     const userId = searchParams.get('userId');
     const type = searchParams.get('type');
     const status = searchParams.get('status');
-    const limit = parseInt(searchParams.get('limit')) || 100;
+    const limit = parseInt(searchParams.get('limit')) || 500;
     
     let query = {};
     

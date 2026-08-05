@@ -2385,16 +2385,10 @@ export default function AdminDashboard() {
       return false;
     }
 
-    // Default search for name, email, phone, etc. (excluding referralCode so we don't get mismatching historical registration codes)
-    const referrerPhone = user.referredBy;
-    const referrerUser = referrerPhone ? users.find(u => u.phone === referrerPhone) : null;
-    const referrerMatch = referrerUser && [referrerUser.name, referrerUser.email, referrerUser.phone, referrerUser.shortId]
-      .filter(Boolean)
-      .some(val => String(val).toLowerCase().includes(q));
-
+    // Default search for name, email, phone, etc.
     return [user.name, user.email, user.phone, user.shortId, user._id, user.referredBy]
       .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(q)) || referrerMatch;
+      .some((value) => String(value).toLowerCase().includes(q));
   })
 
   const activeUsersCount = users.filter(u => {

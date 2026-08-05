@@ -860,7 +860,7 @@ export default function Page() {
   useEffect(() => {
     if (page === 'history' && profile?.phone) {
       setTxLoading(true)
-      fetch(`/api/transactions?userId=${profile.phone}`)
+      fetch(`/api/transactions?userId=${encodeURIComponent(profile.phone)}&limit=1000`)
         .then(res => res.json())
         .then(data => {
           setTxHistory(Array.isArray(data) ? data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) : [])
