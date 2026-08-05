@@ -172,6 +172,12 @@ export async function GET(request) {
         }
       }
 
+      let formattedSponsorId = 'None';
+      if (sId !== 'UNKNOWN') {
+        const upperSId = sId.toUpperCase();
+        formattedSponsorId = upperSId.startsWith('HMH') ? upperSId : `HMH${upperSId}`;
+      }
+
       return {
         userId: user._id ? String(user._id) : '',
         userName: user.name || 'Unknown User',
@@ -180,7 +186,7 @@ export async function GET(request) {
         userProfilePicture: userPic,
         sponsorName: sName,
         sponsorPhone: sPhone,
-        sponsorId: sId !== 'UNKNOWN' ? `HMH${sId.toUpperCase()}` : 'None',
+        sponsorId: formattedSponsorId,
         planId: plan._id ? String(plan._id) : (plan.id ? String(plan.id) : Math.random().toString()),
         planName: plan.planName || 'Plan',
         userCurrentPlan: plan.planName || 'Plan',
