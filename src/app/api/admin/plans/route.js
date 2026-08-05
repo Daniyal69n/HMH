@@ -38,6 +38,17 @@ export async function GET(request) {
         $match: stage1Match
       },
       {
+        $project: {
+          _id: 1,
+          name: 1,
+          phone: 1,
+          email: 1,
+          profilePicture: 1,
+          referredBy: 1,
+          investmentPlans: 1
+        }
+      },
+      {
         $unwind: {
           path: '$investmentPlans',
           preserveNullAndEmptyArrays: false
@@ -53,6 +64,7 @@ export async function GET(request) {
           phone: 1,
           email: 1,
           profilePicture: 1,
+          referredBy: 1,
           'plan._id': '$investmentPlans._id',
           'plan.planName': '$investmentPlans.planName',
           'plan.amount': '$investmentPlans.amount',
@@ -110,6 +122,7 @@ export async function GET(request) {
         userPhone: user.phone || '',
         userEmail: user.email || '',
         userProfilePicture: user.profilePicture || '',
+        referredBy: user.referredBy || 'None',
         planId: plan._id ? String(plan._id) : (plan.id ? String(plan.id) : Math.random().toString()),
         planName: plan.planName || 'Plan',
         userCurrentPlan: plan.planName || 'Plan',

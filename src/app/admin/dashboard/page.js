@@ -4027,6 +4027,12 @@ export default function AdminDashboard() {
                     <div className={styles.detailLabel}>Requested on</div>
                     <div className={styles.detailValue}>{req.startDate || '-'}</div>
                   </div>
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <div className={styles.detailLabel}>Referred By (Sponsor ID)</div>
+                    <div className={styles.detailValue} style={{ color: '#aaa', fontSize: '13px' }}>
+                      {req.referredBy === 'None' || !req.referredBy ? 'No Sponsor (Direct)' : req.referredBy}
+                    </div>
+                  </div>
                 </div>
 
                 {/* TRX ID Prominent Display Box */}
