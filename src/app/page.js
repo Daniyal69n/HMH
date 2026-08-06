@@ -447,7 +447,15 @@ export default function Page() {
 
     if (profile?.phone) {
       fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone)}&_t=${ts}`)
-        .then(res => res.json())
+        .then(res => {
+          if (res.status === 404) {
+            localStorage.removeItem('hmh-profile')
+            localStorage.removeItem('user')
+            window.location.href = '/login'
+            return null
+          }
+          return res.json()
+        })
         .then(data => {
           if (data && !data.error) {
             setProfile(prev => {
@@ -457,6 +465,7 @@ export default function Page() {
             })
           }
         })
+        .catch(console.error)
 
       // Fetch purchase progress
       setPurchaseProgressLoading(true)

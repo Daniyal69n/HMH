@@ -72,6 +72,12 @@ export default function TeamPage() {
     try {
       const timestamp = Date.now(); // Add timestamp to prevent caching
       const response = await fetch(`/api/user/team?userId=${userData.phone}&_t=${timestamp}`)
+      if (response.status === 404) {
+        localStorage.removeItem('hmh-profile')
+        localStorage.removeItem('user')
+        window.location.href = '/login'
+        return
+      }
       if (response.ok) {
         const data = await response.json()
         
