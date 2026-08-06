@@ -40,7 +40,8 @@ async function connectDB() {
     socketTimeoutMS: 45000,
     connectTimeoutMS: 10000,
     family: 4, // Force IPv4
-    tls: true // Explicitly enable TLS to prevent SSL alert 80
+    tls: true, // Explicitly enable TLS to prevent SSL alert 80
+    serverApi: { version: '1', strict: true, deprecationErrors: true } // Ensures stable Atlas routing for serverless
   };
 
   cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
