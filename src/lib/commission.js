@@ -113,8 +113,7 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
 
   if (r1PlanId !== 'free' && purchasedPlanId !== 'free') {
     if (r1PlanId === purchasedPlanId) {
-      const pConfig = earningsPlans.find(p => p.id === purchasedPlanId) || { adWatchDays: 10 };
-      extraDays = pConfig.adWatchDays || 10;
+      extraDays = 10;
     } else {
       if (purchasedPlanId === 'basic') extraDays = 2;
       else if (purchasedPlanId === 'standard') extraDays = 3;
@@ -124,6 +123,7 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
       else if (purchasedPlanId === 'legend') extraDays = 10;
     }
     r1.adWatchDaysLeft = (r1.adWatchDaysLeft || 0) + extraDays;
+    r1.totalAdWatchDays = (r1.totalAdWatchDays || 0) + extraDays;
     await r1.save();
   }
 
@@ -282,9 +282,8 @@ export async function activateUserPlan(user, planToApprove) {
   const selectedConfig = configPlans.find(p => p.id === foundPlanId) || { adWatchDays: 10 };
   const initialDays = selectedConfig.adWatchDays || 10;
 
-  if (user.adWatchDaysLeft === undefined || user.adWatchDaysLeft === null) {
-    user.adWatchDaysLeft = initialDays;
-  }
+  user.adWatchDaysLeft = (user.adWatchDaysLeft || 0) + initialDays;
+  user.totalAdWatchDays = (user.totalAdWatchDays || 0) + initialDays;
   await user.save();
 
   // 3. Distribute the commissions based on the amount the user requested (which is what they paid)

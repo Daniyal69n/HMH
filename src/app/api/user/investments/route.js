@@ -97,6 +97,7 @@ export async function POST(request) {
     const initialDays = selectedConfig.adWatchDays || 10;
     
     user.adWatchDaysLeft = (user.adWatchDaysLeft || 0) + initialDays;
+    user.totalAdWatchDays = (user.totalAdWatchDays || 0) + initialDays;
     await user.save();
     
     // Create investment

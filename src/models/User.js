@@ -135,6 +135,10 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  totalAdWatchDays: {
+    type: Number,
+    default: 0
+  },
   customTotalEarnings: {
     type: Number,
     default: null

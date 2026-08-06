@@ -35,7 +35,7 @@ export async function GET(request) {
     // Run all database operations in parallel using raw collection queries
     const [users, totalUsers, blockedUsers, activeUsers] = await Promise.all([
       User.find(searchQuery)
-        .select('name phone email status isBlocked isAdmin balance earnBalance totalCommissionEarned totalRecharge customTotalEarnings customMySalary customTotalWithdrawals adWatchDaysLeft customAdEarning customSpinReward claimedLevels level withdrawHistory createdAt referralCode shortId investmentPlans.status investmentPlans.planName investmentPlans.amount investmentPlans.startDate investmentPlans._id referredBy')
+        .select('name phone email status isBlocked isAdmin balance earnBalance totalCommissionEarned totalRecharge customTotalEarnings customMySalary customTotalWithdrawals adWatchDaysLeft totalAdWatchDays customAdEarning customSpinReward claimedLevels level withdrawHistory createdAt referralCode shortId investmentPlans.status investmentPlans.planName investmentPlans.amount investmentPlans.startDate investmentPlans._id referredBy')
         .sort({ _id: -1 })
         .skip(skip)
         .limit(limit)
@@ -218,6 +218,9 @@ export async function PUT(request) {
 
         if (data.adWatchDaysLeft !== undefined && data.adWatchDaysLeft !== null) {
           editUser.adWatchDaysLeft = parseInt(data.adWatchDaysLeft) || 0;
+        }
+        if (data.totalAdWatchDays !== undefined && data.totalAdWatchDays !== null) {
+          editUser.totalAdWatchDays = parseInt(data.totalAdWatchDays) || 0;
         }
 
         editUser.customDirectReferrals = (data.customDirectReferrals !== undefined && data.customDirectReferrals !== null && data.customDirectReferrals !== "") ? parseInt(data.customDirectReferrals) : null;

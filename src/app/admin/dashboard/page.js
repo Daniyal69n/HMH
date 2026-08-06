@@ -2242,6 +2242,7 @@ export default function AdminDashboard() {
       customMySalary: initialSalary,
       customTotalWithdrawals: initialWithdrawals,
       adWatchDaysLeft: initialAdDays,
+      totalAdWatchDays: user.totalAdWatchDays !== undefined && user.totalAdWatchDays !== null ? user.totalAdWatchDays : initialAdDays,
       customDirectReferrals: user.customDirectReferrals !== undefined && user.customDirectReferrals !== null ? String(user.customDirectReferrals) : '',
       customIndirectReferrals: user.customIndirectReferrals !== undefined && user.customIndirectReferrals !== null ? String(user.customIndirectReferrals) : '',
       customAdEarning: user.customAdEarning !== undefined && user.customAdEarning !== null ? String(user.customAdEarning) : '',
@@ -2292,7 +2293,8 @@ export default function AdminDashboard() {
           customTotalEarnings: fullTotEarn,
           customTotalWithdrawals: fullWd,
           customMySalary: fullSal,
-          adWatchDaysLeft: fullAdDays
+          adWatchDaysLeft: fullAdDays,
+          totalAdWatchDays: fullUser.totalAdWatchDays !== undefined && fullUser.totalAdWatchDays !== null ? fullUser.totalAdWatchDays : fullAdDays
         }))
       }
     } catch (e) {
@@ -2963,6 +2965,16 @@ export default function AdminDashboard() {
                   style={{ background: 'var(--bg)', border: '1px solid rgba(201,160,74,0.4)', padding: '8px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
                 />
                 <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Remaining days for user to earn from ads.</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--gold)' }}>Total Ads Earning Days</label>
+                <input
+                  type="number"
+                  value={editForm.totalAdWatchDays}
+                  onChange={e => setEditForm(prev => ({ ...prev, totalAdWatchDays: parseInt(e.target.value) || 0 }))}
+                  style={{ background: 'var(--bg)', border: '1px solid rgba(201,160,74,0.4)', padding: '8px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
+                />
+                <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Total accumulated ad watching days.</span>
               </div>
             </div>
 
