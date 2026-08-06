@@ -39,7 +39,8 @@ async function connectDB() {
     serverSelectionTimeoutMS: 10000,
     socketTimeoutMS: 45000,
     connectTimeoutMS: 10000,
-    family: 4 // Force IPv4 to prevent Vercel serverless IPv6 resolution timeouts
+    family: 4, // Force IPv4
+    tls: true // Explicitly enable TLS to prevent SSL alert 80
   };
 
   cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
