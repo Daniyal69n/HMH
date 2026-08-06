@@ -179,6 +179,10 @@ const userSchema = new mongoose.Schema({
     type: [Number],
     default: []
   },
+  level: {
+    type: Number,
+    default: 1
+  },
   totalApprovedPurchases: {
     type: Number,
     default: 0

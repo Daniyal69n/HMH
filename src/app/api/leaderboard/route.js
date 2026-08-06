@@ -87,6 +87,7 @@ export async function GET(request) {
             }
           },
           claimedLevels: 1,
+          level: 1,
           customTotalEarnings: 1,
           earnBalance: 1,
           totalCommissionEarned: 1,
@@ -110,7 +111,9 @@ export async function GET(request) {
     });
 
     const realLeaders = topUsers.map(user => {
-      const level = (user.claimedLevels && user.claimedLevels.length > 0) ? Math.max(...user.claimedLevels) : 1;
+      const claimLvl = (user.claimedLevels && user.claimedLevels.length > 0) ? Math.max(...user.claimedLevels) : 1;
+      const dbLvl = user.level || 1;
+      const level = Math.max(claimLvl, dbLvl);
       const amt = user.computedEarnings / 300.0; // convert PKR to USD
       
       const fifteenDayPKR = fifteenDayMap[user.phone] || 0;
