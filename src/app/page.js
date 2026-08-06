@@ -1060,13 +1060,18 @@ export default function Page() {
       setWdAccount('')
       setActiveWdPopup({ type: 'pending' })
       showToast('✅ Withdrawal request submitted. Pending admin approval.')
-      // Reload withdrawal history
+      // Reload withdrawal history & transaction history
       try {
         const txRes = await fetch(`/api/transactions?userId=${encodeURIComponent(phone)}&type=withdraw`)
         if (txRes.ok) {
           const txData = await txRes.json()
           const txns = Array.isArray(txData) ? txData : (txData.transactions || [])
           setWithdrawHistory(txns)
+        }
+        const fullTxRes = await fetch(`/api/transactions?userId=${encodeURIComponent(phone)}&limit=1000`)
+        if (fullTxRes.ok) {
+          const fullTxData = await fullTxRes.json()
+          setTxHistory(Array.isArray(fullTxData) ? fullTxData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) : [])
         }
       } catch { }
     } catch (err) {
@@ -2202,7 +2207,7 @@ export default function Page() {
                 <div>
                   <div className="stat-label">Total withdrawals</div>
                   <div className="stat-value">
-                    {formatVal(profile.customTotalWithdrawals !== undefined && profile.customTotalWithdrawals !== null
+                    {formatVal((profile.customTotalWithdrawals !== undefined && profile.customTotalWithdrawals !== null && Number(profile.customTotalWithdrawals) > 0)
                       ? profile.customTotalWithdrawals
                       : (withdrawHistory || [])
                         .filter(w => w.status === 'approved')
