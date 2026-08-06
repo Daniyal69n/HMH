@@ -1382,7 +1382,19 @@ export default function Page() {
           notes: stNotes
         })
       })
-      const data = await res.json()
+      
+      let data;
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await res.json();
+      } else {
+        const textResponse = await res.text();
+        console.error("Non-JSON response from server:", textResponse);
+        showToast(`Server Error ${res.status}: Request may be too large or timed out.`);
+        setStSubmitting(false);
+        return;
+      }
+
       if (res.ok) {
         showToast(data.message || 'Task submitted successfully!')
         setStLink('')
@@ -1399,7 +1411,7 @@ export default function Page() {
       }
     } catch (err) {
       console.error(err)
-      showToast('Error submitting task')
+      showToast(err.message || 'Error submitting task')
     } finally {
       setStSubmitting(false)
     }
