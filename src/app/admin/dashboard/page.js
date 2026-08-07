@@ -2201,7 +2201,7 @@ export default function AdminDashboard() {
 
     const initialWithdrawals = (user.customTotalWithdrawals !== undefined && user.customTotalWithdrawals !== null && user.customTotalWithdrawals !== '')
       ? String(user.customTotalWithdrawals)
-      : String((user.withdrawHistory || []).filter(w => w.status === 'approved').reduce((sum, w) => sum + Number(w.amount || 0), 0))
+      : String((user.withdrawHistory || []).filter(w => w.status === 'approved' || w.status === 'pending').reduce((sum, w) => sum + Number(w.amount || 0), 0))
 
     let calcSalUSD = 0
     const claimedLvs = user.claimedLevels || []
@@ -2255,7 +2255,7 @@ export default function AdminDashboard() {
       if (res.ok) {
         const fullUser = await res.json()
         const fullApprovedWdSum = (fullUser.withdrawHistory || [])
-          .filter(w => w.status === 'approved')
+          .filter(w => w.status === 'approved' || w.status === 'pending')
           .reduce((sum, w) => sum + Number(w.amount || 0), 0)
 
         const fullTotEarn = (fullUser.customTotalEarnings !== undefined && fullUser.customTotalEarnings !== null && fullUser.customTotalEarnings !== '')

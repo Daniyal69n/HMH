@@ -705,7 +705,7 @@ export default function ProfilePage() {
               <div className="absolute top-0 right-0 w-16 h-16 bg-purple-200 rounded-full -translate-y-8 translate-x-8 opacity-30"></div>
               <div className="relative z-10">
                 <p className="text-sm font-medium opacity-90">Total Withdraw</p>
-                <p className="text-xl font-bold mt-1">Rs{withdrawHistory.filter(req => req.userId === userData?.phone && req.status === 'approved').reduce((sum, req) => sum + parseFloat(req.amount), 0).toFixed(2)}</p>
+                <p className="text-xl font-bold mt-1">Rs{withdrawHistory.filter(req => req.userId === userData?.phone && (req.status === 'approved' || req.status === 'pending')).reduce((sum, req) => sum + parseFloat(req.amount), 0).toFixed(2)}</p>
               </div>
             </div>
           </div>

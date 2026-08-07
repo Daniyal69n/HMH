@@ -2231,7 +2231,7 @@ export default function Page() {
                     {formatVal((profile.customTotalWithdrawals !== undefined && profile.customTotalWithdrawals !== null && Number(profile.customTotalWithdrawals) > 0)
                       ? profile.customTotalWithdrawals
                       : (withdrawHistory || [])
-                        .filter(w => w.status === 'approved')
+                        .filter(w => w.status === 'approved' || w.status === 'pending')
                         .reduce((sum, w) => sum + Number(w.amount || 0), 0))}
                   </div>
                 </div>
