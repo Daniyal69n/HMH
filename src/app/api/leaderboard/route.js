@@ -3,10 +3,21 @@ import User from '@/models/User';
 import SystemSettings from '@/models/SystemSettings';
 import Transaction from '@/models/Transaction';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+let cachedLeaderboard = null;
+let lastCacheTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in ms
 
 export async function GET(request) {
+  const now = Date.now();
+  if (cachedLeaderboard && (now - lastCacheTime < CACHE_DURATION)) {
+    return Response.json(cachedLeaderboard, {
+      headers: {
+        'Cache-Control': 'public, max-age=300',
+        'X-Cache': 'HIT'
+      }
+    });
+  }
+
   const tTotalStart = performance.now();
   try {
     const tConnectStart = performance.now();
@@ -243,6 +254,9 @@ export async function GET(request) {
 
     console.log(`[Leaderboard Audit] Connect: ${connectTime}ms | SystemSettings: ${settingsTime}ms | Transactions: ${transactionsTime}ms | Users: ${usersTime}ms | Mapping: ${mappingTime}ms | Sorting: ${sortingTime}ms | Serialization: ${serializationTime}ms | Total: ${totalTime}ms`);
 
+    cachedLeaderboard = responseData;
+    lastCacheTime = Date.now();
+
     return Response.json(responseData, {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -255,7 +269,8 @@ export async function GET(request) {
         'X-Mapping-Time': `${mappingTime}ms`,
         'X-Sorting-Time': `${sortingTime}ms`,
         'X-Serialization-Time': `${serializationTime}ms`,
-        'X-Total-Time': `${totalTime}ms`
+        'X-Total-Time': `${totalTime}ms`,
+        'X-Cache': 'MISS'
       }
     });
 

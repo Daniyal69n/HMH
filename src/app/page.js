@@ -446,27 +446,6 @@ export default function Page() {
       .catch(console.error)
 
     if (profile?.phone) {
-      fetch(`/api/user/profile?phone=${encodeURIComponent(profile.phone)}&_t=${ts}`)
-        .then(res => {
-          if (res.status === 404) {
-            localStorage.removeItem('hmh-profile')
-            localStorage.removeItem('user')
-            window.location.href = '/login'
-            return null
-          }
-          return res.json()
-        })
-        .then(data => {
-          if (data && !data.error) {
-            setProfile(prev => {
-              const next = { ...prev, ...data }
-              localStorage.setItem('hmh-profile', JSON.stringify(next))
-              return next
-            })
-          }
-        })
-        .catch(console.error)
-
       // Fetch purchase progress
       setPurchaseProgressLoading(true)
       fetch(`/api/user/purchase-progress?phone=${encodeURIComponent(profile.phone)}&_t=${ts}`)
@@ -489,13 +468,6 @@ export default function Page() {
         })
         .catch(console.error)
     }
-
-    fetch(`/api/admin/ecommerce-settings?_t=${ts}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data) setEcommerceBankDetails(data)
-      })
-      .catch(console.error)
 
     fetch(`/api/admin/mystery-boxes?_t=${ts}`)
       .then(res => res.json())
@@ -704,7 +676,7 @@ export default function Page() {
   }, [router])
 
   useEffect(() => {
-    if (profile && profile.phone) {
+    if (page === 'team' && profile && profile.phone) {
       const loadTeamData = async () => {
         try {
           const response = await fetch(`/api/user/team?userId=${profile.phone}`)
@@ -719,7 +691,7 @@ export default function Page() {
       }
       loadTeamData()
     }
-  }, [profile?.phone])
+  }, [profile?.phone, page])
 
   // Fetch ads progress
   useEffect(() => {
@@ -992,7 +964,7 @@ export default function Page() {
     if (profile?.withdrawHistory && Array.isArray(profile.withdrawHistory) && profile.withdrawHistory.length > 0) {
       setWithdrawHistory(profile.withdrawHistory)
     }
-    if (!userPhone) return
+    if (!userPhone || page !== 'withdraw') return
     const loadWithdrawHistory = async () => {
       try {
         const res = await fetch(`/api/transactions?userId=${encodeURIComponent(userPhone)}&type=withdraw`)
@@ -1103,6 +1075,12 @@ export default function Page() {
   const openCheckout = (p) => {
     setCheckoutProduct(p)
     setCheckoutOpen(true)
+    fetch(`/api/admin/ecommerce-settings?_t=${Date.now()}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data) setEcommerceBankDetails(data)
+      })
+      .catch(console.error)
   }
 
   const openGallery = (p) => {

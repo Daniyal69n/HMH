@@ -20,9 +20,7 @@ export async function GET(request) {
       );
     }
 
-    console.time("query1");
-    const user = await User.findOne({ phone });
-    console.timeEnd("query1");
+    const user = await User.findOne({ phone }).select('-rechargeHistory -socialTaskSubmissions.screenshotBase64 -investmentPlans.screenshotData');
 
     if (!user) {
       return NextResponse.json(
