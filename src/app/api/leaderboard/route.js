@@ -178,12 +178,12 @@ export async function GET(request) {
     const mappingTime = (performance.now() - tMapStart).toFixed(2);
 
     const tSortStart = performance.now();
-    // Sort by 15 days earnings descending, then by all time earnings descending
+    // Sort by all time earnings descending, then by 15 days earnings descending
     realLeaders.sort((a, b) => {
-      if (b.fifteenDayAmt !== a.fifteenDayAmt) {
-        return b.fifteenDayAmt - a.fifteenDayAmt;
+      if (b.amt !== a.amt) {
+        return b.amt - a.amt;
       }
-      return b.amt - a.amt;
+      return b.fifteenDayAmt - a.fifteenDayAmt;
     });
 
     // Take top 10 unique names
