@@ -301,8 +301,8 @@ export async function PUT(request) {
         
       case 'reject':
         transaction.status = 'rejected';
-        if (body.reason || body.adminRemarks) {
-          transaction.adminRemarks = body.reason || body.adminRemarks;
+        if (updateData.reason || updateData.adminRemarks) {
+          transaction.adminRemarks = updateData.reason || updateData.adminRemarks;
         }
         
         // For rejected withdrawals, refund the balance back to user
