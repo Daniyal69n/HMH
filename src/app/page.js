@@ -676,7 +676,7 @@ export default function Page() {
   }, [router])
 
   useEffect(() => {
-    if (page === 'team' && profile && profile.phone) {
+    if ((page === 'team' || page === 'network') && profile && profile.phone) {
       const loadTeamData = async () => {
         try {
           const response = await fetch(`/api/user/team?userId=${profile.phone}`)
