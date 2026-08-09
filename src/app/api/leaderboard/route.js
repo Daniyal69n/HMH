@@ -162,7 +162,9 @@ export async function GET(request) {
         });
       }
 
-      const fifteenDayAmt = fifteenDayPKR / 300.0; // convert PKR to USD
+      const fifteenDayAmt = user.customTotalEarnings !== undefined && user.customTotalEarnings !== null
+        ? Math.max((user.customTotalEarnings / 300.0) * 0.1, fifteenDayPKR / 300.0)
+        : fifteenDayPKR / 300.0; // convert PKR to USD
 
       const displayName = user.name || 'Anonymous';
 
