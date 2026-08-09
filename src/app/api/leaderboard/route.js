@@ -64,7 +64,7 @@ export async function GET(request) {
       {
         $match: {
           status: { $in: ['completed', 'approved'] },
-          type: { $in: ['daily_income', 'referral_income', 'coupon_redeem', 'signup_bonus', 'level_reward', 'social_task_reward'] },
+          type: { $in: ['daily_income', 'referral_income', 'coupon_redeem', 'signup_bonus', 'level_reward', 'social_task_reward', 'mystery_box_reward', 'bonus'] },
           createdAt: { $gte: cycleStartDate }
         }
       },
@@ -146,13 +146,17 @@ export async function GET(request) {
         }
       });
 
-      if (cleanPhone) {
+      if (cleanPhone && cleanPhone.length >= 10) {
+        const phoneSuffix = cleanPhone.slice(-10);
         Object.keys(fifteenDayMap).forEach(key => {
           const cleanKey = String(key).replace(/[^0-9]/g, '');
-          if (cleanKey && (cleanKey === cleanPhone || cleanKey.endsWith(cleanPhone) || cleanPhone.endsWith(cleanKey))) {
-            if (!keysToCheck.has(key)) {
-              fifteenDayPKR += fifteenDayMap[key];
-              keysToCheck.add(key);
+          if (cleanKey && cleanKey.length >= 10) {
+            const keySuffix = cleanKey.slice(-10);
+            if (phoneSuffix === keySuffix) {
+              if (!keysToCheck.has(key)) {
+                fifteenDayPKR += fifteenDayMap[key];
+                keysToCheck.add(key);
+              }
             }
           }
         });
