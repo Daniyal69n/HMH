@@ -82,9 +82,10 @@ export async function GET(request) {
       { $match: { isAdmin: { $ne: true }, isBlocked: { $ne: true } } },
       {
         $project: {
-          _id: 0,
+          _id: 1,
           name: 1,
           phone: 1,
+          email: 1,
           profilePicture: {
             $cond: {
               if: {
@@ -127,7 +128,36 @@ export async function GET(request) {
       const level = Math.max(claimLvl, dbLvl);
       const amt = user.computedEarnings / 300.0; // convert PKR to USD
       
-      const fifteenDayPKR = fifteenDayMap[user.phone] || 0;
+      const rawPhone = user.phone || '';
+      const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
+      const userIdStr = user._id ? String(user._id) : '';
+      const email = user.email || '';
+
+      let fifteenDayPKR = 0;
+      const keysToCheck = new Set();
+      if (rawPhone) keysToCheck.add(rawPhone);
+      if (cleanPhone) keysToCheck.add(cleanPhone);
+      if (userIdStr) keysToCheck.add(userIdStr);
+      if (email) keysToCheck.add(email);
+
+      keysToCheck.forEach(key => {
+        if (fifteenDayMap[key]) {
+          fifteenDayPKR += fifteenDayMap[key];
+        }
+      });
+
+      if (cleanPhone) {
+        Object.keys(fifteenDayMap).forEach(key => {
+          const cleanKey = String(key).replace(/[^0-9]/g, '');
+          if (cleanKey && (cleanKey === cleanPhone || cleanKey.endsWith(cleanPhone) || cleanPhone.endsWith(cleanKey))) {
+            if (!keysToCheck.has(key)) {
+              fifteenDayPKR += fifteenDayMap[key];
+              keysToCheck.add(key);
+            }
+          }
+        });
+      }
+
       const fifteenDayAmt = fifteenDayPKR / 300.0; // convert PKR to USD
 
       const displayName = user.name || 'Anonymous';
