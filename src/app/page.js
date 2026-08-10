@@ -539,6 +539,8 @@ export default function Page() {
       return consumed
     }
 
+    let hasMetUncompleted = false
+
     return Array.from({ length: 50 }, (_, index) => {
       const lv = index + 1
       let reqText = ''
@@ -552,18 +554,32 @@ export default function Page() {
         rewardUSD = 2
         membersRequired = 5
         reqText = '5 members of any plan'
-        const count = consumeAny(5)
-        progressPercent = Math.min(100, Math.round((count / 5) * 100))
-        isCompleted = count >= 5
-        progressText = `${count} / ${membersRequired}`
+        if (hasMetUncompleted) {
+          progressPercent = 0
+          progressText = `0 / ${membersRequired}`
+          isCompleted = false
+        } else {
+          const count = consumeAny(5)
+          progressPercent = Math.min(100, Math.round((count / 5) * 100))
+          isCompleted = count >= 5
+          progressText = `${count} / ${membersRequired}`
+          if (!isCompleted) hasMetUncompleted = true
+        }
       } else if (lv === 2) {
         rewardUSD = 5
         membersRequired = 10
         reqText = '10 members of any plan'
-        const count = consumeAny(10)
-        progressPercent = Math.min(100, Math.round((count / 10) * 100))
-        isCompleted = count >= 10
-        progressText = `${count} / ${membersRequired}`
+        if (hasMetUncompleted) {
+          progressPercent = 0
+          progressText = `0 / ${membersRequired}`
+          isCompleted = false
+        } else {
+          const count = consumeAny(10)
+          progressPercent = Math.min(100, Math.round((count / 10) * 100))
+          isCompleted = count >= 10
+          progressText = `${count} / ${membersRequired}`
+          if (!isCompleted) hasMetUncompleted = true
+        }
       } else {
         // Levels 3 to 50
         let reqEach = 0
@@ -585,25 +601,32 @@ export default function Page() {
         membersRequired = reqEach * 6
         reqText = `${reqEach} Basic · ${reqEach} Standard · ${reqEach} Diamond · ${reqEach} Pro · ${reqEach} Premium · ${reqEach} Legend`
 
-        const basicProgress = consumeSpecific('basic', reqEach)
-        const standardProgress = consumeSpecific('standard', reqEach)
-        const diamondProgress = consumeSpecific('diamond', reqEach)
-        const proProgress = consumeSpecific('pro', reqEach)
-        const premiumProgress = consumeSpecific('premium', reqEach)
-        const legendProgress = consumeSpecific('legend', reqEach)
+        if (hasMetUncompleted) {
+          progressPercent = 0
+          progressText = `0 / ${membersRequired}`
+          isCompleted = false
+        } else {
+          const basicProgress = consumeSpecific('basic', reqEach)
+          const standardProgress = consumeSpecific('standard', reqEach)
+          const diamondProgress = consumeSpecific('diamond', reqEach)
+          const proProgress = consumeSpecific('pro', reqEach)
+          const premiumProgress = consumeSpecific('premium', reqEach)
+          const legendProgress = consumeSpecific('legend', reqEach)
 
-        const totalProgress = basicProgress + standardProgress + diamondProgress + proProgress + premiumProgress + legendProgress
-        progressPercent = Math.min(100, Math.round((totalProgress / membersRequired) * 100))
-        progressText = `${totalProgress} / ${membersRequired}`
+          const totalProgress = basicProgress + standardProgress + diamondProgress + proProgress + premiumProgress + legendProgress
+          progressPercent = Math.min(100, Math.round((totalProgress / membersRequired) * 100))
+          progressText = `${totalProgress} / ${membersRequired}`
 
-        isCompleted = (
-          basicProgress >= reqEach &&
-          standardProgress >= reqEach &&
-          diamondProgress >= reqEach &&
-          proProgress >= reqEach &&
-          premiumProgress >= reqEach &&
-          legendProgress >= reqEach
-        )
+          isCompleted = (
+            basicProgress >= reqEach &&
+            standardProgress >= reqEach &&
+            diamondProgress >= reqEach &&
+            proProgress >= reqEach &&
+            premiumProgress >= reqEach &&
+            legendProgress >= reqEach
+          )
+          if (!isCompleted) hasMetUncompleted = true
+        }
       }
 
       const isMilestone = lv % 10 === 0
@@ -624,15 +647,15 @@ export default function Page() {
   }, [teamData.levelA?.members])
 
   const currentLevel = useMemo(() => {
-    let lvl = 1
+    let lvl = 0
     for (let i = 0; i < levels.length; i++) {
       if (levels[i].isCompleted) {
-        lvl = levels[i].level + 1
+        lvl = levels[i].level
       } else {
         break
       }
     }
-    return Math.min(lvl, 50)
+    return lvl === 0 ? 1 : Math.min(lvl, 50)
   }, [levels])
 
   useEffect(() => {
