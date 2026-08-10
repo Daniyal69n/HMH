@@ -76,6 +76,7 @@ export default function AdminDashboard() {
   })
   const [userSearchQuery, setUserSearchQuery] = useState('')
   const [userFilterStatus, setUserFilterStatus] = useState('all') // 'all', 'active', 'pending'
+  const [selectedPlanFilter, setSelectedPlanFilter] = useState('all')
   const [editingUserData, setEditingUserData] = useState(null)
   const [editForm, setEditForm] = useState({
     name: '',
@@ -2364,8 +2365,18 @@ export default function AdminDashboard() {
     const activePlan = [...(user.investmentPlans || [])].reverse().find((plan) => plan.status === 'active')?.planName || 'Free';
     const isPaid = activePlan !== 'Free';
 
-    if (userFilterStatus === 'active' && !isPaid) return false;
-    if (userFilterStatus === 'pending' && isPaid) return false;
+    if (selectedPlanFilter !== 'all') {
+      const normActivePlan = activePlan.toLowerCase();
+      const normFilter = selectedPlanFilter.toLowerCase();
+      if (normFilter === 'free') {
+        if (normActivePlan !== 'free') return false;
+      } else {
+        if (!normActivePlan.includes(normFilter)) return false;
+      }
+    } else {
+      if (userFilterStatus === 'active' && !isPaid) return false;
+      if (userFilterStatus === 'pending' && isPaid) return false;
+    }
 
     const q = userSearchQuery.trim().toLowerCase()
     if (!q) return true
@@ -2402,6 +2413,18 @@ export default function AdminDashboard() {
     const activePlan = [...(u.investmentPlans || [])].reverse().find((plan) => plan.status === 'active')?.planName || 'Free';
     return activePlan === 'Free';
   }).length;
+
+  const getPlanCount = (planName) => {
+    return users.filter(u => {
+      const activePlan = [...(u.investmentPlans || [])].reverse().find((plan) => plan.status === 'active')?.planName || 'Free';
+      const normActivePlan = activePlan.toLowerCase();
+      const normPlan = planName.toLowerCase();
+      if (normPlan === 'free') {
+        return normActivePlan === 'free';
+      }
+      return normActivePlan.includes(normPlan);
+    }).length;
+  };
 
   // Handle payment details update
   const handleUpdatePaymentDetails = (method, field, value) => {
@@ -2621,28 +2644,81 @@ export default function AdminDashboard() {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
             <button 
-              className={`${styles.btn} ${userFilterStatus === 'all' ? styles.btnGold : styles.btnOutline}`} 
-              onClick={() => setUserFilterStatus('all')}
+              className={`${styles.btn} ${userFilterStatus === 'all' && selectedPlanFilter === 'all' ? styles.btnGold : styles.btnOutline}`} 
+              onClick={() => {
+                setUserFilterStatus('all');
+                setSelectedPlanFilter('all');
+              }}
               style={{ padding: '8px 16px', fontSize: '14px' }}
             >
               All Users ({users.length})
             </button>
             <button 
-              className={`${styles.btn} ${userFilterStatus === 'active' ? styles.btnGold : styles.btnOutline}`} 
-              onClick={() => setUserFilterStatus('active')}
+              className={`${styles.btn} ${userFilterStatus === 'active' && selectedPlanFilter === 'all' ? styles.btnGold : styles.btnOutline}`} 
+              onClick={() => {
+                setUserFilterStatus('active');
+                setSelectedPlanFilter('all');
+              }}
               style={{ padding: '8px 16px', fontSize: '14px' }}
             >
               Active (Paid) ({activeUsersCount})
             </button>
             <button 
-              className={`${styles.btn} ${userFilterStatus === 'pending' ? styles.btnGold : styles.btnOutline}`} 
-              onClick={() => setUserFilterStatus('pending')}
+              className={`${styles.btn} ${userFilterStatus === 'pending' && selectedPlanFilter === 'all' ? styles.btnGold : styles.btnOutline}`} 
+              onClick={() => {
+                setUserFilterStatus('pending');
+                setSelectedPlanFilter('all');
+              }}
               style={{ padding: '8px 16px', fontSize: '14px' }}
             >
               Pending (Free) ({pendingUsersCount})
             </button>
+          </div>
+
+          {/* Plan-specific filters */}
+          <div 
+            style={{ 
+              display: 'flex', 
+              gap: '8px', 
+              marginBottom: '20px', 
+              overflowX: 'auto', 
+              paddingBottom: '10px',
+              scrollbarWidth: 'thin',
+              msOverflowStyle: 'none'
+            }}
+          >
+            <button 
+              className={`${styles.btn} ${selectedPlanFilter === 'all' ? styles.btnGold : styles.btnOutline}`} 
+              onClick={() => {
+                setSelectedPlanFilter('all');
+                setUserFilterStatus('all');
+              }}
+              style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px', flexShrink: 0 }}
+            >
+              All Plans
+            </button>
+            {['Free', 'Basic', 'Standard', 'Diamond', 'Pro', 'Premium', 'Legend'].map((plan) => {
+              const count = getPlanCount(plan);
+              return (
+                <button 
+                  key={plan}
+                  className={`${styles.btn} ${selectedPlanFilter === plan ? styles.btnGold : styles.btnOutline}`} 
+                  onClick={() => {
+                    setSelectedPlanFilter(plan);
+                    if (plan === 'Free') {
+                      setUserFilterStatus('pending');
+                    } else {
+                      setUserFilterStatus('active');
+                    }
+                  }}
+                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px', flexShrink: 0 }}
+                >
+                  {plan} ({count})
+                </button>
+              );
+            })}
           </div>
 
           {isUsersLoading && users.length === 0 ? (
