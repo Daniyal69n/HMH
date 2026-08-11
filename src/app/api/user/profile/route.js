@@ -111,6 +111,14 @@ export async function GET(request) {
     // Return user data without password
     const userData = user.toPublicJSON();
     
+    if (userData.referredBy) {
+      const upline = await User.findOne({ phone: userData.referredBy }).select('name shortId').lean();
+      if (upline) {
+        userData.uplineName = upline.name;
+        userData.uplineId = upline.shortId;
+      }
+    }
+    
     // Ensure totalRecharge is included in response
     if (userData.totalRecharge === undefined || userData.totalRecharge === null) {
       userData.totalRecharge = 0;

@@ -2247,7 +2247,9 @@ export default function AdminDashboard() {
       customDirectReferrals: user.customDirectReferrals !== undefined && user.customDirectReferrals !== null ? String(user.customDirectReferrals) : '',
       customIndirectReferrals: user.customIndirectReferrals !== undefined && user.customIndirectReferrals !== null ? String(user.customIndirectReferrals) : '',
       customAdEarning: user.customAdEarning !== undefined && user.customAdEarning !== null ? String(user.customAdEarning) : '',
-      customSpinReward: user.customSpinReward || 'nil'
+      customSpinReward: user.customSpinReward || 'nil',
+      uplineId: user.referrerCode || '',
+      uplineName: user.referrerName || ''
     })
     
     // Fetch full user details asynchronously to get history arrays missing from list
@@ -2300,6 +2302,24 @@ export default function AdminDashboard() {
       }
     } catch (e) {
       console.warn('Error fetching full user history', e)
+    }
+  }
+
+  const handleCheckUplineId = async (shortId) => {
+    if (!shortId || !shortId.trim()) {
+      setEditForm(prev => ({ ...prev, uplineName: '' }));
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/user-by-id?shortId=${encodeURIComponent(shortId.trim())}`);
+      if (res.ok) {
+        const data = await res.json();
+        setEditForm(prev => ({ ...prev, uplineName: data.name }));
+      } else {
+        setEditForm(prev => ({ ...prev, uplineName: 'Not found' }));
+      }
+    } catch (e) {
+      setEditForm(prev => ({ ...prev, uplineName: 'Error' }));
     }
   }
 
@@ -2932,6 +2952,29 @@ export default function AdminDashboard() {
                   value={editForm.password}
                   onChange={e => setEditForm(prev => ({ ...prev, password: e.target.value }))}
                   style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Upline ID (shortId)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. HMH1000"
+                  value={editForm.uplineId}
+                  onChange={e => setEditForm(prev => ({ ...prev, uplineId: e.target.value }))}
+                  onBlur={e => handleCheckUplineId(e.target.value)}
+                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Upline Name (Auto-fetched)</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={editForm.uplineName}
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', color: 'var(--text-dim)', cursor: 'not-allowed' }}
                 />
               </div>
             </div>

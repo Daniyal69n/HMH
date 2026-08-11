@@ -228,6 +228,21 @@ export async function PUT(request) {
         editUser.customAdEarning = (data.customAdEarning !== undefined && data.customAdEarning !== null && data.customAdEarning !== "") ? parseFloat(data.customAdEarning) : null;
         editUser.customSpinReward = (data.customSpinReward && data.customSpinReward !== 'nil') ? data.customSpinReward : null;
 
+        if (data.uplineId !== undefined) {
+          const uId = (data.uplineId || '').trim();
+          if (uId) {
+            const uplineUser = await User.findOne({ shortId: uId }).lean();
+            if (uplineUser) {
+              editUser.referredBy = uplineUser.phone;
+            } else {
+              return NextResponse.json({ error: `Upline user with ID ${uId} not found` }, { status: 404 });
+            }
+          } else {
+            editUser.referredBy = null;
+          }
+        }
+
+
         // Handle plans
         const oldPlans = editUser.investmentPlans || [];
         const newPlans = data.investmentPlans || [];

@@ -3080,6 +3080,18 @@ export default function Page() {
               <p>Grow your team to unlock higher tiers and bonuses.</p>
             </div>
 
+            {profile.uplineName && (
+              <div className="card" style={{ marginBottom: 18, background: 'rgba(255,255,255,0.03)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div className="stat-icon" style={{ background: 'rgba(255, 255, 255, 0.1)', width: '40px', height: '40px', fontSize: '18px', padding: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>👤</div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-dim)', marginBottom: '4px' }}>Referred By</div>
+                    <div style={{ fontWeight: '600', color: '#fff' }}>{profile.uplineName} <span style={{ color: 'var(--text-dim)', fontSize: '12px', fontWeight: 'normal', marginLeft: '4px' }}>({profile.uplineId})</span></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="stat-pair">
               <div className="card stat-card">
                 <div className="stat-icon" style={{ background: 'rgba(201,160,74,.12)' }}>👤</div>
