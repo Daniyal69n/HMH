@@ -5,14 +5,14 @@ import Transaction from '@/models/Transaction';
 
 let cachedLeaderboard = null;
 let lastCacheTime = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in ms
+const CACHE_DURATION = 1 * 60 * 1000; // 1 minute in ms
 
 export async function GET(request) {
   const now = Date.now();
   if (cachedLeaderboard && (now - lastCacheTime < CACHE_DURATION)) {
     return Response.json(cachedLeaderboard, {
       headers: {
-        'Cache-Control': 'public, max-age=300',
+        'Cache-Control': 'public, max-age=60',
         'X-Cache': 'HIT'
       }
     });
