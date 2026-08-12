@@ -2436,7 +2436,7 @@ export default function Page() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="leader-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</div>
-                        <div className="leader-level">Level {u.level}</div>
+                        <div className="leader-level">Level {u.level < 50 ? u.level + 1 : 50}</div>
                       </div>
                       <div className="leader-amounts-wrap" style={{ display: 'flex', gap: '8px', alignItems: 'center', textAlign: 'right', flexShrink: 0 }}>
                         <div className="leader-amt-15" style={{ width: '68px', color: 'var(--gold-bright)', fontFamily: 'monospace', fontWeight: 'bold', fontSize: '13px' }}>
