@@ -2183,7 +2183,7 @@ export default function Page() {
                   <span className="badge gold" style={{ background: activePlanName === 'Free' ? 'rgba(255,255,255,0.08)' : 'rgba(201,160,74,0.18)', color: activePlanName === 'Free' ? 'var(--text-dim)' : 'var(--gold-bright)', border: activePlanName === 'Free' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(201,160,74,0.4)' }}>
                     {activePlanName === 'Free' ? '🆓 Free' : `⭐ ${activePlanName} Plan`}
                   </span>
-                  <span className="badge gold">Level {currentLevel}</span>
+                  <span className="badge gold">Level {currentLevel < 50 ? currentLevel + 1 : 50}</span>
                 </div>
               </div>
             </div>
@@ -3705,11 +3705,11 @@ export default function Page() {
                     <span className="levels-summary-icon">🏆</span>
                     <span>Current level</span>
                   </h3>
-                  <span className="streak-pill">Level {currentLevel} / 50</span>
+                  <span className="streak-pill">Level {currentLevel < 50 ? currentLevel + 1 : 50} / 50</span>
                 </div>
                 <div className="levels-summary-grid">
                   <div>
-                    <div className="levels-summary-number">{currentLevel}</div>
+                    <div className="levels-summary-number">{currentLevel < 50 ? currentLevel + 1 : 50}</div>
                     <div className="levels-summary-sub">{teamData.totalMembers} referral{teamData.totalMembers === 1 ? '' : 's'} made</div>
                   </div>
                   <div>
@@ -4320,7 +4320,7 @@ export default function Page() {
                       </div>
                       <div className="mem-col">
                         <div className="mem-label">Level</div>
-                        <div className="mem-val">{currentLevel}</div>
+                        <div className="mem-val">{currentLevel < 50 ? currentLevel + 1 : 50}</div>
                       </div>
                       <div className="mem-col">
                         <div className="mem-label">Member since</div>
