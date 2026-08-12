@@ -2249,7 +2249,8 @@ export default function AdminDashboard() {
       customAdEarning: user.customAdEarning !== undefined && user.customAdEarning !== null ? String(user.customAdEarning) : '',
       customSpinReward: user.customSpinReward || 'nil',
       uplineId: user.referrerCode || '',
-      uplineName: user.referrerName || ''
+      uplineName: user.referrerName || '',
+      level: user.level || 1
     })
     
     // Fetch full user details asynchronously to get history arrays missing from list
@@ -2297,7 +2298,8 @@ export default function AdminDashboard() {
           customTotalWithdrawals: fullWd,
           customMySalary: fullSal,
           adWatchDaysLeft: fullAdDays,
-          totalAdWatchDays: fullUser.totalAdWatchDays !== undefined && fullUser.totalAdWatchDays !== null ? fullUser.totalAdWatchDays : fullAdDays
+          totalAdWatchDays: fullUser.totalAdWatchDays !== undefined && fullUser.totalAdWatchDays !== null ? fullUser.totalAdWatchDays : fullAdDays,
+          level: fullUser.level || prev.level || 1
         }))
       }
     } catch (e) {
@@ -3076,14 +3078,29 @@ export default function AdminDashboard() {
                 <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Leave empty = user earns based on their plan. Set a $ amount to override their ad reward.</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '12px', color: 'var(--gold)' }}>Ads Earning Days Left</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--gold)' }}>Ads Earning Days Left</label>
+                  {(editForm.level || 1) <= 1 ? (
+                    <span style={{ fontSize: '11px', color: '#ff6b6b', background: 'rgba(255,107,107,0.1)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(255,107,107,0.3)', fontWeight: 600 }}>
+                      🔒 Locked (Level 1 Incomplete)
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: '11px', color: '#51cf66', background: 'rgba(81,207,102,0.1)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(81,207,102,0.3)', fontWeight: 600 }}>
+                      🔓 Unlocked
+                    </span>
+                  )}
+                </div>
                 <input
                   type="number"
                   value={editForm.adWatchDaysLeft}
                   onChange={e => setEditForm(prev => ({ ...prev, adWatchDaysLeft: parseInt(e.target.value) || 0 }))}
                   style={{ background: 'var(--bg)', border: '1px solid rgba(201,160,74,0.4)', padding: '8px 12px', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
                 />
-                <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Remaining days for user to earn from ads.</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>
+                  {(editForm.level || 1) <= 1 
+                    ? 'Days countdown is paused and locked until user completes Level 1.' 
+                    : 'Remaining active days for user to earn from ads.'}
+                </span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', color: 'var(--gold)' }}>Total Ads Earning Days</label>

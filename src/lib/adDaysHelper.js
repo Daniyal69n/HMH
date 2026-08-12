@@ -3,6 +3,11 @@ export async function syncUserAdDays(user) {
     return false;
   }
 
+  // If user has not completed Level 1 yet (level <= 1), watch ads is locked and days countdown does not start
+  if ((user.level || 1) <= 1) {
+    return false;
+  }
+
   const now = new Date();
   const pktTime = new Date(now.getTime() + 5 * 60 * 60 * 1000);
   const currentDate = pktTime.toISOString().split('T')[0];
@@ -10,7 +15,7 @@ export async function syncUserAdDays(user) {
   let modified = false;
 
   if (!user.lastDayReducedDate) {
-    // For existing users or newly bought plans, set the initial date to today
+    // When they unlock Level 1 (reaching Level 2+), set the initial date to today
     // so they don't lose a day immediately. They will lose a day tomorrow at 12:00 AM.
     user.lastDayReducedDate = currentDate;
     modified = true;

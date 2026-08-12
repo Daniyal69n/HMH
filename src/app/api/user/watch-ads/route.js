@@ -106,6 +106,11 @@ export async function GET(request) {
       limitReached = true;
     }
 
+    const isLevelLocked = (user.level || 1) <= 1;
+    if (isLevelLocked) {
+      limitReached = true;
+    }
+
     const claimedToday = user.lastAdRewardClaimDate === currentDate;
     console.timeEnd("processing");
 
@@ -118,7 +123,9 @@ export async function GET(request) {
       dailyIncome: `$${fullDailyUSD.toFixed(2)}`,
       claimedToday,
       adWatchDaysLeft,
-      limitReached
+      limitReached,
+      isLevelLocked,
+      levelLockMessage: 'Please complete Level 1 (Invite 5 active members) to unlock Watch Ads & Earn.'
     });
     console.timeEnd("response");
     return res;
@@ -180,6 +187,9 @@ export async function POST(request) {
         await user.save();
       }
       adWatchDaysLeft = user.adWatchDaysLeft;
+      if ((user.level || 1) <= 1) {
+        return Response.json({ message: 'Please complete Level 1 (Invite 5 active members) to unlock Watch Ads & Earn.' }, { status: 403 });
+      }
       if (adWatchDaysLeft <= 0) {
         return Response.json({ message: 'Ad limit reached. Please invite a member to unlock more days.' }, { status: 403 });
       }

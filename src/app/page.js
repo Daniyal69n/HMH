@@ -2749,7 +2749,20 @@ export default function Page() {
                 </span>
               </div>
 
-              {adWatchData.limitReached && (
+              {adWatchData.isLevelLocked ? (
+                <div style={{ padding: '16px', background: 'rgba(201, 160, 74, 0.08)', color: 'var(--gold-bright)', border: '1px solid rgba(201, 160, 74, 0.3)', borderRadius: '10px', marginBottom: '14px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '6px' }}>🔒</div>
+                  <div style={{ fontSize: '15px', fontWeight: 'bold', marginBottom: '4px' }}>
+                    Watch Ads Locked
+                  </div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-dim)', marginBottom: '10px' }}>
+                    Please complete <strong>Level 1 (Invite 5 active members)</strong> to unlock Watch Ads & Earn. Your ad days countdown will start as soon as you complete Level 1!
+                  </div>
+                  <button className="btn btn-gold" onClick={() => setPage('network')} style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 'bold' }}>
+                    Go to Team to Invite (Level 1)
+                  </button>
+                </div>
+              ) : adWatchData.limitReached && (
                 <div style={{ padding: '12px', background: 'rgba(255, 50, 50, 0.1)', color: '#ff4d4d', borderRadius: '8px', marginBottom: '14px', fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>
                   🚫 Ad Limit Reached. Invite a member to unlock more days!
                   <div style={{ marginTop: '8px' }}>
@@ -2805,7 +2818,7 @@ export default function Page() {
               ) : (
                 adWatchData.activeAds.map((ad, idx) => {
                   const activeAdsLength = adWatchData.activeAds.length;
-                  const isLimitReached = adWatchData.watchedToday >= activeAdsLength || adWatchData.limitReached;
+                  const isLimitReached = adWatchData.watchedToday >= activeAdsLength || adWatchData.limitReached || adWatchData.isLevelLocked;
                   const isWatched = idx < adWatchData.watchedToday;
 
                   return (
@@ -2857,7 +2870,7 @@ export default function Page() {
                           cursor: (isLimitReached || isWatched) ? 'not-allowed' : 'pointer'
                         }}
                       >
-                        {isWatched ? '✅ Watched' : (isLimitReached ? '🔒 Locked' : '▶ Watch')}
+                        {isWatched ? '✅ Watched' : (adWatchData.isLevelLocked ? '🔒 Level 1 Required' : (isLimitReached ? '🔒 Locked' : '▶ Watch'))}
                       </button>
                     </div>
                   );
