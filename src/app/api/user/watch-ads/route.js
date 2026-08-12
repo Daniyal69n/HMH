@@ -91,7 +91,13 @@ export async function GET(request) {
       if (adWatchDaysLeft === undefined || adWatchDaysLeft === null) {
         adWatchDaysLeft = planConfig.adWatchDays || 10;
         await User.findByIdAndUpdate(user._id, { adWatchDaysLeft: adWatchDaysLeft });
+        user.adWatchDaysLeft = adWatchDaysLeft;
       }
+      const { syncUserAdDays } = await import('@/lib/adDaysHelper');
+      if (await syncUserAdDays(user)) {
+        await user.save();
+      }
+      adWatchDaysLeft = user.adWatchDaysLeft;
       if (adWatchDaysLeft <= 0) {
         limitReached = true;
       }
@@ -169,6 +175,11 @@ export async function POST(request) {
         user.adWatchDaysLeft = adWatchDaysLeft;
         await user.save();
       }
+      const { syncUserAdDays } = await import('@/lib/adDaysHelper');
+      if (await syncUserAdDays(user)) {
+        await user.save();
+      }
+      adWatchDaysLeft = user.adWatchDaysLeft;
       if (adWatchDaysLeft <= 0) {
         return Response.json({ message: 'Ad limit reached. Please invite a member to unlock more days.' }, { status: 403 });
       }

@@ -143,7 +143,6 @@ export async function POST(request) {
         user.customTotalEarnings += rewardPKR;
       }
       user.lastAdRewardClaimDate = currentDate;
-      user.adWatchDaysLeft -= 1;
       await user.save();
       
       // Create transaction log
@@ -169,7 +168,11 @@ export async function POST(request) {
     } else {
       // If reward is 0, still mark as claimed
       user.lastAdRewardClaimDate = currentDate;
-      user.adWatchDaysLeft -= 1;
+      await user.save();
+    }
+    
+    const { syncUserAdDays } = await import('@/lib/adDaysHelper');
+    if (await syncUserAdDays(user)) {
       await user.save();
     }
     

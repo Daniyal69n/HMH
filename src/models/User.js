@@ -131,6 +131,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  lastDayReducedDate: {
+    type: String,
+    default: ''
+  },
   adWatchDaysLeft: {
     type: Number,
     default: 0

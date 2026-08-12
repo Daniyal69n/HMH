@@ -113,7 +113,7 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
 
   if (r1PlanId !== 'free' && purchasedPlanId !== 'free') {
     if (r1PlanId === purchasedPlanId) {
-      extraDays = 10;
+      extraDays = 7;
     } else {
       if (purchasedPlanId === 'basic') extraDays = 2;
       else if (purchasedPlanId === 'standard') extraDays = 3;
