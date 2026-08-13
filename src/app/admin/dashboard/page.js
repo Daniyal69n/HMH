@@ -3088,8 +3088,18 @@ export default function AdminDashboard() {
                     setEditForm(prev => {
                       const updated = { ...prev, adWatchUnlocked: isUnlocked };
                       if (isUnlocked && (prev.adWatchDaysLeft || 0) === 0) {
-                        updated.adWatchDaysLeft = 10;
-                        updated.totalAdWatchDays = Math.max(prev.totalAdWatchDays || 0, 10);
+                        let defaultDays = 10;
+                        if (editingUserData && editingUserData.investmentPlans) {
+                          const activePlan = editingUserData.investmentPlans.find(p => p.status === 'active');
+                          if (activePlan) {
+                            const planConfig = earningsPlans.find(p => p.id === activePlan.planId);
+                            if (planConfig && planConfig.adWatchDays) {
+                              defaultDays = Number(planConfig.adWatchDays);
+                            }
+                          }
+                        }
+                        updated.adWatchDaysLeft = defaultDays;
+                        updated.totalAdWatchDays = Math.max(prev.totalAdWatchDays || 0, defaultDays);
                       }
                       return updated;
                     });

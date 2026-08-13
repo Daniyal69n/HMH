@@ -217,13 +217,7 @@ export async function PUT(request) {
         }
 
         if (data.adWatchUnlocked !== undefined && data.adWatchUnlocked !== null) {
-          const oldStatus = editUser.adWatchUnlocked;
           editUser.adWatchUnlocked = !!data.adWatchUnlocked;
-          
-          if (editUser.adWatchUnlocked && !oldStatus && (editUser.adWatchDaysLeft || 0) === 0) {
-            editUser.adWatchDaysLeft = 10;
-            editUser.totalAdWatchDays = Math.max(editUser.totalAdWatchDays || 0, 10);
-          }
         }
 
         if (data.adWatchDaysLeft !== undefined && data.adWatchDaysLeft !== null) {
