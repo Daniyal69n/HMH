@@ -106,7 +106,7 @@ export async function GET(request) {
       limitReached = true;
     }
 
-    const isLevelLocked = (user.level || 1) <= 1;
+    const isLevelLocked = (user.level || 1) <= 1 && !user.adWatchUnlocked;
     if (isLevelLocked) {
       limitReached = true;
     }
@@ -182,7 +182,7 @@ export async function POST(request) {
         await user.save();
       }
       adWatchDaysLeft = user.adWatchDaysLeft;
-      if ((user.level || 1) <= 1) {
+      if ((user.level || 1) <= 1 && !user.adWatchUnlocked) {
         return Response.json({ message: 'Please complete Level 1 (Invite 5 active members) to unlock Watch Ads & Earn.' }, { status: 403 });
       }
       if (adWatchDaysLeft <= 0) {

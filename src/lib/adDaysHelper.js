@@ -3,8 +3,8 @@ export async function syncUserAdDays(user) {
     return false;
   }
 
-  // If user has not completed Level 1 yet (level <= 1), watch ads is locked and days countdown does not start
-  if ((user.level || 1) <= 1) {
+  // If user has not completed Level 1 yet (level <= 1) and not unlocked, watch ads is locked and days countdown does not start
+  if ((user.level || 1) <= 1 && !user.adWatchUnlocked) {
     return false;
   }
 

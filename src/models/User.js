@@ -143,6 +143,10 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  adWatchUnlocked: {
+    type: Boolean,
+    default: false
+  },
   customTotalEarnings: {
     type: Number,
     default: null

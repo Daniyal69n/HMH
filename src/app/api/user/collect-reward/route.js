@@ -78,7 +78,7 @@ export async function POST(request) {
         user.adWatchDaysLeft = adWatchDaysLeft;
         await user.save();
       }
-      if ((user.level || 1) <= 1) {
+      if ((user.level || 1) <= 1 && !user.adWatchUnlocked) {
         return Response.json({ message: 'Please complete Level 1 (Invite 5 active members) to unlock Watch Ads & Earn.' }, { status: 403 });
       }
       if (adWatchDaysLeft <= 0) {
