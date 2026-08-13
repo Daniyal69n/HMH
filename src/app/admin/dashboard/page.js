@@ -108,6 +108,9 @@ export default function AdminDashboard() {
     binance: { number: '', accountName: '' }
   })
 
+  const [whatsappLink, setWhatsappLink] = useState('')
+  const [appSettingsSaving, setAppSettingsSaving] = useState(false)
+
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     title: '',
@@ -1512,6 +1515,23 @@ export default function AdminDashboard() {
 
     }
   }, [isAdminLoggedIn, isCheckingAuth, activeTab])
+
+  useEffect(() => {
+    if (isAdminLoggedIn && activeTab === 'appSettings') {
+      const loadAppSettings = async () => {
+        try {
+          const res = await fetch('/api/settings?key=whatsapp_link')
+          if (res.ok) {
+            const data = await res.json()
+            if (data && data.value) setWhatsappLink(data.value)
+          }
+        } catch (error) {
+          console.warn('Error loading app settings:', error)
+        }
+      }
+      loadAppSettings()
+    }
+  }, [isAdminLoggedIn, activeTab])
 
   // Load recharge history when recharges tab is activated
   useEffect(() => {
@@ -5348,6 +5368,49 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {activeTab === 'appSettings' && (
+        <div className={styles.panel} style={{ maxWidth: '600px', margin: '0 auto', padding: '24px' }}>
+          <h2 style={{ marginBottom: '8px', color: 'var(--gold)' }}>App Settings</h2>
+          <p style={{ color: 'var(--text-dim)', marginBottom: '24px' }}>Configure global application settings</p>
+          
+          <div className={styles.field}>
+            <label>WhatsApp Support Link</label>
+            <input
+              type="text"
+              value={whatsappLink}
+              onChange={e => setWhatsappLink(e.target.value)}
+              placeholder="e.g. https://wa.me/923000000000 or https://chat.whatsapp.com/..."
+            />
+            <p style={{ fontSize: '12px', color: 'var(--text-faint)', marginTop: '4px' }}>
+              This link will be used for the floating WhatsApp button on the user side.
+            </p>
+          </div>
+          
+          <button 
+            className={`${styles.btn} ${styles.btnGold}`} 
+            onClick={async () => {
+              setAppSettingsSaving(true)
+              try {
+                const res = await fetch('/api/settings', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ key: 'whatsapp_link', value: whatsappLink, description: 'Support WhatsApp Link' })
+                })
+                if (res.ok) showSuccess('Settings saved successfully!')
+                else showError('Failed to save settings')
+              } catch (err) {
+                showError('Network error')
+              }
+              setAppSettingsSaving(false)
+            }}
+            disabled={appSettingsSaving}
+          >
+            {appSettingsSaving ? 'Saving...' : 'Save Settings'}
+          </button>
+        </div>
+      )}
+
       {/* Custom Confirm Modal */}
       {confirmModal.isOpen && (
         <div className={styles.editModal} onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} style={{ zIndex: 20000 }}>

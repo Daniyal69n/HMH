@@ -1,13 +1,35 @@
 'use client'
+import { useState, useEffect } from 'react';
 
 export default function WhatsAppButton() {
-  // Assuming the number is in Pakistan based on 03 format
-  const phoneNumber = '923715918754';
-  const whatsappUrl = `https://wa.me/${phoneNumber}`;
+  const [link, setLink] = useState('https://wa.me/923715918754'); // default fallback
+
+  useEffect(() => {
+    const fetchLink = async () => {
+      try {
+        const res = await fetch('/api/settings?key=whatsapp_link');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.value) {
+            // Check if it's just a number or a full URL
+            const value = data.value.trim();
+            if (value.startsWith('http')) {
+              setLink(value);
+            } else {
+              setLink(`https://wa.me/${value}`);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Error loading whatsapp link', err);
+      }
+    };
+    fetchLink();
+  }, []);
 
   return (
     <a
-      href={whatsappUrl}
+      href={link}
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-[9999] bg-[#25D366] text-white p-3 md:p-4 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 flex items-center justify-center group"
