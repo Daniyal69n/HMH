@@ -93,8 +93,8 @@ export async function POST(request) {
     else if (planIdName.includes('premium')) foundPlanId = 'premium';
     else if (planIdName.includes('legend')) foundPlanId = 'legend';
     
-    const selectedConfig = configPlans.find(p => p.id === foundPlanId) || { adWatchDays: 10 };
-    const initialDays = selectedConfig.adWatchDays || 10;
+    const selectedConfig = configPlans.find(p => p.id === foundPlanId) || { adWatchDays: 0 };
+    const initialDays = 0;
     
     user.adWatchDaysLeft = (user.adWatchDaysLeft || 0) + initialDays;
     user.totalAdWatchDays = (user.totalAdWatchDays || 0) + initialDays;

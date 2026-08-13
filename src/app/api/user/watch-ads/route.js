@@ -89,7 +89,7 @@ export async function GET(request) {
 
     if (activeInvestment) {
       if (adWatchDaysLeft === undefined || adWatchDaysLeft === null) {
-        adWatchDaysLeft = planConfig.adWatchDays || 10;
+        adWatchDaysLeft = 0;
         await User.findByIdAndUpdate(user._id, { adWatchDaysLeft: adWatchDaysLeft });
         user.adWatchDaysLeft = adWatchDaysLeft;
       }
@@ -173,12 +173,7 @@ export async function POST(request) {
         else if (planNameStr.includes('premium')) planId = 'premium';
         else if (planNameStr.includes('legend')) planId = 'legend';
 
-        const SystemSettings = (await import('@/models/SystemSettings')).default;
-        const earningsSetting = await SystemSettings.findOne({ key: 'earnings_plans' }).lean();
-        const earningsPlans = earningsSetting && earningsSetting.value ? earningsSetting.value : [];
-        const planConfig = earningsPlans.find(p => p.id === planId) || { adWatchDays: 10 };
-        
-        adWatchDaysLeft = planConfig.adWatchDays || 10;
+        adWatchDaysLeft = 0;
         user.adWatchDaysLeft = adWatchDaysLeft;
         await user.save();
       }

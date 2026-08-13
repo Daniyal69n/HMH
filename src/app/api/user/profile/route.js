@@ -39,7 +39,7 @@ export async function GET(request) {
     const hasActiveInvestment = (user.investmentPlans || []).some(p => p.status === 'active');
     let needsSave = false;
     if (hasActiveInvestment && (user.adWatchDaysLeft === undefined || user.adWatchDaysLeft === null)) {
-      user.adWatchDaysLeft = 10;
+      user.adWatchDaysLeft = 0;
       needsSave = true;
     }
 

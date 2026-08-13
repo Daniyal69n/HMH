@@ -2222,7 +2222,7 @@ export default function AdminDashboard() {
     const userHasActivePlan = (user.investmentPlans || []).some(p => p.status === 'active');
     const initialAdDays = (user.adWatchDaysLeft !== undefined && user.adWatchDaysLeft !== null)
       ? user.adWatchDaysLeft
-      : (userHasActivePlan ? 10 : 0);
+      : 0;
 
     setEditForm({
       name: user.name || '',
@@ -2288,7 +2288,7 @@ export default function AdminDashboard() {
         const fullHasActive = (fullUser.investmentPlans || []).some(p => p.status === 'active');
         const fullAdDays = (fullUser.adWatchDaysLeft !== undefined && fullUser.adWatchDaysLeft !== null)
           ? fullUser.adWatchDaysLeft
-          : (fullHasActive ? 10 : 0);
+          : 0;
 
         setEditForm(prev => ({
           ...prev,
