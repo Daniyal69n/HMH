@@ -551,7 +551,7 @@ export default function Page() {
       let membersRequired = 0
 
       if (lv === 1) {
-        rewardUSD = 2
+        rewardUSD = 1
         membersRequired = 5
         reqText = '5 members of any plan'
         if (hasMetUncompleted) {
@@ -566,7 +566,7 @@ export default function Page() {
           if (!isCompleted) hasMetUncompleted = true
         }
       } else if (lv === 2) {
-        rewardUSD = 5
+        rewardUSD = 2
         membersRequired = 10
         reqText = '10 members of any plan'
         if (hasMetUncompleted) {

@@ -63,11 +63,11 @@ export async function POST(request) {
     
     for (let lv = 1; lv <= level; lv++) {
       if (lv === 1) {
-        rewardUSD = 2;
+        rewardUSD = 1;
         const count = consumeAny(5);
         if (lv === level) isEligible = count >= 5;
       } else if (lv === 2) {
-        rewardUSD = 5;
+        rewardUSD = 2;
         const count = consumeAny(10);
         if (lv === level) isEligible = count >= 10;
       } else {
