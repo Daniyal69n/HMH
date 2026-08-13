@@ -2266,7 +2266,7 @@ export default function Page() {
                   : 'Start your streak — invite 1 member today.'
                 }
               </div>
-              <div className="streak-note">Complete a 10-day streak to earn a $10 bonus reward.</div>
+              <div className="streak-note">Complete a 10-day streak to earn a $5 bonus reward.</div>
 
               <div style={{ marginTop: '16px' }}>
                 <button
@@ -2284,8 +2284,8 @@ export default function Page() {
                   }}
                 >
                   {streakDays === 10
-                    ? '🎁 Claim $10 Reward'
-                    : '🔒 Claim $10 Reward (Reach Day 10)'
+                    ? '🎁 Claim $5 Reward'
+                    : '🔒 Claim $5 Reward (Reach Day 10)'
                   }
                 </button>
               </div>

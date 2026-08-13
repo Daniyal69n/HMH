@@ -48,8 +48,8 @@ export async function POST(request) {
       return Response.json({ message: 'Streak is not complete. You need a 10-day referral streak to claim this reward.' }, { status: 400 });
     }
 
-    // Award $10 (Rs 3000)
-    const rewardPKR = 10 * 300; // $10 converted to PKR
+    // Award $5 (Rs 1500)
+    const rewardPKR = 5 * 300; // $5 converted to PKR
 
     user.balance = (user.balance || 0) + rewardPKR;
     user.earnBalance = (user.earnBalance || 0) + rewardPKR;
@@ -68,14 +68,14 @@ export async function POST(request) {
       amount: rewardPKR,
       type: 'referral_income',
       status: 'completed',
-      description: '10-Day Referral Streak Reward ($10)',
+      description: '10-Day Referral Streak Reward ($5)',
       createdAt: new Date()
     });
 
     await user.save();
 
     return Response.json({
-      message: 'Congratulations! You claimed your $10 streak reward successfully.',
+      message: 'Congratulations! You claimed your $5 streak reward successfully.',
       claimedStreakReward: true,
       totalCommissionEarned: user.totalCommissionEarned,
       earnBalance: user.earnBalance,
