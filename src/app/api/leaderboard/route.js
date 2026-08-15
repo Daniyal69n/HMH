@@ -122,6 +122,9 @@ export async function GET(request) {
       }
     });
 
+    const cycleDurationElapsed = Math.max(0, Date.now() - cycleStartDate.getTime());
+    const cycleProgress = Math.min(1, cycleDurationElapsed / FIFTEEN_DAYS_MS);
+
     const realLeaders = topUsers.map(user => {
       const claimLvl = (user.claimedLevels && user.claimedLevels.length > 0) ? Math.max(...user.claimedLevels) : 1;
       const dbLvl = user.level || 1;
@@ -163,7 +166,7 @@ export async function GET(request) {
       }
 
       const fifteenDayAmt = user.customTotalEarnings !== undefined && user.customTotalEarnings !== null
-        ? Math.max((user.customTotalEarnings / 300.0) * 0.1, fifteenDayPKR / 300.0)
+        ? Math.max((user.customTotalEarnings / 300.0) * 0.1 * cycleProgress, fifteenDayPKR / 300.0)
         : fifteenDayPKR / 300.0; // convert PKR to USD
 
       const displayName = user.name || 'Anonymous';
@@ -241,6 +244,11 @@ export async function GET(request) {
       );
 
       cycleEndDate = newEndDate;
+
+      // Zero out the leaderboard for the response, since the cycle just restarted
+      uniqueLeaders.forEach(u => {
+        u.fifteenDayAmt = 0;
+      });
     }
 
     // Enrich cycleWinners if name or profilePicture is missing from past cycles
