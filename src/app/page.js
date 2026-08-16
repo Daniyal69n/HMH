@@ -3990,7 +3990,14 @@ export default function Page() {
                       width: 'fit-content',
                       boxShadow: '0 0 15px rgba(201, 160, 74, 0.1)'
                     }}>
-                      {wonAmount === '2$' ? 'Rs 600 ($2)' : 'Rs 300 ($1)'}
+                      {(() => {
+                        if (wonAmount && wonAmount.endsWith('$')) {
+                          const val = parseInt(wonAmount.replace('$', ''), 10) || 0;
+                          const pkr = val * PKR_RATE;
+                          return `Rs ${pkr.toLocaleString()} ($${val})`;
+                        }
+                        return wonAmount;
+                      })()}
                     </div>
                     <button
                       className="btn btn-gold"
