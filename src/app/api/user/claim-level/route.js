@@ -177,7 +177,9 @@ export async function POST(request) {
       balance: user.balance,
       earnBalance: user.earnBalance,
       totalCommissionEarned: user.totalCommissionEarned,
-      claimedLevels: user.claimedLevels
+      claimedLevels: user.claimedLevels,
+      rewardUSD,
+      rewardPKR
     });
     
   } catch (error) {

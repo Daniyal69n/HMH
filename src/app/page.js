@@ -1764,10 +1764,11 @@ export default function Page() {
       })
       const data = await res.json()
       if (res.ok) {
-        const usdVal = Number(data.rewardUSD || data.amount) || 5
+        const usdVal = Number(data.rewardUSD) || 1
+        const pkrVal = Number(data.rewardPKR) || (usdVal * PKR_RATE)
         setCollectRewardAmount({
           usd: usdVal,
-          pkr: usdVal * PKR_RATE,
+          pkr: pkrVal,
           title: 'Reward Collected!',
           desc: `Congratulations! You have unlocked Level ${level} reward and earned:`
         })
