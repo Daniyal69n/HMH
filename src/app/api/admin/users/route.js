@@ -188,7 +188,6 @@ export async function PUT(request) {
         editUser.name = data.name;
         editUser.email = data.email;
         editUser.phone = data.phone;
-        editUser.balance = parseFloat(data.balance) || 0;
         editUser.totalCommissionEarned = parseFloat(data.totalCommissionEarned) || 0;
         editUser.totalRecharge = parseFloat(data.totalRecharge) || 0;
         editUser.status = data.status;
@@ -196,24 +195,26 @@ export async function PUT(request) {
         editUser.isAdmin = data.isAdmin;
 
         // Financial & Dashboard Stats
+        // Track old earnBalance so we can apply the same delta to balance
+        const oldEarnBalance = parseFloat(editUser.earnBalance) || 0;
         if (data.customTotalEarnings !== undefined && data.customTotalEarnings !== null && data.customTotalEarnings !== "") {
           const totEarnings = parseFloat(data.customTotalEarnings) || 0;
           editUser.customTotalEarnings = totEarnings;
-          editUser.earnBalance = Math.max(0, totEarnings - editUser.totalCommissionEarned);
+          const newEarnBalance = Math.max(0, totEarnings - editUser.totalCommissionEarned);
+          editUser.earnBalance = newEarnBalance;
+          // Apply the same earnings delta to the user's spendable balance
+          // so that if total earnings goes from 100 to 200, balance also grows by 100
+          const earningsDelta = newEarnBalance - oldEarnBalance;
+          editUser.balance = Math.max(0, (parseFloat(data.balance) || 0) + earningsDelta);
         } else {
           editUser.earnBalance = parseFloat(data.earnBalance) || 0;
+          editUser.balance = parseFloat(data.balance) || 0;
         }
 
         if (data.customMySalary !== undefined && data.customMySalary !== null && data.customMySalary !== "") {
           editUser.customMySalary = parseFloat(data.customMySalary) || 0;
         } else {
           editUser.customMySalary = null;
-        }
-
-        if (data.customTotalWithdrawals !== undefined && data.customTotalWithdrawals !== null && data.customTotalWithdrawals !== "") {
-          editUser.customTotalWithdrawals = parseFloat(data.customTotalWithdrawals) || 0;
-        } else {
-          editUser.customTotalWithdrawals = null;
         }
 
         if (data.adWatchUnlocked !== undefined && data.adWatchUnlocked !== null) {
@@ -328,6 +329,23 @@ export async function PUT(request) {
           }
         }
         editUser.withdrawHistory = data.withdrawHistory || [];
+
+        // Auto-sync customTotalWithdrawals: take the max of the admin-submitted custom value
+        // and the actual sum of all approved/pending withdrawals in history.
+        // This ensures that admin-added withdrawals are always reflected in the dashboard total.
+        {
+          const actualWdSum = (editUser.withdrawHistory)
+            .filter(w => w.status === 'approved' || w.status === 'pending')
+            .reduce((sum, w) => sum + Number(w.amount || 0), 0);
+          const customVal = parseFloat(data.customTotalWithdrawals);
+          if (!isNaN(customVal) && customVal > 0) {
+            // Use whichever is larger — the explicitly set custom value or the real sum
+            editUser.customTotalWithdrawals = Math.max(customVal, actualWdSum);
+          } else {
+            // No custom override — set to null so dashboard falls back to real sum
+            editUser.customTotalWithdrawals = null;
+          }
+        }
 
         // Handle new recharges to sync to Transaction collection
         if (data.rechargeHistory && Array.isArray(data.rechargeHistory)) {
