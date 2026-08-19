@@ -1329,8 +1329,8 @@ export default function AdminDashboard() {
             } else {
               // Default payment details
               const defaultPaymentDetails = {
-                easypaisa: { number: '0300 1234567', accountName: 'Neo Earner' },
-                jazzcash: { number: '0300 7654321', accountName: 'Neo Earner' },
+                easypaisa: { number: '03715918754', accountName: 'Aqsa Shahid' },
+                jazzcash: { number: '03715918754', accountName: 'Aqsa Shahid' },
                 binance: { number: '940791290', accountName: 'Binance Pay ID' }
               }
               setPaymentDetails(defaultPaymentDetails)
@@ -1338,8 +1338,8 @@ export default function AdminDashboard() {
           } else {
             // If API fails, use default payment details
             const defaultPaymentDetails = {
-              easypaisa: { number: '0300 1234567', accountName: 'Neo Earner' },
-              jazzcash: { number: '0300 7654321', accountName: 'Neo Earner' },
+              easypaisa: { number: '03715918754', accountName: 'Aqsa Shahid' },
+              jazzcash: { number: '03715918754', accountName: 'Aqsa Shahid' },
               binance: { number: '940791290', accountName: 'Binance Pay ID' }
             }
             setPaymentDetails(defaultPaymentDetails)
@@ -1348,8 +1348,8 @@ export default function AdminDashboard() {
           console.warn('Error loading payment details:', error)
           // Use default payment details on error
           const defaultPaymentDetails = {
-            easypaisa: { number: '0300 1234567', accountName: 'Neo Earner' },
-            jazzcash: { number: '0300 7654321', accountName: 'Neo Earner' },
+            easypaisa: { number: '03715918754', accountName: 'Aqsa Shahid' },
+            jazzcash: { number: '03715918754', accountName: 'Aqsa Shahid' },
             binance: { number: '940791290', accountName: 'Binance Pay ID' }
           }
           setPaymentDetails(defaultPaymentDetails)
