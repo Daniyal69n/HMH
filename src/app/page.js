@@ -504,36 +504,39 @@ export default function Page() {
   )
 
   const levels = useMemo(() => {
-    let pools = {
+    // Build plan-specific pools for Level 3+ (these are NOT consumed by Level 1/2)
+    const planPools = {
       basic: [], standard: [], diamond: [], pro: [], premium: [], legend: [], other: []
     }
+    // Total active members count for Level 1 & Level 2 (independent from plan pools)
+    let totalActiveMembers = 0
+
     if (teamData.levelA?.members) {
       for (const m of teamData.levelA.members) {
         const plan = (m.plan || '').toLowerCase().trim()
-        if (pools[plan]) {
-          pools[plan].push(m)
+        totalActiveMembers++
+        if (planPools[plan] !== undefined) {
+          planPools[plan].push(m)
         } else {
-          pools.other.push(m)
+          planPools.other.push(m)
         }
       }
     }
 
+    // Level 1 & 2 use a separate running total so they don't deplete plan-specific pools
+    let anyConsumed = 0
+
     const consumeAny = (count) => {
-      let consumed = 0
-      const order = ['other', 'basic', 'standard', 'diamond', 'pro', 'premium', 'legend']
-      for (const p of order) {
-        while (pools[p].length > 0 && consumed < count) {
-          pools[p].pop()
-          consumed++
-        }
-      }
+      const available = Math.max(0, totalActiveMembers - anyConsumed)
+      const consumed = Math.min(available, count)
+      anyConsumed += consumed
       return consumed
     }
 
     const consumeSpecific = (plan, count) => {
       let consumed = 0
-      while (pools[plan] && pools[plan].length > 0 && consumed < count) {
-        pools[plan].pop()
+      while (planPools[plan] && planPools[plan].length > 0 && consumed < count) {
+        planPools[plan].pop()
         consumed++
       }
       return consumed
@@ -581,7 +584,7 @@ export default function Page() {
           if (!isCompleted) hasMetUncompleted = true
         }
       } else {
-        // Levels 3 to 50
+        // Levels 3 to 50 — use plan-specific pools (independent from Level 1/2 consumption)
         let reqEach = 0
         if (lv === 3) {
           rewardUSD = 10
