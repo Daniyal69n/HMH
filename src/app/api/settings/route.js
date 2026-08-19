@@ -10,7 +10,25 @@ export async function GET(request) {
     
     if (key) {
       // Get specific setting
-      const setting = await SystemSettings.findOne({ key }).lean();
+      let setting = await SystemSettings.findOne({ key }).lean();
+      
+      // Self-healing for old payment details
+      if (key === 'paymentDetails' && setting && setting.value) {
+        if (setting.value.easypaisa?.accountName === 'Neo Earner' || setting.value.jazzcash?.accountName === 'Neo Earner') {
+          const newPaymentDetails = {
+            easypaisa: { number: '03715918754', accountName: 'Aqsa Shahid' },
+            jazzcash: { number: '03715918754', accountName: 'Aqsa Shahid' },
+            binance: setting.value.binance || { number: '940791290', accountName: 'Binance Pay ID' }
+          };
+          // Update it in DB so we don't have to do it again
+          await SystemSettings.findOneAndUpdate(
+            { key: 'paymentDetails' },
+            { $set: { value: newPaymentDetails } }
+          );
+          setting.value = newPaymentDetails;
+        }
+      }
+
       return Response.json(setting, {
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
