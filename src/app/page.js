@@ -853,7 +853,7 @@ export default function Page() {
         localStorage.setItem(`hmh-spins-used-${profile.phone}`, '0')
       }
 
-      const totalEligibleSpins = Math.floor(cycleInvites / 3)
+      const totalEligibleSpins = cycleInvites >= 3 ? 1 : 0
       const remainingSpins = Math.max(0, totalEligibleSpins - spinsUsed)
       setHasSpunThisCycle(remainingSpins <= 0)
     }
@@ -1546,7 +1546,7 @@ export default function Page() {
         localStorage.setItem(`hmh-last-spin-cycle-${profile.phone}`, String(currentCycleIndex))
         localStorage.setItem(`hmh-spins-used-${profile.phone}`, String(spinsUsed))
         
-        const totalEligibleSpins = Math.floor(currentCycleInvites / 3)
+        const totalEligibleSpins = currentCycleInvites >= 3 ? 1 : 0
         const remainingSpins = Math.max(0, totalEligibleSpins - spinsUsed)
         setHasSpunThisCycle(remainingSpins <= 0)
 
