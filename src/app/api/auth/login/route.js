@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 
+export const maxDuration = 60; // Increase timeout to 60 seconds for Vercel
+
 export async function POST(request) {
   try {
     await connectDB();
