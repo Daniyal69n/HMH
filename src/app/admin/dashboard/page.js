@@ -1303,7 +1303,7 @@ export default function AdminDashboard() {
         try {
           setIsUsersLoading(true)
           // Get all users by setting a high limit
-          const response = await fetch('/api/admin/users?limit=1000')
+          const response = await fetch('/api/admin/users?limit=50000')
           if (response.ok) {
             const data = await response.json()
             updateUsersWithCache(data.users || [])
