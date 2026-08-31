@@ -122,10 +122,10 @@ export default function RegisterPage() {
               <span style={{ fontSize: '18px' }}>📺</span> How to Register (Tutorial)
             </h3>
             <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border)', backgroundColor: '#000' }}>
-              <video 
-                controls 
+              <video
+                controls
                 playsInline
-                poster="/tutorial-thumb.jpeg" 
+                poster="/tutorial-thumb.jpeg"
                 style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', display: 'block', borderRadius: '12px' }}
               >
                 <source src="/tutorial.mp4.mp4" type="video/mp4" />

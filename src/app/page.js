@@ -2192,6 +2192,64 @@ export default function Page() {
               </div>
             </div>
 
+            {/* Plan Request Status Banner */}
+            {(() => {
+              const latestPlan = [...(profile?.investmentPlans || [])].reverse()[0]
+              const isPlanRejected = latestPlan && (latestPlan.status === 'cancelled' || latestPlan.status === 'rejected')
+              const isPlanPending = latestPlan && latestPlan.status === 'pending'
+              const isPlanActive = latestPlan && (latestPlan.status === 'active' || latestPlan.status === 'approved')
+
+              if (isPlanRejected) {
+                return (
+                  <div className="card" style={{ marginBottom: '18px', padding: '14px 18px', background: 'rgba(196, 87, 74, 0.12)', border: '1px solid rgba(196, 87, 74, 0.35)', borderRadius: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '24px', flexShrink: 0 }}>⚠️</span>
+                      <div>
+                        <div style={{ fontWeight: '700', color: 'var(--red)', fontSize: '15px' }}>Plan Request Rejected</div>
+                        <div style={{ color: 'var(--text-dim)', fontSize: '13.5px', marginTop: '2px' }}>
+                          Your plan request ({latestPlan.planName || 'Plan'}) was rejected by admin. All options are currently locked except <strong>Dashboard</strong> and <strong>My plan</strong>.
+                        </div>
+                        <button
+                          onClick={() => goTo('plans')}
+                          style={{
+                            marginTop: '8px',
+                            background: 'var(--gold)',
+                            color: '#0b0d12',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '6px 14px',
+                            fontSize: '12.5px',
+                            fontWeight: '700',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          View & Choose Plan →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+
+              if (isPlanPending) {
+                return (
+                  <div className="card" style={{ marginBottom: '18px', padding: '14px 18px', background: 'rgba(201, 160, 74, 0.1)', border: '1px solid rgba(201, 160, 74, 0.3)', borderRadius: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '24px', flexShrink: 0 }}>⏳</span>
+                      <div>
+                        <div style={{ fontWeight: '700', color: 'var(--gold-bright)', fontSize: '15px' }}>Plan Request Under Review</div>
+                        <div style={{ color: 'var(--text-dim)', fontSize: '13.5px', marginTop: '2px' }}>
+                          Your <strong>{latestPlan.planName}</strong> plan request (TRX ID: <code style={{ color: 'var(--gold)' }}>{latestPlan.trxId}</code>) is pending review by admin. Once approved, all menu options will be unlocked!
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+
+              return null
+            })()}
+
             {/* Withdrawal Ticker */}
             <div className="card ticker-card">
               <span style={{ fontSize: '18px', flexShrink: 0 }}>📢</span>
