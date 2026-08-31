@@ -77,6 +77,7 @@ function loadStoredProfile() {
 export default function Page() {
   const router = useRouter()
   const [isAppLoading, setIsAppLoading] = useState(true)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   useEffect(() => {
     const timer = setTimeout(() => setIsAppLoading(false), 800)
     return () => clearTimeout(timer)
@@ -690,8 +691,11 @@ export default function Page() {
     if (typeof window !== 'undefined') {
       const user = localStorage.getItem('user')
       if (!user) {
-        router.replace('/login')
+        setIsLoggedIn(false)
+        setIsAppLoading(false)
         return
+      } else {
+        setIsLoggedIn(true)
       }
     }
 
@@ -2028,6 +2032,10 @@ export default function Page() {
   }, [currency])
 
   if (isAppLoading) return <Loader />;
+
+  if (!isLoggedIn) {
+    return <LandingPage />
+  }
 
   return (
     <div className="meridian">
