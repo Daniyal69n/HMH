@@ -302,6 +302,9 @@ userSchema.index({ isAdmin: 1, isBlocked: 1 });
 userSchema.index({ referredBy: 1 });
 userSchema.index({ earnBalance: -1 });
 userSchema.index({ totalCommissionEarned: -1 });
+// Enforce uniqueness of sequential shortIds (HMH1000, HMH1001, …)
+// sparse: true so existing docs with shortId: null are excluded
+userSchema.index({ shortId: 1 }, { unique: true, sparse: true });
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
