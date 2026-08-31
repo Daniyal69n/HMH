@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import LandingPage from './components/LandingView'
 import Loader from '@/components/Loader'
 import Cropper from 'react-easy-crop'
 
