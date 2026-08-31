@@ -3,8 +3,11 @@ import User from '@/models/User';
 import Transaction from '@/models/Transaction';
 import { processSocialTaskMilestones } from '@/lib/socialTaskMilestoneHelper';
 
+export const maxDuration = 60; // Prevent Vercel 5s default timeout on cold-start + DB writes
+
 export async function POST(request) {
   try {
+
     await connectDB();
     const body = await request.json();
     const { phone, link, platform, action, screenshotBase64, notes } = body;
@@ -136,7 +139,7 @@ export async function POST(request) {
     if (platformLower === 'instagram' && !linkLower.includes('instagram.com')) {
       return Response.json({ message: 'Invalid link. Please provide a valid Instagram link.' }, { status: 400 });
     }
-    if (platformLower === 'tiktok' && !linkLower.includes('tiktok.com')) {
+    if (platformLower === 'tiktok' && !linkLower.includes('tiktok.com') && !linkLower.includes('vm.tiktok.com') && !linkLower.includes('vt.tiktok.com')) {
       return Response.json({ message: 'Invalid link. Please provide a valid TikTok link.' }, { status: 400 });
     }
     if (platformLower === 'facebook' && !linkLower.includes('facebook.com') && !linkLower.includes('fb.watch') && !linkLower.includes('fb.com')) {

@@ -1336,7 +1336,7 @@ export default function Page() {
       showToast('Please provide a valid Instagram link.')
       return
     }
-    if (platformLower === 'tiktok' && !linkLower.includes('tiktok.com')) {
+    if (platformLower === 'tiktok' && !linkLower.includes('tiktok.com') && !linkLower.includes('vm.tiktok.com') && !linkLower.includes('vt.tiktok.com')) {
       showToast('Please provide a valid TikTok link.')
       return
     }
