@@ -7,7 +7,7 @@ export const maxDuration = 60; // Increase timeout to 60 seconds for Vercel
 export async function POST(request) {
   try {
     await connectDB();
-    
+
     const { email, password } = await request.json();
 
     // Validate required fields
@@ -37,7 +37,24 @@ export async function POST(request) {
     if (user.isBlocked) {
       console.log('User is blocked:', user.name);
       return NextResponse.json(
-        { error: 'Your account has been blocked by admin. Please contact admin for support.' },
+        { error: 'Your account has been blocked by admin. Please contact admin for support or email: support@hondacivicinvestment.com' },
+        { status: 403 }
+      );
+    }
+
+    // Check if user is approved
+    if (user.status === 'pending') {
+      console.log('User login attempted but status is pending:', user.name);
+      return NextResponse.json(
+        { error: 'Your account registration is pending admin approval.' },
+        { status: 403 }
+      );
+    }
+
+    if (user.status === 'rejected') {
+      console.log('User login attempted but status is rejected:', user.name);
+      return NextResponse.json(
+        { error: 'Your account registration request has been rejected by the admin.' },
         { status: 403 }
       );
     }
@@ -71,4 +88,4 @@ export async function POST(request) {
       { status: 500 }
     );
   }
-}
+} 

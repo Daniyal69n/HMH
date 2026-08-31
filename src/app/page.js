@@ -1270,13 +1270,13 @@ export default function Page() {
     const now = new Date();
     const pktTime = new Date(now.getTime() + 5 * 60 * 60 * 1000);
     const todayStr = pktTime.toISOString().split('T')[0];
-    
+
     const isToday = stData.date === todayStr;
     const tkDone = isToday && stData.tiktok;
     const igDone = isToday && stData.instagram;
     const fbDone = isToday && stData.facebook;
     const ytDone = isToday && stData.youtube;
-    
+
     let completedCount = 0;
     if (tkDone) completedCount++;
     if (igDone) completedCount++;
@@ -1309,7 +1309,7 @@ export default function Page() {
         } else {
           showToast(data.message || 'Error claiming reward')
         }
-      } catch(err) {
+      } catch (err) {
         console.error(err)
         showToast('Error submitting request')
       } finally {
@@ -1386,16 +1386,16 @@ export default function Page() {
       const res = await fetch('/api/user/social-task', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          phone: profile.phone, 
-          action: 'submit_link', 
-          link: stLink, 
+        body: JSON.stringify({
+          phone: profile.phone,
+          action: 'submit_link',
+          link: stLink,
           platform: currentRequiredPlatform,
           screenshotBase64,
           notes: stNotes
         })
       })
-      
+
       let data;
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.indexOf("application/json") !== -1) {
@@ -1499,11 +1499,11 @@ export default function Page() {
 
     let chosenIndex;
     let customIndex = -1;
-    
+
     if (profile && profile.customSpinReward && profile.customSpinReward !== 'nil') {
       customIndex = spinPrizes.findIndex(p => p.label === profile.customSpinReward);
     }
-    
+
     if (customIndex !== -1) {
       chosenIndex = customIndex;
     } else {
@@ -1535,17 +1535,17 @@ export default function Page() {
         todayStart.setHours(0, 0, 0, 0)
         const localTime = todayStart.getTime() - todayStart.getTimezoneOffset() * 60000
         const currentCycleIndex = Math.floor(localTime / (24 * 60 * 60 * 1000))
-        
+
         const savedCycle = localStorage.getItem(`hmh-last-spin-cycle-${profile.phone}`)
         let spinsUsed = 0
         if (savedCycle === String(currentCycleIndex)) {
           spinsUsed = parseInt(localStorage.getItem(`hmh-spins-used-${profile.phone}`) || '0', 10)
         }
         spinsUsed += 1
-        
+
         localStorage.setItem(`hmh-last-spin-cycle-${profile.phone}`, String(currentCycleIndex))
         localStorage.setItem(`hmh-spins-used-${profile.phone}`, String(spinsUsed))
-        
+
         const totalEligibleSpins = currentCycleInvites >= 3 ? 1 : 0
         const remainingSpins = Math.max(0, totalEligibleSpins - spinsUsed)
         setHasSpunThisCycle(remainingSpins <= 0)
@@ -2191,64 +2191,6 @@ export default function Page() {
                 </div>
               </div>
             </div>
-
-            {/* Plan Request Status Banner */}
-            {(() => {
-              const latestPlan = [...(profile?.investmentPlans || [])].reverse()[0]
-              const isPlanRejected = latestPlan && (latestPlan.status === 'cancelled' || latestPlan.status === 'rejected')
-              const isPlanPending = latestPlan && latestPlan.status === 'pending'
-              const isPlanActive = latestPlan && (latestPlan.status === 'active' || latestPlan.status === 'approved')
-
-              if (isPlanRejected) {
-                return (
-                  <div className="card" style={{ marginBottom: '18px', padding: '14px 18px', background: 'rgba(196, 87, 74, 0.12)', border: '1px solid rgba(196, 87, 74, 0.35)', borderRadius: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{ fontSize: '24px', flexShrink: 0 }}>⚠️</span>
-                      <div>
-                        <div style={{ fontWeight: '700', color: 'var(--red)', fontSize: '15px' }}>Plan Request Rejected</div>
-                        <div style={{ color: 'var(--text-dim)', fontSize: '13.5px', marginTop: '2px' }}>
-                          Your plan request ({latestPlan.planName || 'Plan'}) was rejected by admin. All options are currently locked except <strong>Dashboard</strong> and <strong>My plan</strong>.
-                        </div>
-                        <button
-                          onClick={() => goTo('plans')}
-                          style={{
-                            marginTop: '8px',
-                            background: 'var(--gold)',
-                            color: '#0b0d12',
-                            border: 'none',
-                            borderRadius: '6px',
-                            padding: '6px 14px',
-                            fontSize: '12.5px',
-                            fontWeight: '700',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          View & Choose Plan →
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )
-              }
-
-              if (isPlanPending) {
-                return (
-                  <div className="card" style={{ marginBottom: '18px', padding: '14px 18px', background: 'rgba(201, 160, 74, 0.1)', border: '1px solid rgba(201, 160, 74, 0.3)', borderRadius: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{ fontSize: '24px', flexShrink: 0 }}>⏳</span>
-                      <div>
-                        <div style={{ fontWeight: '700', color: 'var(--gold-bright)', fontSize: '15px' }}>Plan Request Under Review</div>
-                        <div style={{ color: 'var(--text-dim)', fontSize: '13.5px', marginTop: '2px' }}>
-                          Your <strong>{latestPlan.planName}</strong> plan request (TRX ID: <code style={{ color: 'var(--gold)' }}>{latestPlan.trxId}</code>) is pending review by admin. Once approved, all menu options will be unlocked!
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              }
-
-              return null
-            })()}
 
             {/* Withdrawal Ticker */}
             <div className="card ticker-card">
@@ -3581,7 +3523,7 @@ export default function Page() {
               const _now = new Date();
               const _pktTime = new Date(_now.getTime() + 5 * 60 * 60 * 1000);
               const _todayStr = _pktTime.toISOString().split('T')[0];
-              
+
               const _isToday = _stData.date === _todayStr;
               const _tkDone = _isToday && _stData.tiktok;
               const _igDone = _isToday && _stData.instagram;
@@ -3594,7 +3536,7 @@ export default function Page() {
               if (_igDone) _completedCount++;
               if (_fbDone) _completedCount++;
               if (_ytDone) _completedCount++;
-              
+
               const _currentPlatform = !_tkDone ? 'TikTok' : (!_igDone ? 'Instagram' : (!_fbDone ? 'Facebook' : (!_ytDone ? 'YouTube' : '')));
 
               return (
@@ -3742,7 +3684,7 @@ export default function Page() {
                           <div key={idx} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', fontSize: '13px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                               <strong style={{ color: 'var(--gold)' }}>{sub.platform}</strong>
-                              <span style={{ 
+                              <span style={{
                                 padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold',
                                 background: sub.status === 'reviewed' ? 'rgba(79, 174, 130, 0.2)' : 'rgba(201, 160, 74, 0.2)',
                                 color: sub.status === 'reviewed' ? '#4fae82' : '#c9a04a'
@@ -4382,7 +4324,7 @@ export default function Page() {
                     if (!isNaN(d.getTime())) {
                       formattedJoinDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
                     }
-                  } catch (e) {}
+                  } catch (e) { }
                 }
 
                 return (
@@ -5012,20 +4954,20 @@ export default function Page() {
         </div>
       )}
 
-            {/* COLLECT AD REWARD SUCCESS MODAL */}
-            {showCollectAnimModal && (
-              <div style={{
-                position: 'fixed',
-                inset: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 99999,
-                animation: 'fadeIn 0.4s ease-out'
-              }}>
-                <style dangerouslySetInnerHTML={{
-                  __html: `
+      {/* COLLECT AD REWARD SUCCESS MODAL */}
+      {showCollectAnimModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 99999,
+          animation: 'fadeIn 0.4s ease-out'
+        }}>
+          <style dangerouslySetInnerHTML={{
+            __html: `
                   @keyframes bounceReward {
                     0%, 100% { transform: translateY(0) scale(1); }
                     50% { transform: translateY(-12px) scale(1.05); }
@@ -5035,106 +4977,106 @@ export default function Page() {
                     50% { transform: scale(1.1); opacity: 1; }
                   }
                 ` }} />
-                <div style={{
-                  position: 'absolute',
-                  width: '500px',
-                  height: '500px',
-                  background: 'radial-gradient(circle, rgba(201, 160, 74, 0.15) 0%, transparent 70%)',
-                  borderRadius: '50%',
-                  zIndex: 0,
-                  pointerEvents: 'none',
-                  animation: 'pulseGlow 3s ease-in-out infinite'
-                }} />
+          <div style={{
+            position: 'absolute',
+            width: '500px',
+            height: '500px',
+            background: 'radial-gradient(circle, rgba(201, 160, 74, 0.15) 0%, transparent 70%)',
+            borderRadius: '50%',
+            zIndex: 0,
+            pointerEvents: 'none',
+            animation: 'pulseGlow 3s ease-in-out infinite'
+          }} />
 
-                <div style={{
-                  background: 'linear-gradient(135deg, #1c1917 0%, #0c0a09 100%)',
-                  border: '3px solid #c9a04a',
-                  borderRadius: '24px',
-                  padding: '48px 32px',
-                  textAlign: 'center',
-                  maxWidth: '420px',
-                  width: '90%',
-                  boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8), 0 0 50px rgba(201,160,74,0.4)',
-                  animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                  position: 'relative',
-                  zIndex: 1
-                }}>
-                  <div style={{ position: 'relative', height: '100px', marginBottom: '20px' }}>
-                    <div style={{ fontSize: '72px', animation: 'bounceReward 2s infinite' }}>🎁</div>
-                    <div style={{
-                      position: 'absolute',
-                      top: '10px',
-                      left: '30%',
-                      fontSize: '24px'
-                    }}>✨</div>
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '10px',
-                      right: '30%',
-                      fontSize: '24px'
-                    }}>✨</div>
-                  </div>
+          <div style={{
+            background: 'linear-gradient(135deg, #1c1917 0%, #0c0a09 100%)',
+            border: '3px solid #c9a04a',
+            borderRadius: '24px',
+            padding: '48px 32px',
+            textAlign: 'center',
+            maxWidth: '420px',
+            width: '90%',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8), 0 0 50px rgba(201,160,74,0.4)',
+            animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            position: 'relative',
+            zIndex: 1
+          }}>
+            <div style={{ position: 'relative', height: '100px', marginBottom: '20px' }}>
+              <div style={{ fontSize: '72px', animation: 'bounceReward 2s infinite' }}>🎁</div>
+              <div style={{
+                position: 'absolute',
+                top: '10px',
+                left: '30%',
+                fontSize: '24px'
+              }}>✨</div>
+              <div style={{
+                position: 'absolute',
+                bottom: '10px',
+                right: '30%',
+                fontSize: '24px'
+              }}>✨</div>
+            </div>
 
-                  <h2 style={{
-                    color: '#e2b968',
-                    fontSize: '28px',
-                    fontWeight: 900,
-                    margin: '0 0 12px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1.5px',
-                    fontFamily: 'var(--font-fraunces), serif'
-                  }}>
-                    {collectRewardAmount.title || 'Reward Collected!'}
-                  </h2>
+            <h2 style={{
+              color: '#e2b968',
+              fontSize: '28px',
+              fontWeight: 900,
+              margin: '0 0 12px',
+              textTransform: 'uppercase',
+              letterSpacing: '1.5px',
+              fontFamily: 'var(--font-fraunces), serif'
+            }}>
+              {collectRewardAmount.title || 'Reward Collected!'}
+            </h2>
 
-                  <p style={{ color: 'var(--text-dim)', fontSize: '15px', margin: '0 0 28px', lineHeight: 1.5 }}>
-                    {collectRewardAmount.desc || 'Congratulations! You have successfully earned:'}
-                  </p>
+            <p style={{ color: 'var(--text-dim)', fontSize: '15px', margin: '0 0 28px', lineHeight: 1.5 }}>
+              {collectRewardAmount.desc || 'Congratulations! You have successfully earned:'}
+            </p>
 
-                  <div style={{
-                    fontSize: '32px',
-                    fontWeight: 900,
-                    color: '#ffffff',
-                    background: 'linear-gradient(135deg, rgba(201, 160, 74, 0.2) 0%, rgba(201, 160, 74, 0.04) 100%)',
-                    border: '2px dashed #c9a04a',
-                    padding: '16px 28px',
-                    borderRadius: '16px',
-                    margin: '0 auto 36px',
-                    width: 'fit-content',
-                    boxShadow: '0 0 25px rgba(201, 160, 74, 0.2)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}>
-                    <span style={{ fontSize: '14px', textTransform: 'uppercase', color: '#e2b968', fontWeight: 700, letterSpacing: '1px' }}>
-                      Total Earned
-                    </span>
-                    <span style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}>
-                      Rs {collectRewardAmount.pkr.toLocaleString()}
-                    </span>
-                    <span style={{ fontSize: '16px', color: 'var(--text-dim)', fontWeight: 600 }}>
-                      (${collectRewardAmount.usd.toFixed(2)})
-                    </span>
-                  </div>
+            <div style={{
+              fontSize: '32px',
+              fontWeight: 900,
+              color: '#ffffff',
+              background: 'linear-gradient(135deg, rgba(201, 160, 74, 0.2) 0%, rgba(201, 160, 74, 0.04) 100%)',
+              border: '2px dashed #c9a04a',
+              padding: '16px 28px',
+              borderRadius: '16px',
+              margin: '0 auto 36px',
+              width: 'fit-content',
+              boxShadow: '0 0 25px rgba(201, 160, 74, 0.2)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <span style={{ fontSize: '14px', textTransform: 'uppercase', color: '#e2b968', fontWeight: 700, letterSpacing: '1px' }}>
+                Total Earned
+              </span>
+              <span style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}>
+                Rs {collectRewardAmount.pkr.toLocaleString()}
+              </span>
+              <span style={{ fontSize: '16px', color: 'var(--text-dim)', fontWeight: 600 }}>
+                (${collectRewardAmount.usd.toFixed(2)})
+              </span>
+            </div>
 
-                  <button
-                    className="btn btn-gold"
-                    onClick={() => setShowCollectAnimModal(false)}
-                    style={{
-                      width: '100%',
-                      padding: '14px',
-                      fontWeight: 800,
-                      fontSize: '16px',
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 15px rgba(201, 160, 74, 0.3)'
-                    }}
-                  >
-                    Awesome, Thanks!
-                  </button>
-                </div>
-              </div>
-            )}
+            <button
+              className="btn btn-gold"
+              onClick={() => setShowCollectAnimModal(false)}
+              style={{
+                width: '100%',
+                padding: '14px',
+                fontWeight: 800,
+                fontSize: '16px',
+                borderRadius: '12px',
+                boxShadow: '0 4px 15px rgba(201, 160, 74, 0.3)'
+              }}
+            >
+              Awesome, Thanks!
+            </button>
+          </div>
+        </div>
+      )}
       {/* Crop Modal */}
       {showCropModal && cropImageSrc && (
         <div className="modal-bg show" style={{ zIndex: 999999 }}>
