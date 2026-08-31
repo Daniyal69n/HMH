@@ -39,7 +39,6 @@ async function connectDB() {
     serverSelectionTimeoutMS: 10000,
     socketTimeoutMS: 45000,
     connectTimeoutMS: 10000,
-    family: 4, // Force IPv4
     tls: true, // Explicitly enable TLS to prevent SSL alert 80
     serverApi: { version: '1', strict: true, deprecationErrors: true } // Ensures stable Atlas routing for serverless
   };
