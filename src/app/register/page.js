@@ -99,43 +99,57 @@ export default function RegisterPage() {
     }))
   }
 
-  // Compress image to 800x800 jpeg 0.7 using HTML Canvas
-  const compressImage = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const img = new Image()
-        img.onload = () => {
-          const canvas = document.createElement('canvas')
-          const MAX_WIDTH = 800
-          const MAX_HEIGHT = 800
-          let width = img.width
-          let height = img.height
+  // Compress image to 800x800 jpeg 0.7 using HTML Canvas with safe fallbacks
+  const compressImage = async (file) => {
+    try {
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          const img = new Image()
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas')
+              const MAX_WIDTH = 800
+              const MAX_HEIGHT = 800
+              let width = img.width
+              let height = img.height
 
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height = Math.round((height * MAX_WIDTH) / width)
-              width = MAX_WIDTH
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width = Math.round((width * MAX_HEIGHT) / height)
-              height = MAX_HEIGHT
+              if (width > height) {
+                if (width > MAX_WIDTH) {
+                  height = Math.round((height * MAX_WIDTH) / width)
+                  width = MAX_WIDTH
+                }
+              } else {
+                if (height > MAX_HEIGHT) {
+                  width = Math.round((width * MAX_HEIGHT) / height)
+                  height = MAX_HEIGHT
+                }
+              }
+
+              canvas.width = width
+              canvas.height = height
+              const ctx = canvas.getContext('2d')
+              ctx.drawImage(img, 0, 0, width, height)
+              resolve(canvas.toDataURL('image/jpeg', 0.7))
+            } catch {
+              // Fallback to original data url
+              resolve(e.target.result)
             }
           }
-
-          canvas.width = width
-          canvas.height = height
-          const ctx = canvas.getContext('2d')
-          ctx.drawImage(img, 0, 0, width, height)
-          resolve(canvas.toDataURL('image/jpeg', 0.7))
+          img.onerror = () => resolve(e.target.result)
+          img.src = e.target.result
         }
-        img.onerror = (err) => reject(err)
-        img.src = e.target.result
-      }
-      reader.onerror = (err) => reject(err)
-      reader.readAsDataURL(file)
-    })
+        reader.onerror = (err) => reject(err)
+        reader.readAsDataURL(file)
+      })
+    } catch {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = (e) => resolve(e.target.result)
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+    }
   }
 
   const handleFileChange = (e) => {
@@ -202,13 +216,14 @@ export default function RegisterPage() {
     }
 
     setLoading(true)
-    setLoadingStatusText('Compressing and uploading screenshot...')
+    setLoadingStatusText('Processing payment screenshot...')
 
     try {
       // 1. Client-side fast compression
       const compressedBase64 = await compressImage(screenshotFile)
 
       // 2. Upload to Cloudinary via serverless helper
+      setLoadingStatusText('Uploading screenshot...')
       let uploadedScreenshotUrl = null
       try {
         const uploadRes = await fetch('/api/user/plan-screenshot-upload', {
@@ -250,16 +265,23 @@ export default function RegisterPage() {
         })
       })
 
-      const data = await response.json()
+      let data = {}
+      try {
+        const text = await response.text()
+        data = text ? JSON.parse(text) : {}
+      } catch {
+        data = { error: 'Server returned an invalid response. Please try again.' }
+      }
+
       if (response.ok) {
         router.push('/login?registered=true')
       } else {
-        setError(data.error || data.message || 'Registration failed.')
+        setError(data.error || data.message || `Registration failed (Status ${response.status}).`)
         setLoading(false)
       }
     } catch (err) {
-      console.error(err)
-      setError('Connection error. Please check your internet and try again.')
+      console.error('Registration error:', err)
+      setError(err.message || 'Registration failed. Please check your connection and try again.')
       setLoading(false)
     }
   }
