@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Loader from '@/components/Loader'
@@ -53,6 +53,11 @@ export default function RegisterPage() {
   const [copiedField, setCopiedField] = useState('')
   const fileInputRef = useRef(null)
 
+  // Modals
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showRejectionModal, setShowRejectionModal] = useState(false)
+  const [pendingUser, setPendingUser] = useState(null)
+
   const [paymentDetails, setPaymentDetails] = useState({
     jazzcash: { accountName: 'Muhammad Haseeb', number: '03705318754' },
     easypaisa: { accountName: 'Muhammad Haseeb', number: '03705318754' },
@@ -64,6 +69,63 @@ export default function RegisterPage() {
   const [loadingStatusText, setLoadingStatusText] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // Status check function
+  const checkStatus = useCallback(async (userInfo) => {
+    if (!userInfo || (!userInfo.email && !userInfo.phone)) return
+    try {
+      const res = await fetch(`/api/auth/register-status?email=${encodeURIComponent(userInfo.email || '')}&phone=${encodeURIComponent(userInfo.phone || '')}&_t=${Date.now()}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.status === 'pending') {
+          setShowSuccessModal(true)
+          setShowRejectionModal(false)
+        } else if (data.status === 'approved') {
+          localStorage.removeItem('hmh-pending-reg')
+          setShowSuccessModal(false)
+          setShowRejectionModal(false)
+          router.push('/login?approved=true')
+        } else if (data.status === 'rejected') {
+          setShowSuccessModal(false)
+          setShowRejectionModal(true)
+        } else if (data.status === 'not_found') {
+          localStorage.removeItem('hmh-pending-reg')
+          setShowSuccessModal(false)
+          setShowRejectionModal(false)
+        }
+      }
+    } catch (e) {
+      console.warn('Error checking registration status:', e)
+    }
+  }, [router])
+
+  // Check on mount if user has a pending registration
+  useEffect(() => {
+    try {
+      const savedPending = localStorage.getItem('hmh-pending-reg')
+      if (savedPending) {
+        const parsed = JSON.parse(savedPending)
+        setPendingUser(parsed)
+        setShowSuccessModal(true)
+        checkStatus(parsed)
+      }
+    } catch { }
+  }, [checkStatus])
+
+  // Periodic status polling if pending
+  useEffect(() => {
+    if (!showSuccessModal && !pendingUser) return
+    const interval = setInterval(() => {
+      const saved = localStorage.getItem('hmh-pending-reg')
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          checkStatus(parsed)
+        } catch { }
+      }
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [showSuccessModal, pendingUser, checkStatus])
 
   // Fetch admin payment account settings from server
   useEffect(() => {
@@ -132,7 +194,6 @@ export default function RegisterPage() {
               ctx.drawImage(img, 0, 0, width, height)
               resolve(canvas.toDataURL('image/jpeg', 0.7))
             } catch {
-              // Fallback to original data url
               resolve(e.target.result)
             }
           }
@@ -242,7 +303,7 @@ export default function RegisterPage() {
       // Auto-generate unique phone number as required by schema
       const randomPhone = '03' + Math.floor(100000000 + Math.random() * 900000000).toString().substring(0, 9);
 
-      setLoadingStatusText('Creating account and plan request...')
+      setLoadingStatusText('Submitting registration...')
 
       const paymentMethodLabel = formData.paymentMethod === 'jazzcash'
         ? 'JazzCash'
@@ -274,7 +335,16 @@ export default function RegisterPage() {
       }
 
       if (response.ok) {
-        router.push('/login?registered=true')
+        // Save pending registration in localStorage to persist across refreshes
+        const pendingData = {
+          email: formData.email.trim(),
+          phone: randomPhone,
+          name: formData.name.trim()
+        }
+        localStorage.setItem('hmh-pending-reg', JSON.stringify(pendingData))
+        setPendingUser(pendingData)
+        setShowSuccessModal(true)
+        setLoading(false)
       } else {
         setError(data.error || data.message || `Registration failed (Status ${response.status}).`)
         setLoading(false)
@@ -284,6 +354,13 @@ export default function RegisterPage() {
       setError(err.message || 'Registration failed. Please check your connection and try again.')
       setLoading(false)
     }
+  }
+
+  const handleCloseRejection = () => {
+    localStorage.removeItem('hmh-pending-reg')
+    setShowRejectionModal(false)
+    setPendingUser(null)
+    router.push('/')
   }
 
   return (
@@ -659,7 +736,7 @@ export default function RegisterPage() {
 
               <div style={{ marginTop: '18px' }}>
                 <button className="btn btn-gold" type="submit" disabled={loading} style={{ opacity: loading ? 0.75 : 1, width: '100%', padding: '14px 0', fontSize: '15px' }}>
-                  {loading ? 'Creating Account...' : 'Create Account'}
+                  {loading ? 'Submitting Registration...' : 'Complete Registration & Pay'}
                 </button>
               </div>
             </form>
@@ -673,6 +750,191 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+
+      {/* REGISTRATION SUCCESS / PENDING VERIFICATION MODAL */}
+      {showSuccessModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#151821',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '20px',
+            padding: '28px 24px',
+            maxWidth: '440px',
+            width: '100%',
+            position: 'relative',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
+          }}>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: 'none',
+                color: '#fff',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontSize: '16px',
+                lineHeight: '1'
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                background: '#4caf50',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 12px auto',
+                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.35)'
+              }}>
+                <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', margin: 0 }}>
+                Registration Submitted Successfully!
+              </h2>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px', color: '#d0d5e0', lineHeight: '1.5' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '12px 14px', borderRadius: '10px' }}>
+                <span style={{ fontSize: '16px' }}>👋</span>
+                <span>Thank you for joining <strong>HMHProo</strong>.</span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '12px 14px', borderRadius: '10px' }}>
+                <span style={{ fontSize: '16px' }}>🔍</span>
+                <span>Your registration and payment are currently under verification.</span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '12px 14px', borderRadius: '10px' }}>
+                <span style={{ fontSize: '16px' }}>📝</span>
+                <span>Our team will review your TRX ID and payment details.</span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '12px 14px', borderRadius: '10px' }}>
+                <span style={{ fontSize: '16px' }}>🔔</span>
+                <span>Please wait for approval. You will be notified as soon as your account is activated.</span>
+              </div>
+
+              <div style={{ background: 'rgba(201, 160, 74, 0.08)', border: '1px solid rgba(201, 160, 74, 0.25)', padding: '12px 14px', borderRadius: '10px', color: 'var(--gold-bright)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '10px', marginTop: '2px' }}>
+                <span style={{ fontSize: '16px' }}>⏱️</span>
+                <span>Estimated verification time: 5 minutes to 2 hours.</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              style={{
+                marginTop: '22px',
+                width: '100%',
+                padding: '13px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #c9a04a, #e8c06a)',
+                color: '#181205',
+                fontWeight: 'bold',
+                fontSize: '15px',
+                cursor: 'pointer'
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* REGISTRATION REJECTED MODAL */}
+      {showRejectionModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.88)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#151821',
+            border: '1px solid rgba(244, 67, 54, 0.3)',
+            borderRadius: '20px',
+            padding: '28px 24px',
+            maxWidth: '440px',
+            width: '100%',
+            position: 'relative',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.7)',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              background: '#f44336',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 14px auto',
+              boxShadow: '0 4px 12px rgba(244, 67, 54, 0.35)'
+            }}>
+              <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </div>
+
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#ff6b6b', margin: '0 0 10px 0' }}>
+              Registration Request Rejected
+            </h2>
+
+            <p style={{ fontSize: '14px', color: '#d0d5e0', lineHeight: '1.6', marginBottom: '22px' }}>
+              Your registration and payment verification request was not approved by the admin. Please verify your payment details and register again.
+            </p>
+
+            <button
+              onClick={handleCloseRejection}
+              style={{
+                width: '100%',
+                padding: '13px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #c9a04a, #e8c06a)',
+                color: '#181205',
+                fontWeight: 'bold',
+                fontSize: '15px',
+                cursor: 'pointer'
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {(loading || isAppLoading) && <Loader />}
     </div>
   )
