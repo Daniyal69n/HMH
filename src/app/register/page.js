@@ -543,7 +543,7 @@ export default function RegisterPage() {
               >
                 {PLANS_LIST.map((p) => (
                   <option key={p.name} value={p.name} style={{ background: '#1c1c1c', color: '#fff' }}>
-                    {p.name} Plan — ${p.priceUSD} (Rs {p.pricePKR.toLocaleString()}) — {p.desc}
+                    {p.name} Plan
                   </option>
                 ))}
               </select>
