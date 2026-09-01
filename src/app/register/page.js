@@ -77,7 +77,7 @@ export default function RegisterPage() {
           }))
         }
       })
-      .catch(() => {})
+      .catch(() => { })
   }, [])
 
   useEffect(() => {
@@ -244,8 +244,8 @@ export default function RegisterPage() {
 
       setLoadingStatusText('Creating account and plan request...')
 
-      const paymentMethodLabel = formData.paymentMethod === 'jazzcash' 
-        ? 'JazzCash' 
+      const paymentMethodLabel = formData.paymentMethod === 'jazzcash'
+        ? 'JazzCash'
         : (formData.paymentMethod === 'easypaisa' ? 'EasyPaisa' : 'Binance')
 
       const response = await fetch('/api/auth/register', {
@@ -290,7 +290,7 @@ export default function RegisterPage() {
     <div className="meridian">
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: '24px 16px' }}>
         <div style={{ width: '100%', maxWidth: '560px' }}>
-          
+
           {/* Header Card */}
           <div className="card" style={{ marginBottom: '18px', textAlign: 'center', background: 'linear-gradient(150deg, var(--surface), var(--surface-2))' }}>
             <img
@@ -326,7 +326,7 @@ export default function RegisterPage() {
           {/* Main Form Card */}
           <div className="card" style={{ borderRadius: '16px', padding: '24px 20px' }}>
             <form onSubmit={handleSubmit}>
-              
+
               {/* Account Details Section */}
               <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--gold-bright)', marginBottom: '14px', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
                 1. Account Details
@@ -659,7 +659,7 @@ export default function RegisterPage() {
 
               <div style={{ marginTop: '18px' }}>
                 <button className="btn btn-gold" type="submit" disabled={loading} style={{ opacity: loading ? 0.75 : 1, width: '100%', padding: '14px 0', fontSize: '15px' }}>
-                  {loading ? 'Submitting Registration...' : 'Complete Registration & Pay'}
+                  {loading ? 'Creating Account...' : 'Create Account'}
                 </button>
               </div>
             </form>
