@@ -102,12 +102,17 @@ export async function POST(request) {
       });
     }
 
+    const userShortId = await getNextShortId();
+
     const user = new User({
       name,
       email,
       phone,
       password,
+      shortId: userShortId,
       referralCode: referralCode || null,
+      referredBy: referrer ? referrer.phone : null,
+      referralLevel: referrer ? 'A' : null,
       status: (cleanedTrxId || planName) ? 'pending' : 'approved',
       balance: 0,
       signupBonus: 0,
@@ -120,26 +125,13 @@ export async function POST(request) {
 
     await user.save();
 
-    // Atomically reserve the next sequential shortId (e.g. "HMH1000").
-    // Uses a MongoDB counter document with $inc + upsert — one round-trip,
-    // no regex scan, no loop, safe under concurrent serverless requests.
-    user.shortId = await getNextShortId();
-    await user.save();
-
     // Add user to referrer's team if referral code was used
     if (referrer) {
-      // Set referral relationship (commission will be given when user buys a plan)
-      user.referredBy = referrer.phone;
-      user.referralLevel = 'A';
-      await user.save();
-
-      // Add to referrer's team members
       referrer.teamMembers.push({
         userId: user._id,
         level: 'A',
         joinDate: new Date()
       });
-
       await referrer.save();
     }
 

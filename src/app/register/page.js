@@ -171,8 +171,8 @@ export default function RegisterPage() {
           img.onload = () => {
             try {
               const canvas = document.createElement('canvas')
-              const MAX_WIDTH = 800
-              const MAX_HEIGHT = 800
+              const MAX_WIDTH = 500
+              const MAX_HEIGHT = 500
               let width = img.width
               let height = img.height
 
@@ -192,7 +192,7 @@ export default function RegisterPage() {
               canvas.height = height
               const ctx = canvas.getContext('2d')
               ctx.drawImage(img, 0, 0, width, height)
-              resolve(canvas.toDataURL('image/jpeg', 0.7))
+              resolve(canvas.toDataURL('image/jpeg', 0.6))
             } catch {
               resolve(e.target.result)
             }
@@ -327,11 +327,12 @@ export default function RegisterPage() {
       })
 
       let data = {}
+      let responseText = ''
       try {
-        const text = await response.text()
-        data = text ? JSON.parse(text) : {}
+        responseText = await response.text()
+        data = responseText ? JSON.parse(responseText) : {}
       } catch {
-        data = { error: 'Server returned an invalid response. Please try again.' }
+        data = { error: responseText ? responseText.slice(0, 150) : `Server error (Status ${response.status})` }
       }
 
       if (response.ok) {

@@ -15,13 +15,13 @@ export async function POST(request) {
       );
     }
 
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || process.env.CLOUDINARY_UPLOAD_PRESET;
 
     if (!cloudName || !uploadPreset) {
-      console.error('Missing Cloudinary config');
+      console.warn('Cloudinary not configured in environment');
       return Response.json(
-        { message: 'Cloudinary not configured' },
+        { message: 'Cloudinary not configured', success: false },
         { status: 500 }
       );
     }
