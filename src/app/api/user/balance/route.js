@@ -21,7 +21,7 @@ export async function PUT(request) {
       console.time("connectDB");
       await connectDB();
       console.timeEnd("connectDB");
-      
+
       console.time("query1");
       user = await User.findOne({ phone: userId }).select('-profilePicture');
       console.timeEnd("query1");
@@ -46,7 +46,7 @@ export async function PUT(request) {
     }
 
     let updateData = {};
-    
+
     console.time("processing");
 
     switch (operation) {
@@ -63,7 +63,7 @@ export async function PUT(request) {
           userTransactionId: data.transactionId || null,
           transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
         });
-        
+
         // Don't update balance immediately - wait for admin approval
         // Balance and totalRecharge will be updated when admin approves the transaction
         break;
@@ -73,21 +73,21 @@ export async function PUT(request) {
         // Use only the live DB balance — no fee, no commission math
         const currentBalance = typeof user.balance === 'number' ? user.balance : 0;
         const requestedAmount = Number(data.amount) || 0;
-        
+
         if (requestedAmount < 300) {
           return NextResponse.json(
             { error: `Minimum withdrawal amount is Rs 300 ($1).` },
             { status: 400 }
           );
         }
-        
+
         if (currentBalance < requestedAmount) {
           return NextResponse.json(
             { error: `Insufficient balance. Your current balance is Rs ${currentBalance.toFixed(2)} but you requested Rs ${requestedAmount.toFixed(2)}.` },
             { status: 400 }
           );
         }
-        
+
         // Validate required fields
         if (!data.withdrawalMethod || !data.withdrawalAccountName) {
           return NextResponse.json(
@@ -95,13 +95,13 @@ export async function PUT(request) {
             { status: 400 }
           );
         }
-        
+
         // Deduct exact amount from balance immediately
         const newBalance = currentBalance - data.amount;
-        
+
         await User.findOneAndUpdate(
           { phone: userId },
-          { 
+          {
             balance: newBalance,
             $push: {
               withdrawHistory: {
@@ -115,7 +115,7 @@ export async function PUT(request) {
             }
           }
         );
-        
+
         // Create withdrawal transaction (pending — requires admin approval)
         // No fee: full amount is what admin will pay out
         const transaction = await Transaction.create({
@@ -132,7 +132,7 @@ export async function PUT(request) {
           withdrawalNumber: data.withdrawalNumber,
           transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
         });
-        
+
         // Return success response with new balance
         return NextResponse.json({
           message: 'Withdrawal request submitted successfully',
@@ -145,24 +145,24 @@ export async function PUT(request) {
       case 'spin_reward': {
         const rewardUSD = Number(data.amount) || 0;
         const rewardPKR = rewardUSD * 300; // $1 = Rs 300
-        
+
         user.balance = (user.balance || 0) + rewardPKR;
         user.earnBalance = (user.earnBalance || 0) + rewardPKR;
-        
+
         await user.save();
-        
+
         // Create transaction log
         await Transaction.create({
           userId: userId,
           userName: user.name,
           userPhone: user.phone,
           amount: rewardPKR,
-          type: 'level_reward',
+          type: 'spin_reward',
           status: 'completed',
           description: `Lucky Spin Reward ($${rewardUSD})`,
           createdAt: new Date()
         });
-        
+
         return NextResponse.json({
           message: 'Spin reward added successfully',
           newBalance: user.balance,
@@ -184,40 +184,40 @@ export async function PUT(request) {
         // Check and add daily income if not already added today
         const currentDate = new Date().toDateString();
         const lastIncomeDate = user.lastDailyIncomeDate;
-        
+
         if (lastIncomeDate !== currentDate) {
           // Get active investment
           const activeInvestment = await UserInvestment.findOne({
             userId: userId,
             isActive: true
           });
-          
+
           if (activeInvestment) {
             // Check if it's time for the first income (24 hours after investDate)
             const now = new Date();
             const firstIncomeDate = new Date(activeInvestment.firstIncomeDate);
-            
+
             // Only add income if current time has passed the first income date
             if (now >= firstIncomeDate) {
               const dailyIncomeAmount = parseFloat(activeInvestment.dailyIncome.replace(/[$,₹Rs]/g, '').replace(/,/g, ''));
-              
+
               // Ensure balance fields are numbers before arithmetic operations
               const currentEarnBalance = typeof user.earnBalance === 'number' ? user.earnBalance : 0;
               const currentBalance = typeof user.balance === 'number' ? user.balance : 0;
-              
+
               // Update user balances - add to both earn balance and account balance
               const newEarnBalance = currentEarnBalance + dailyIncomeAmount;
               const newBalance = currentBalance + dailyIncomeAmount;
-              
+
               await User.findOneAndUpdate(
                 { phone: userId },
-                { 
+                {
                   earnBalance: newEarnBalance,
                   balance: newBalance,
                   lastDailyIncomeDate: currentDate
                 }
               );
-              
+
               // Create transaction record
               await Transaction.create({
                 userId: userId,
@@ -227,16 +227,16 @@ export async function PUT(request) {
                 description: `Daily income from ${activeInvestment.planName}`,
                 transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
               });
-              
+
               // Update investment record
               await UserInvestment.findOneAndUpdate(
                 { _id: activeInvestment._id },
-                { 
+                {
                   totalEarned: activeInvestment.totalEarned + dailyIncomeAmount,
                   lastIncomeDate: new Date()
                 }
               );
-              
+
               return NextResponse.json({
                 message: 'Daily income added successfully',
                 incomeAdded: true,
@@ -248,7 +248,7 @@ export async function PUT(request) {
               // Calculate time remaining until first income
               const timeRemaining = firstIncomeDate.getTime() - now.getTime();
               const hoursRemaining = Math.ceil(timeRemaining / (1000 * 60 * 60));
-              
+
               return NextResponse.json({
                 message: `First daily income will be added in ${hoursRemaining} hours`,
                 incomeAdded: false,
@@ -257,7 +257,7 @@ export async function PUT(request) {
             }
           }
         }
-        
+
         return NextResponse.json({
           message: 'No daily income to add',
           incomeAdded: false
@@ -268,16 +268,16 @@ export async function PUT(request) {
         // Calculate team income (3-tier referral system based on active plan eligibility)
         const { getUserActivePlanPrice } = await import('@/lib/commission');
         const userPlanPrice = await getUserActivePlanPrice(user);
-        
+
         let totalTeamIncome = 0;
         let levelAIncome = 0;
         let levelBIncome = 0;
         let levelCIncome = 0;
-        
+
         // Level A members (direct referrals)
         const levelAMembers = await User.find({ referredBy: user.phone, 'investmentPlans.status': 'active' }).select('phone').lean();
         const levelAPhones = levelAMembers.map(m => m.phone);
-        
+
         // Level A: Direct referrals (20% commission, if user has any active plan)
         if (userPlanPrice > 0) {
           for (const member of levelAMembers) {
@@ -291,83 +291,83 @@ export async function PUT(request) {
               }
               return sum;
             }, 0);
-            
+
             const commission = memberTotalActivity * 0.20;
             levelAIncome += commission;
           }
         }
-        
+
         // Level B: Indirect referrals (5% commission, if user has any active plan)
-        const levelBMembers = levelAPhones.length > 0 
+        const levelBMembers = levelAPhones.length > 0
           ? await User.find({ referredBy: { $in: levelAPhones }, 'investmentPlans.status': 'active' }).select('phone').lean()
           : [];
         const levelBPhones = levelBMembers.map(m => m.phone);
-        
+
         if (userPlanPrice > 0) {
           for (const member of levelBMembers) {
             const memberTransactions = await Transaction.find({
               userId: member.phone,
               status: 'completed'
             }).lean();
-            
+
             const memberTotalActivity = memberTransactions.reduce((sum, tx) => {
               if (tx.type === 'recharge' || tx.type === 'withdraw') {
                 return sum + tx.amount;
               }
               return sum;
             }, 0);
-            
+
             const commission = memberTotalActivity * 0.05;
             levelBIncome += commission;
           }
         }
-        
+
         // Level C: Downline referrals (5% commission, if user has active plan >= $40)
         const levelCMembers = levelBPhones.length > 0
           ? await User.find({ referredBy: { $in: levelBPhones }, 'investmentPlans.status': 'active' }).select('phone').lean()
           : [];
-          
+
         if (userPlanPrice >= 40) {
           for (const member of levelCMembers) {
             const memberTransactions = await Transaction.find({
               userId: member.phone,
               status: 'completed'
             }).lean();
-            
+
             const memberTotalActivity = memberTransactions.reduce((sum, tx) => {
               if (tx.type === 'recharge' || tx.type === 'withdraw') {
                 return sum + tx.amount;
               }
               return sum;
             }, 0);
-            
+
             const commission = memberTotalActivity * 0.05;
             levelCIncome += commission;
           }
         }
-        
+
         totalTeamIncome = levelAIncome + levelBIncome + levelCIncome;  // Update user's referral commission and total commission earned
         const currentReferralCommission = typeof user.referralCommission === 'number' ? user.referralCommission : 0;
-        
+
         // Add new team income to referral commission
         const newReferralCommission = currentReferralCommission + totalTeamIncome;
-        
+
         // Also add to earn balance and account balance for immediate use
         const currentEarnBalance = typeof user.earnBalance === 'number' ? user.earnBalance : 0;
         const currentBalance = typeof user.balance === 'number' ? user.balance : 0;
-        
+
         const newEarnBalance = currentEarnBalance + totalTeamIncome;
         const newBalance = currentBalance + totalTeamIncome;
-        
+
         await User.findOneAndUpdate(
           { phone: userId },
-          { 
+          {
             referralCommission: newReferralCommission,
             earnBalance: newEarnBalance,
             balance: newBalance
           }
         );
-        
+
         // Create transaction record for team income
         if (totalTeamIncome > 0) {
           await Transaction.create({
@@ -379,7 +379,7 @@ export async function PUT(request) {
             transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
           });
         }
-        
+
         return NextResponse.json({
           message: 'Team income calculated successfully',
           totalTeamIncome: totalTeamIncome,
@@ -415,7 +415,7 @@ export async function PUT(request) {
 
     // Return updated user data without password
     const userData = user.toPublicJSON();
-    
+
     // Ensure totalRecharge is included in response
     if (userData.totalRecharge === undefined || userData.totalRecharge === null) {
       userData.totalRecharge = 0;

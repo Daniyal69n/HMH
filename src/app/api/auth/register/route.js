@@ -10,7 +10,7 @@ export async function POST(request) {
   try {
     await connectDB();
 
-    const { name, email, phone, password, referralCode } = await request.json();
+    const { name, email, phone, password, referralCode, planName, planAmount, paymentMethod, trxId, screenshotUrl } = await request.json();
 
     // Validate required fields
     if (!name || !email || !phone || !password) {
@@ -18,6 +18,27 @@ export async function POST(request) {
         { error: 'Name, email, phone number, and password are required' },
         { status: 400 }
       );
+    }
+
+    // Check TRX ID uniqueness if provided
+    let cleanedTrxId = null;
+    if (trxId && trxId.trim()) {
+      cleanedTrxId = trxId.trim();
+      if (cleanedTrxId.length < 8 || cleanedTrxId.length > 30) {
+        return NextResponse.json(
+          { error: 'TRX ID must be between 8 and 30 characters' },
+          { status: 400 }
+        );
+      }
+      const existingTrx = await User.findOne({
+        'investmentPlans.trxId': { $regex: new RegExp(`^${cleanedTrxId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+      });
+      if (existingTrx) {
+        return NextResponse.json(
+          { error: 'This TRX ID has already been used. Please enter a valid unique TRX ID.' },
+          { status: 400 }
+        );
+      }
     }
 
     // Check if user already exists (by phone number or email)
@@ -54,15 +75,43 @@ export async function POST(request) {
       }
     }
 
+    // Process screenshot if provided as base64 fallback
+    let finalScreenshotUrl = screenshotUrl || null;
+    if (screenshotUrl && typeof screenshotUrl === 'string' && screenshotUrl.startsWith('data:image')) {
+      try {
+        const { uploadBase64ToCloudinary } = await import('@/lib/cloudinaryHelper');
+        const cUrl = await uploadBase64ToCloudinary(screenshotUrl, 'plan-requests');
+        if (cUrl) {
+          finalScreenshotUrl = cUrl;
+        }
+      } catch (err) {
+        console.warn('Cloudinary upload error in register route:', err);
+      }
+    }
+
+    const initialInvestmentPlans = [];
+    if (cleanedTrxId || planName) {
+      initialInvestmentPlans.push({
+        planName: planName || 'Basic',
+        amount: parseFloat(planAmount) || 1500,
+        trxId: cleanedTrxId || ('REG' + Date.now()),
+        status: 'pending',
+        startDate: new Date(),
+        paymentMethod: paymentMethod || 'JazzCash',
+        screenshotData: finalScreenshotUrl
+      });
+    }
+
     const user = new User({
       name,
       email,
       phone,
       password,
       referralCode: referralCode || null,
+      status: (cleanedTrxId || planName) ? 'pending' : 'approved',
       balance: 0,
       signupBonus: 0,
-      investmentPlans: [],
+      investmentPlans: initialInvestmentPlans,
       rechargeHistory: [],
       withdrawHistory: [],
       couponHistory: [],

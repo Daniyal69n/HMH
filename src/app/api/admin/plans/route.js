@@ -273,14 +273,19 @@ export async function PUT(request) {
       if (planToApprove.status === 'active') {
         return NextResponse.json({ error: 'Plan is already active. Cannot approve again.' }, { status: 400 });
       }
+      user.status = 'approved';
       const { activateUserPlan } = await import('@/lib/commission');
-      // activateUserPlan calls user.save() internally, no need to save again
+      // activateUserPlan calls user.save() internally
       await activateUserPlan(user, planToApprove);
     } else {
       // Reject
       const planToReject = user.investmentPlans.find(p => p._id.toString() === planId.toString());
       if (planToReject) {
         planToReject.status = 'cancelled';
+      }
+      const hasActivePlan = (user.investmentPlans || []).some(p => p.status === 'active');
+      if (!hasActivePlan) {
+        user.status = 'rejected';
       }
       await user.save();
     }

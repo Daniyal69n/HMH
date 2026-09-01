@@ -42,22 +42,8 @@ export async function POST(request) {
       );
     }
 
-    // Check if user is approved
-    if (user.status === 'pending') {
-      console.log('User login attempted but status is pending:', user.name);
-      return NextResponse.json(
-        { error: 'Your account registration is pending admin approval.' },
-        { status: 403 }
-      );
-    }
-
-    if (user.status === 'rejected') {
-      console.log('User login attempted but status is rejected:', user.name);
-      return NextResponse.json(
-        { error: 'Your account registration request has been rejected by the admin.' },
-        { status: 403 }
-      );
-    }
+    // Allow pending and rejected users to log in; menu permissions and restrictions are handled on frontend
+    // Only blocked users are denied login
 
     // Verify password
     console.log('Verifying password...');

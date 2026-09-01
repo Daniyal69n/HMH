@@ -211,6 +211,19 @@ export default function Page() {
     return 'Free'
   })
 
+  // Check if user has a pending registration plan request
+  const hasPendingPlan = useMemo(() => {
+    return profile?.status === 'pending' || (profile?.investmentPlans || []).some(p => p.status === 'pending')
+  }, [profile?.status, profile?.investmentPlans])
+
+  // If user has active plan or is in pending approval state, all menus are unlocked.
+  // If rejected or free with no pending plan, only dashboard, plans, and profile settings are accessible.
+  const isUserLocked = useMemo(() => {
+    if (activePlanName && activePlanName !== 'Free') return false
+    if (hasPendingPlan) return false
+    return true
+  }, [activePlanName, hasPendingPlan])
+
   // PKR conversion: $1 = PKR 300
   const PKR_RATE = 300
 
@@ -910,13 +923,13 @@ export default function Page() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedPage = localStorage.getItem('hmh-active-page')
-      if (activePlanName === 'Free') {
+      if (isUserLocked && savedPage && savedPage !== 'dashboard' && savedPage !== 'plans' && savedPage !== 'profile') {
         setPage('dashboard')
       } else if (savedPage) {
         setPage(savedPage)
       }
     }
-  }, [activePlanName])
+  }, [isUserLocked])
 
   useEffect(() => {
     if (typeof window === 'undefined' || !profileReady.current) return
@@ -936,8 +949,8 @@ export default function Page() {
       setBellOpen(false)
       return
     }
-    if (activePlanName === 'Free' && id !== 'dashboard' && id !== 'plans') {
-      showToast('Please upgrade your plan to access this page.')
+    if (isUserLocked && id !== 'dashboard' && id !== 'plans' && id !== 'profile') {
+      showToast('Please purchase a plan to unlock this feature.')
       return
     }
     setPage(id)
@@ -2060,7 +2073,7 @@ export default function Page() {
 
           <nav className="nav">
             {NAV.map((item) => {
-              const isLocked = activePlanName === 'Free' && item.id !== 'dashboard' && item.id !== 'plans' && item.id !== 'admin'
+              const isLocked = isUserLocked && item.id !== 'dashboard' && item.id !== 'plans' && item.id !== 'profile' && item.id !== 'admin'
               return (
                 <a
                   key={item.id}
@@ -2070,7 +2083,7 @@ export default function Page() {
                   onClick={(e) => {
                     e.preventDefault()
                     if (isLocked) {
-                      showToast('Please upgrade your plan to access this page.')
+                      showToast('Please purchase a plan to unlock this feature.')
                     } else {
                       goTo(item.id)
                     }
@@ -2644,9 +2657,9 @@ export default function Page() {
                     return 'Direct Referral';
                   }
 
-                  // Spin Earning ("spin income")
+                  // Lucky Spin
                   if (type === 'spin_reward' || type === 'spin_income' || type === 'spin_earning' || desc.includes('spin')) {
-                    return 'Spin Earning';
+                    return 'Lucky Spin';
                   }
 
                   // Social Task Earning ("social task income")
@@ -2718,27 +2731,38 @@ export default function Page() {
 
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {filtered.map(t => (
-                      <div key={t._id || t.transactionId || Math.random()} style={{ padding: '16px', background: 'var(--input-bg)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <div style={{ fontWeight: 600, fontSize: '15px', color: '#fff', marginBottom: '4px' }}>
-                            {formatTxTitle(t)}
+                    {filtered.map(t => {
+                      const isSpinTx = t.type === 'spin_reward' || t.type === 'spin_income' || t.type === 'spin_earning' || (t.description || '').toLowerCase().includes('spin');
+                      // Extract won USD amount from description e.g. "Lucky Spin Reward ($1)" -> "$1"
+                      const spinWonMatch = isSpinTx && t.description ? t.description.match(/\$(\d+(\.\d+)?)/) : null;
+                      const spinWonLabel = spinWonMatch ? spinWonMatch[0] : null;
+                      return (
+                        <div key={t._id || t.transactionId || Math.random()} style={{ padding: '16px', background: 'var(--input-bg)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: '15px', color: '#fff', marginBottom: '4px' }}>
+                              {formatTxTitle(t)}
+                            </div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-faint)' }}>
+                              {new Date(t.createdAt).toLocaleString()}
+                            </div>
+                            {isSpinTx && spinWonLabel && (
+                              <div style={{ fontSize: '12px', color: '#4caf50', marginTop: '3px', fontWeight: 600 }}>
+                                🎰 Won {spinWonLabel}
+                              </div>
+                            )}
                           </div>
-                          <div style={{ fontSize: '12px', color: 'var(--text-faint)' }}>
-                            {new Date(t.createdAt).toLocaleString()}
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontWeight: 'bold', fontSize: '15px', color: (t.type === 'withdraw' || t.type === 'plan_purchase' || t.type === 'ecommerce_purchase') ? '#f44336' : '#4caf50' }}>
+                              {(t.type === 'withdraw' || t.type === 'plan_purchase' || t.type === 'ecommerce_purchase') ? '-' : '+'}
+                              {formatVal(t.amount || t.amountAfterFee)}
+                            </div>
+                            <div style={{ fontSize: '12px', color: t.status === 'completed' || t.status === 'approved' ? '#4caf50' : t.status === 'pending' ? '#ff9800' : '#f44336' }}>
+                              {(t.status || '').toUpperCase()}
+                            </div>
                           </div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontWeight: 'bold', fontSize: '15px', color: (t.type === 'withdraw' || t.type === 'plan_purchase' || t.type === 'ecommerce_purchase') ? '#f44336' : '#4caf50' }}>
-                            {(t.type === 'withdraw' || t.type === 'plan_purchase' || t.type === 'ecommerce_purchase') ? '-' : '+'}
-                            {formatVal(t.amount || t.amountAfterFee)}
-                          </div>
-                          <div style={{ fontSize: '12px', color: t.status === 'completed' || t.status === 'approved' ? '#4caf50' : t.status === 'pending' ? '#ff9800' : '#f44336' }}>
-                            {(t.status || '').toUpperCase()}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 );
               })()}
