@@ -110,6 +110,17 @@ export async function POST(request) {
       return Response.json({ message: `You do not meet the conditions for Level ${level} yet` }, { status: 400 });
     }
     
+    // Atomic check-and-lock to prevent race conditions / duplicate rapid claims
+    const claimedUser = await User.findOneAndUpdate(
+      { phone, claimedLevels: { $ne: level } },
+      { $addToSet: { claimedLevels: level } },
+      { new: true }
+    );
+
+    if (!claimedUser) {
+      return Response.json({ message: `Level ${level} reward already claimed` }, { status: 400 });
+    }
+
     // Exchange rate is $1 = Rs 300
     const PKR_RATE = 300;
     const rewardPKR = rewardUSD * PKR_RATE;
@@ -125,43 +136,45 @@ export async function POST(request) {
     
     // Credit reward and level salary to:
     // 1. My rewards (totalCommissionEarned)
-    user.earnBalance = (user.earnBalance || 0) + rewardPKR + levelSalaryPKR;
-    if (user.customTotalEarnings !== undefined && user.customTotalEarnings !== null) {
-      user.customTotalEarnings += rewardPKR + levelSalaryPKR;
+    claimedUser.earnBalance = (claimedUser.earnBalance || 0) + rewardPKR + levelSalaryPKR;
+    if (claimedUser.customTotalEarnings !== undefined && claimedUser.customTotalEarnings !== null) {
+      claimedUser.customTotalEarnings += rewardPKR + levelSalaryPKR;
     }
     
     // 3. Current balance (balance) gets the standard level reward
-    user.balance = (user.balance || 0) + rewardPKR;
+    claimedUser.balance = (claimedUser.balance || 0) + rewardPKR;
 
     // 4. Milestone Check: If milestone level is reached (10, 20, 30, 40, 50), 
     // move the entire accumulated block salary to the withdrawable current balance.
     if (level === 10) {
-      user.balance += 100 * PKR_RATE; // $100 salary to balance
+      claimedUser.balance += 100 * PKR_RATE; // $100 salary to balance
     } else if (level === 20) {
-      user.balance += 200 * PKR_RATE; // $200 salary to balance
+      claimedUser.balance += 200 * PKR_RATE; // $200 salary to balance
     } else if (level === 30) {
-      user.balance += 300 * PKR_RATE; // $300 salary to balance
+      claimedUser.balance += 300 * PKR_RATE; // $300 salary to balance
     } else if (level === 40) {
-      user.balance += 400 * PKR_RATE; // $400 salary to balance
+      claimedUser.balance += 400 * PKR_RATE; // $400 salary to balance
     } else if (level === 50) {
-      user.balance += 500 * PKR_RATE; // $500 salary to balance
+      claimedUser.balance += 500 * PKR_RATE; // $500 salary to balance
     }
     
-    if (!user.claimedLevels) {
-      user.claimedLevels = [];
+    if (!claimedUser.claimedLevels) {
+      claimedUser.claimedLevels = [];
     }
-    user.claimedLevels.push(level);
+    if (!claimedUser.claimedLevels.includes(level)) {
+      claimedUser.claimedLevels.push(level);
+    }
     
     // Evaluate if this new level unlocks a bulk payout for past social tasks
-    await processSocialTaskMilestones(user);
+    await processSocialTaskMilestones(claimedUser);
 
     // Create corresponding transaction log
     const txnId = `TXN-LV-${level}-${Date.now()}`;
     await Transaction.create({
       transactionId: txnId,
-      userId: user.phone,
-      userName: user.name,
-      userPhone: user.phone,
+      userId: claimedUser.phone,
+      userName: claimedUser.name,
+      userPhone: claimedUser.phone,
       amount: rewardPKR,
       type: 'level_reward',
       paymentMethod: 'bank', // match enum schema options where applicable or omit
@@ -170,14 +183,14 @@ export async function POST(request) {
       createdAt: new Date()
     });
     
-    await user.save();
+    await claimedUser.save();
     
     return Response.json({
       message: `Successfully claimed Level ${level} reward!`,
-      balance: user.balance,
-      earnBalance: user.earnBalance,
-      totalCommissionEarned: user.totalCommissionEarned,
-      claimedLevels: user.claimedLevels,
+      balance: claimedUser.balance,
+      earnBalance: claimedUser.earnBalance,
+      totalCommissionEarned: claimedUser.totalCommissionEarned,
+      claimedLevels: claimedUser.claimedLevels,
       rewardUSD,
       rewardPKR
     });

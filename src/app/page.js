@@ -1775,8 +1775,13 @@ export default function Page() {
     setStreakClaiming(false)
   }
 
+  const levelClaimingRef = useRef({})
+  const [levelClaiming, setLevelClaiming] = useState({})
+
   const claimLevelReward = async (level) => {
-    if (!profile || !profile.phone) return
+    if (levelClaimingRef.current[level] || !profile || !profile.phone) return
+    levelClaimingRef.current[level] = true
+    setLevelClaiming(prev => ({ ...prev, [level]: true }))
     try {
       const res = await fetch('/api/user/claim-level', {
         method: 'POST',
@@ -1812,6 +1817,9 @@ export default function Page() {
     } catch (err) {
       console.error(err)
       showToast('Error claiming reward')
+    } finally {
+      levelClaimingRef.current[level] = false
+      setLevelClaiming(prev => ({ ...prev, [level]: false }))
     }
   }
 
@@ -3814,10 +3822,11 @@ export default function Page() {
                             </button>
                           ) : isCompleted ? (
                             <button
-                              style={{ width: '100%', background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: '8px', padding: '6px 0', fontSize: '11px', fontWeight: 800, cursor: 'pointer', boxShadow: '0 0 10px rgba(201,160,74,0.3)' }}
+                              disabled={!!levelClaiming[reward.level]}
+                              style={{ width: '100%', background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: '8px', padding: '6px 0', fontSize: '11px', fontWeight: 800, cursor: levelClaiming[reward.level] ? 'not-allowed' : 'pointer', opacity: levelClaiming[reward.level] ? 0.6 : 1, boxShadow: '0 0 10px rgba(201,160,74,0.3)' }}
                               onClick={() => claimLevelReward(reward.level)}
                             >
-                              🎁 Collect
+                              {levelClaiming[reward.level] ? '...' : '🎁 Collect'}
                             </button>
                           ) : (
                             <button
@@ -3887,10 +3896,11 @@ export default function Page() {
                           } else if (level.isCompleted) {
                             return (
                               <button
-                                style={{ background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer', boxShadow: '0 0 12px rgba(201,160,74,0.3)' }}
+                                disabled={!!levelClaiming[level.level]}
+                                style={{ background: 'var(--gold)', color: '#181205', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 12, fontWeight: 800, cursor: levelClaiming[level.level] ? 'not-allowed' : 'pointer', opacity: levelClaiming[level.level] ? 0.6 : 1, boxShadow: '0 0 12px rgba(201,160,74,0.3)' }}
                                 onClick={() => claimLevelReward(level.level)}
                               >
-                                🎁 Collect
+                                {levelClaiming[level.level] ? '...' : '🎁 Collect'}
                               </button>
                             );
                           } else {
