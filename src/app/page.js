@@ -519,42 +519,21 @@ export default function Page() {
   )
 
   const levels = useMemo(() => {
-    // Build plan-specific pools for Level 3+ (these are NOT consumed by Level 1/2)
-    const planPools = {
-      basic: [], standard: [], diamond: [], pro: [], premium: [], legend: [], other: []
+    const planCounts = {
+      basic: 0, standard: 0, diamond: 0, pro: 0, premium: 0, legend: 0, other: 0
     }
-    // Total active members count for Level 1 & Level 2 (independent from plan pools)
     let totalActiveMembers = 0
 
     if (teamData.levelA?.members) {
       for (const m of teamData.levelA.members) {
         const plan = (m.plan || '').toLowerCase().trim()
         totalActiveMembers++
-        if (planPools[plan] !== undefined) {
-          planPools[plan].push(m)
+        if (planCounts[plan] !== undefined) {
+          planCounts[plan]++
         } else {
-          planPools.other.push(m)
+          planCounts.other++
         }
       }
-    }
-
-    // Level 1 & 2 use a separate running total so they don't deplete plan-specific pools
-    let anyConsumed = 0
-
-    const consumeAny = (count) => {
-      const available = Math.max(0, totalActiveMembers - anyConsumed)
-      const consumed = Math.min(available, count)
-      anyConsumed += consumed
-      return consumed
-    }
-
-    const consumeSpecific = (plan, count) => {
-      let consumed = 0
-      while (planPools[plan] && planPools[plan].length > 0 && consumed < count) {
-        planPools[plan].pop()
-        consumed++
-      }
-      return consumed
     }
 
     let hasMetUncompleted = false
@@ -577,9 +556,9 @@ export default function Page() {
           progressText = `0 / ${membersRequired}`
           isCompleted = false
         } else {
-          const count = consumeAny(5)
+          const count = Math.min(totalActiveMembers, 5)
           progressPercent = Math.min(100, Math.round((count / 5) * 100))
-          isCompleted = count >= 5
+          isCompleted = totalActiveMembers >= 5
           progressText = `${count} / ${membersRequired}`
           if (!isCompleted) hasMetUncompleted = true
         }
@@ -592,14 +571,13 @@ export default function Page() {
           progressText = `0 / ${membersRequired}`
           isCompleted = false
         } else {
-          const count = consumeAny(10)
+          const count = Math.min(totalActiveMembers, 10)
           progressPercent = Math.min(100, Math.round((count / 10) * 100))
-          isCompleted = count >= 10
+          isCompleted = totalActiveMembers >= 10
           progressText = `${count} / ${membersRequired}`
           if (!isCompleted) hasMetUncompleted = true
         }
       } else {
-        // Levels 3 to 50 — use plan-specific pools (independent from Level 1/2 consumption)
         let reqEach = 0
         if (lv === 3) {
           rewardUSD = 10
@@ -611,7 +589,6 @@ export default function Page() {
           rewardUSD = 20
           reqEach = 4
         } else {
-          // Level 6 to 50
           reqEach = 5
           rewardUSD = 25 + (lv - 6) * 5
         }
@@ -624,24 +601,24 @@ export default function Page() {
           progressText = `0 / ${membersRequired}`
           isCompleted = false
         } else {
-          const basicProgress = consumeSpecific('basic', reqEach)
-          const standardProgress = consumeSpecific('standard', reqEach)
-          const diamondProgress = consumeSpecific('diamond', reqEach)
-          const proProgress = consumeSpecific('pro', reqEach)
-          const premiumProgress = consumeSpecific('premium', reqEach)
-          const legendProgress = consumeSpecific('legend', reqEach)
+          const basicProgress = Math.min(planCounts.basic, reqEach)
+          const standardProgress = Math.min(planCounts.standard, reqEach)
+          const diamondProgress = Math.min(planCounts.diamond, reqEach)
+          const proProgress = Math.min(planCounts.pro, reqEach)
+          const premiumProgress = Math.min(planCounts.premium, reqEach)
+          const legendProgress = Math.min(planCounts.legend, reqEach)
 
           const totalProgress = basicProgress + standardProgress + diamondProgress + proProgress + premiumProgress + legendProgress
           progressPercent = Math.min(100, Math.round((totalProgress / membersRequired) * 100))
           progressText = `${totalProgress} / ${membersRequired}`
 
           isCompleted = (
-            basicProgress >= reqEach &&
-            standardProgress >= reqEach &&
-            diamondProgress >= reqEach &&
-            proProgress >= reqEach &&
-            premiumProgress >= reqEach &&
-            legendProgress >= reqEach
+            planCounts.basic >= reqEach &&
+            planCounts.standard >= reqEach &&
+            planCounts.diamond >= reqEach &&
+            planCounts.pro >= reqEach &&
+            planCounts.premium >= reqEach &&
+            planCounts.legend >= reqEach
           )
           if (!isCompleted) hasMetUncompleted = true
         }
