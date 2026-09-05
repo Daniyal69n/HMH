@@ -70,20 +70,8 @@ export async function POST(request) {
       rewardUSD = 2;
       isEligible = totalCount >= 10;
     } else {
-      let reqEach = 0;
-      if (level === 3) {
-        reqEach = 2;
-        rewardUSD = 10;
-      } else if (level === 4) {
-        reqEach = 3;
-        rewardUSD = 15;
-      } else if (level === 5) {
-        reqEach = 4;
-        rewardUSD = 20;
-      } else {
-        reqEach = 5;
-        rewardUSD = 25 + (level - 6) * 5;
-      }
+      const reqEach = level - 1;
+      rewardUSD = level === 3 ? 10 : level === 4 ? 15 : level === 5 ? 20 : (25 + (level - 6) * 5);
 
       isEligible = (
         planCounts.basic >= reqEach &&

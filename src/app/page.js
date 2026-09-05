@@ -578,20 +578,8 @@ export default function Page() {
           if (!isCompleted) hasMetUncompleted = true
         }
       } else {
-        let reqEach = 0
-        if (lv === 3) {
-          rewardUSD = 10
-          reqEach = 2
-        } else if (lv === 4) {
-          rewardUSD = 15
-          reqEach = 3
-        } else if (lv === 5) {
-          rewardUSD = 20
-          reqEach = 4
-        } else {
-          reqEach = 5
-          rewardUSD = 25 + (lv - 6) * 5
-        }
+        const reqEach = lv - 1
+        rewardUSD = lv === 3 ? 10 : lv === 4 ? 15 : lv === 5 ? 20 : (25 + (lv - 6) * 5)
 
         membersRequired = reqEach * 6
         reqText = `${reqEach} Basic · ${reqEach} Standard · ${reqEach} Diamond · ${reqEach} Pro · ${reqEach} Premium · ${reqEach} Legend`
@@ -3745,7 +3733,7 @@ export default function Page() {
                 <div className="levels-summary-grid">
                   <div>
                     <div className="levels-summary-number">{currentLevel}</div>
-                    <div className="levels-summary-sub">{teamData.totalMembers} referral{teamData.totalMembers === 1 ? '' : 's'} made</div>
+                    <div className="levels-summary-sub">{teamData.levelA?.count || teamData.levelA?.members?.length || 0} direct referral{(teamData.levelA?.count || 0) === 1 ? '' : 's'} made</div>
                   </div>
                   <div>
                     <div className="level-bar">

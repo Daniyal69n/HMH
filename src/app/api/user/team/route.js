@@ -104,14 +104,14 @@ export async function GET(request) {
         balance: member.balance,
         earnBalance: member.earnBalance,
         joinDate: member.createdAt,
-        plan: activePlan ? activePlan.planName : 'Basic'
+        plan: activePlan ? activePlan.planName : 'Free'
       };
     });
 
     for (const member of pendingMembers) {
       if (formattedLevelAMembers.length >= countA) break;
       const activePlan = (member.investmentPlans || []).reverse().find(p => p.status === 'active');
-      const planName = activePlan ? activePlan.planName : availablePlans[formattedLevelAMembers.length % availablePlans.length];
+      const planName = activePlan ? activePlan.planName : 'Free';
       formattedLevelAMembers.push({
         name: member.name,
         phone: member.phone,
