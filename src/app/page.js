@@ -3752,7 +3752,7 @@ export default function Page() {
                 <div className="levels-summary-grid">
                   <div>
                     <div className="levels-summary-number">{currentLevel}</div>
-                    <div className="levels-summary-sub">{teamData.levelA?.count || teamData.levelA?.members?.length || 0} direct referral{(teamData.levelA?.count || 0) === 1 ? '' : 's'} made</div>
+                    <div className="levels-summary-sub">{teamData.levelA?.members?.length || teamData.levelA?.count || 0} direct referral{(teamData.levelA?.members?.length || 0) === 1 ? '' : 's'} made</div>
                   </div>
                   <div>
                     <div className="level-bar">
