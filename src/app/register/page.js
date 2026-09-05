@@ -145,12 +145,19 @@ export default function RegisterPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const ref = params.get('ref')
-    if (ref) {
-      setFormData((prev) => ({
-        ...prev,
-        referralCode: ref
-      }))
-    }
+    const plan = params.get('plan')
+
+    setFormData((prev) => {
+      const updates = {}
+      if (ref) updates.referralCode = ref
+      if (plan) {
+        const matched = PLANS_LIST.find(p => p.name.toLowerCase() === plan.toLowerCase())
+        if (matched) {
+          updates.planName = matched.name
+        }
+      }
+      return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev
+    })
   }, [])
 
   const handleChange = (event) => {
