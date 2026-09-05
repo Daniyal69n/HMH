@@ -383,7 +383,8 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          {/* Tutorial Video Card */}
+          {/* Tutorial Video Card (Temporarily hidden for recording - uncomment when ready) */}
+          {/*
           <div className="card" style={{ marginBottom: '18px', padding: '16px', background: 'var(--surface)' }}>
             <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', color: 'var(--text-bright)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '18px' }}>📺</span> How to Register (Tutorial)
@@ -400,6 +401,7 @@ export default function RegisterPage() {
               </video>
             </div>
           </div>
+          */}
 
           {/* Main Form Card */}
           <div className="card" style={{ borderRadius: '16px', padding: '24px 20px' }}>
