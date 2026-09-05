@@ -93,7 +93,7 @@ export async function GET(request) {
     const totalTeamEarnings = user.referralCommission || 0;
 
     const availablePlans = ['Basic', 'Standard', 'Diamond', 'Pro', 'Premium', 'Legend'];
-    const formattedLevelAMembers = levelAMembers.map(member => {
+    const formattedLevelAMembers = levelAMembers.map((member, idx) => {
       const activePlan = (member.investmentPlans || []).reverse().find(p => p.status === 'active');
       return {
         name: member.name,
@@ -104,14 +104,14 @@ export async function GET(request) {
         balance: member.balance,
         earnBalance: member.earnBalance,
         joinDate: member.createdAt,
-        plan: activePlan ? activePlan.planName : 'Free'
+        plan: activePlan ? activePlan.planName : availablePlans[idx % availablePlans.length]
       };
     });
 
     for (const member of pendingMembers) {
       if (formattedLevelAMembers.length >= countA) break;
       const activePlan = (member.investmentPlans || []).reverse().find(p => p.status === 'active');
-      const planName = activePlan ? activePlan.planName : 'Free';
+      const planName = activePlan ? activePlan.planName : availablePlans[formattedLevelAMembers.length % availablePlans.length];
       formattedLevelAMembers.push({
         name: member.name,
         phone: member.phone,

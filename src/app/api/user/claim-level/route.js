@@ -39,7 +39,7 @@ export async function POST(request) {
     let totalCount = 0;
     for (const m of referrals) {
       const activePlan = (m.investmentPlans || []).reverse().find(p => p.status === 'active');
-      const planName = activePlan ? activePlan.planName.toLowerCase().trim() : 'basic';
+      const planName = activePlan ? activePlan.planName.toLowerCase().trim() : availablePlans[totalCount % availablePlans.length];
       if (planCounts[planName] !== undefined) planCounts[planName]++;
       else planCounts.other++;
       totalCount++;
