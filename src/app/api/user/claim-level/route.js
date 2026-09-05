@@ -78,6 +78,15 @@ export async function POST(request) {
         pools[plan].pop();
         consumed++;
       }
+      if (consumed < count) {
+        const order = ['other', 'basic', 'standard', 'diamond', 'pro', 'premium', 'legend'];
+        for (const p of order) {
+          while (pools[p] && pools[p].length > 0 && consumed < count) {
+            pools[p].pop();
+            consumed++;
+          }
+        }
+      }
       return consumed;
     }
 

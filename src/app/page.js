@@ -552,6 +552,15 @@ export default function Page() {
         planPools[plan].pop()
         consumed++
       }
+      if (consumed < count) {
+        const order = ['other', 'basic', 'standard', 'diamond', 'pro', 'premium', 'legend']
+        for (const p of order) {
+          while (planPools[p] && planPools[p].length > 0 && consumed < count) {
+            planPools[p].pop()
+            consumed++
+          }
+        }
+      }
       return consumed
     }
 
