@@ -32,55 +32,89 @@ export async function POST(request) {
       : (referrals.length + pendingReferrals.length);
 
     const availablePlans = ['basic', 'standard', 'diamond', 'pro', 'premium', 'legend'];
-    let planCounts = {
-      basic: 0, standard: 0, diamond: 0, pro: 0, premium: 0, legend: 0, other: 0
+    let pools = {
+      basic: [], standard: [], diamond: [], pro: [], premium: [], legend: [], other: []
     };
 
     let totalCount = 0;
     for (const m of referrals) {
       const activePlan = (m.investmentPlans || []).reverse().find(p => p.status === 'active');
       const planName = activePlan ? activePlan.planName.toLowerCase().trim() : availablePlans[totalCount % availablePlans.length];
-      if (planCounts[planName] !== undefined) planCounts[planName]++;
-      else planCounts.other++;
+      if (pools[planName]) pools[planName].push(m);
+      else pools.other.push(m);
       totalCount++;
     }
 
     for (const m of pendingReferrals) {
       if (totalCount >= countA) break;
       const planName = availablePlans[totalCount % availablePlans.length];
-      if (planCounts[planName] !== undefined) planCounts[planName]++;
-      else planCounts.other++;
+      if (pools[planName]) pools[planName].push(m);
+      else pools.other.push(m);
       totalCount++;
     }
 
     while (totalCount < countA) {
       const planName = availablePlans[totalCount % availablePlans.length];
-      if (planCounts[planName] !== undefined) planCounts[planName]++;
-      else planCounts.other++;
+      if (pools[planName]) pools[planName].push({});
+      else pools.other.push({});
       totalCount++;
     }
-    
+
+    const consumeAny = (count) => {
+      let consumed = 0;
+      const order = ['other', 'basic', 'standard', 'diamond', 'pro', 'premium', 'legend'];
+      for (const p of order) {
+        while (pools[p].length > 0 && consumed < count) {
+          pools[p].pop();
+          consumed++;
+        }
+      }
+      return consumed;
+    }
+
+    const consumeSpecific = (plan, count) => {
+      let consumed = 0;
+      while (pools[plan] && pools[plan].length > 0 && consumed < count) {
+        pools[plan].pop();
+        consumed++;
+      }
+      return consumed;
+    }
+
     let isEligible = false;
     let rewardUSD = 0;
 
-    if (level === 1) {
-      rewardUSD = 1;
-      isEligible = totalCount >= 5;
-    } else if (level === 2) {
-      rewardUSD = 2;
-      isEligible = totalCount >= 10;
-    } else {
-      const reqEach = level - 1;
-      rewardUSD = level === 3 ? 10 : level === 4 ? 15 : level === 5 ? 20 : (25 + (level - 6) * 5);
+    for (let lv = 1; lv <= level; lv++) {
+      if (lv === 1) {
+        rewardUSD = 1;
+        const count = consumeAny(5);
+        if (lv === level) isEligible = count >= 5;
+      } else if (lv === 2) {
+        rewardUSD = 2;
+        const count = consumeAny(10);
+        if (lv === level) isEligible = count >= 10;
+      } else {
+        const reqEach = lv - 1;
+        rewardUSD = lv === 3 ? 10 : lv === 4 ? 15 : lv === 5 ? 20 : (25 + (lv - 6) * 5);
 
-      isEligible = (
-        planCounts.basic >= reqEach &&
-        planCounts.standard >= reqEach &&
-        planCounts.diamond >= reqEach &&
-        planCounts.pro >= reqEach &&
-        planCounts.premium >= reqEach &&
-        planCounts.legend >= reqEach
-      );
+        const basicProgress = consumeSpecific('basic', reqEach);
+        const standardProgress = consumeSpecific('standard', reqEach);
+        const diamondProgress = consumeSpecific('diamond', reqEach);
+        const proProgress = consumeSpecific('pro', reqEach);
+        const premiumProgress = consumeSpecific('premium', reqEach);
+        const legendProgress = consumeSpecific('legend', reqEach);
+
+        if (lv === level) {
+          isEligible = (
+            basicProgress >= reqEach &&
+            standardProgress >= reqEach &&
+            diamondProgress >= reqEach &&
+            proProgress >= reqEach &&
+            premiumProgress >= reqEach &&
+            legendProgress >= reqEach
+          );
+        }
+      }
     }
     
     if (!isEligible) {
