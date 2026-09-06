@@ -236,11 +236,15 @@ export async function PUT(request) {
         if (data.uplineId !== undefined) {
           const uId = (data.uplineId || '').trim();
           if (uId) {
-            const uplineUser = await User.findOne({ shortId: uId }).lean();
-            if (uplineUser) {
-              editUser.referredBy = uplineUser.phone;
+            if (editUser.referredBy && (uId === editUser.referrerCode || uId === editUser.referredBy || uId === editUser.shortId)) {
+              // Same upline ID, no DB query needed
             } else {
-              return NextResponse.json({ error: `Upline user with ID ${uId} not found` }, { status: 404 });
+              const uplineUser = await User.findOne({ shortId: uId }).lean();
+              if (uplineUser) {
+                editUser.referredBy = uplineUser.phone;
+              } else {
+                return NextResponse.json({ error: `Upline user with ID ${uId} not found` }, { status: 404 });
+              }
             }
           } else {
             editUser.referredBy = null;
@@ -283,12 +287,14 @@ export async function PUT(request) {
         if (data.withdrawHistory && Array.isArray(data.withdrawHistory)) {
           const { default: Transaction } = await import('@/models/Transaction');
           
-          // Find deleted manual withdrawals (added by admin) and delete corresponding Transaction
-          const manualTxs = await Transaction.find({
-            userId: editUser.phone,
-            type: 'withdraw',
-            description: { $regex: /^Manual withdrawal/i }
-          });
+          const existingTxs = await Transaction.find({ userId: editUser.phone, type: 'withdraw' });
+
+          // Find deleted manual withdrawals (added by admin) in memory to avoid unindexed regex DB queries
+          const manualTxs = existingTxs.filter(tx => 
+            tx.description && /^Manual withdrawal/i.test(tx.description)
+          );
+
+          const idsToDelete = [];
           for (let tx of manualTxs) {
             const stillExists = data.withdrawHistory.some(wd => 
               Number(wd.amount) === Number(tx.amount) && 
@@ -299,16 +305,21 @@ export async function PUT(request) {
             const fallbackExists = data.withdrawHistory.some(wd => Number(wd.amount) === Number(tx.amount) && wd.status === tx.status);
             
             if (!stillExists && !fallbackExists) {
-              await Transaction.findByIdAndDelete(tx._id);
+              idsToDelete.push(tx._id);
             }
+          }
+          if (idsToDelete.length > 0) {
+            await Transaction.deleteMany({ _id: { $in: idsToDelete } });
           }
 
           const randomWdMethods = ['JazzCash', 'EasyPaisa', 'Binance'];
-          const existingTxs = await Transaction.find({ userId: editUser.phone, type: 'withdraw' });
+          const newTxsToCreate = [];
+          const txsToSave = [];
+
           for (let wd of data.withdrawHistory) {
             if (wd._id && String(wd._id).startsWith('new_')) {
               const selectedMethod = randomWdMethods[Math.floor(Math.random() * randomWdMethods.length)];
-              await Transaction.create({
+              newTxsToCreate.push({
                 userId: editUser.phone,
                 userName: editUser.name,
                 type: 'withdraw',
@@ -324,9 +335,15 @@ export async function PUT(request) {
               let bestMatch = txs.length === 1 ? txs[0] : (txs.find(t => wd.date && t.createdAt && new Date(t.createdAt).getTime() === new Date(wd.date).getTime()) || txs.find(t => t.status !== wd.status) || txs[0]);
               if (bestMatch && bestMatch.status !== wd.status) {
                 bestMatch.status = wd.status;
-                await bestMatch.save();
+                txsToSave.push(bestMatch.save());
               }
             }
+          }
+          if (newTxsToCreate.length > 0) {
+            await Transaction.insertMany(newTxsToCreate);
+          }
+          if (txsToSave.length > 0) {
+            await Promise.all(txsToSave);
           }
         }
         editUser.withdrawHistory = data.withdrawHistory || [];
@@ -352,9 +369,12 @@ export async function PUT(request) {
         if (data.rechargeHistory && Array.isArray(data.rechargeHistory)) {
           const { default: Transaction } = await import('@/models/Transaction');
           const existingRcTxs = await Transaction.find({ userId: editUser.phone, type: 'recharge' });
+          const newRcTxsToCreate = [];
+          const rcTxsToSave = [];
+
           for (let rc of data.rechargeHistory) {
             if (rc._id && String(rc._id).startsWith('new_')) {
-              await Transaction.create({
+              newRcTxsToCreate.push({
                 userId: editUser.phone,
                 userName: editUser.name,
                 type: 'recharge',
@@ -370,9 +390,15 @@ export async function PUT(request) {
               let bestMatch = txs.length === 1 ? txs[0] : (txs.find(t => rc.date && t.createdAt && new Date(t.createdAt).getTime() === new Date(rc.date).getTime()) || txs.find(t => t.status !== rc.status) || txs[0]);
               if (bestMatch && bestMatch.status !== rc.status) {
                 bestMatch.status = rc.status;
-                await bestMatch.save();
+                rcTxsToSave.push(bestMatch.save());
               }
             }
+          }
+          if (newRcTxsToCreate.length > 0) {
+            await Transaction.insertMany(newRcTxsToCreate);
+          }
+          if (rcTxsToSave.length > 0) {
+            await Promise.all(rcTxsToSave);
           }
         }
         editUser.rechargeHistory = data.rechargeHistory || [];

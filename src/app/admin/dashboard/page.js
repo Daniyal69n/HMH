@@ -2353,15 +2353,33 @@ export default function AdminDashboard() {
       return
     }
 
+    const previousUserData = editingUserData
+    const targetUserId = editingUserData._id || editingUserData.phone
+
+    // Optimistically update React state and close modal immediately (0ms wait)
+    const optimisticUser = {
+      ...editingUserData,
+      ...editForm,
+      investmentPlans: editForm.investmentPlans || [],
+      withdrawHistory: editForm.withdrawHistory || [],
+      rechargeHistory: editForm.rechargeHistory || []
+    }
+
+    setUsers(prev => prev.map(u => (
+      (u._id && u._id === targetUserId) || (u.phone && u.phone === targetUserId)
+        ? { ...u, ...optimisticUser }
+        : u
+    )))
+    setEditingUserData(null)
+
     try {
-      setIsLoading(true)
       const response = await fetch('/api/admin/users', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: editingUserData._id || editingUserData.phone,
+          userId: targetUserId,
           action: 'edit_user',
           data: editForm
         }),
@@ -2370,7 +2388,6 @@ export default function AdminDashboard() {
       if (response.ok) {
         const result = await response.json()
         showSuccess('User updated successfully!')
-        setEditingUserData(null)
         if (result && result.user) {
           setUsers(prev => prev.map(u => (
             (u._id && u._id === result.user._id) || (u.phone && u.phone === result.user.phone)
@@ -2382,12 +2399,24 @@ export default function AdminDashboard() {
       } else {
         const errorData = await response.json()
         showError(errorData.error || 'Failed to update user')
+        if (previousUserData) {
+          setUsers(prev => prev.map(u => (
+            (u._id && u._id === targetUserId) || (u.phone && u.phone === targetUserId)
+              ? previousUserData
+              : u
+          )))
+        }
       }
     } catch (error) {
       console.warn('Error updating user:', error)
       showError('Error updating user')
-    } finally {
-      setIsLoading(false)
+      if (previousUserData) {
+        setUsers(prev => prev.map(u => (
+          (u._id && u._id === targetUserId) || (u.phone && u.phone === targetUserId)
+            ? previousUserData
+            : u
+        )))
+      }
     }
   }
 
