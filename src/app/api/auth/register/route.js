@@ -5,6 +5,7 @@ import Transaction from '@/models/Transaction';
 import { getNextShortId } from '@/lib/shortId';
 
 export const maxDuration = 60; // Increase timeout to 60 seconds for Vercel
+export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {
@@ -20,9 +21,9 @@ export async function POST(request) {
       );
     }
 
-    // Check TRX ID uniqueness if provided
+    // Fast exact check for TRX ID uniqueness if provided
     let cleanedTrxId = null;
-    if (trxId && trxId.trim()) {
+    if (trxId && typeof trxId === 'string' && trxId.trim()) {
       cleanedTrxId = trxId.trim();
       if (cleanedTrxId.length < 8 || cleanedTrxId.length > 30) {
         return NextResponse.json(
@@ -31,8 +32,9 @@ export async function POST(request) {
         );
       }
       const existingTrx = await User.findOne({
-        'investmentPlans.trxId': { $regex: new RegExp(`^${cleanedTrxId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
-      });
+        'investmentPlans.trxId': cleanedTrxId
+      }).select('_id').lean();
+
       if (existingTrx) {
         return NextResponse.json(
           { error: 'This TRX ID has already been used. Please enter a valid unique TRX ID.' },
@@ -41,10 +43,10 @@ export async function POST(request) {
       }
     }
 
-    // Check if user already exists (by phone number or email)
+    // Fast check if user already exists (by phone number or email)
     const existingUser = await User.findOne({
       $or: [{ phone }, { email }]
-    });
+    }).select('email phone').lean();
 
     if (existingUser) {
       if (existingUser.email === email) {
@@ -59,14 +61,18 @@ export async function POST(request) {
       );
     }
 
-    // Validate referral code if provided
+    // Validate referral code if provided (single indexed lookup)
     let referrer = null;
-    if (referralCode) {
-      // Try matching by shortId field first, then phone (backward compat)
-      referrer = await User.findOne({ shortId: referralCode });
-      if (!referrer) {
-        referrer = await User.findOne({ phone: referralCode });
-      }
+    if (referralCode && typeof referralCode === 'string' && referralCode.trim()) {
+      const cleanedRef = referralCode.trim();
+      referrer = await User.findOne({
+        $or: [
+          { shortId: cleanedRef },
+          { shortId: cleanedRef.toUpperCase() },
+          { phone: cleanedRef }
+        ]
+      }).select('_id phone name').lean();
+
       if (!referrer) {
         return NextResponse.json(
           { error: 'Invalid referral code' },
@@ -75,17 +81,21 @@ export async function POST(request) {
       }
     }
 
-    // Process screenshot if provided as base64 fallback
+    // Process screenshot if provided as base64 fallback with 4-second timeout
     let finalScreenshotUrl = screenshotUrl || null;
     if (screenshotUrl && typeof screenshotUrl === 'string' && screenshotUrl.startsWith('data:image')) {
       try {
-        const { uploadBase64ToCloudinary } = await import('@/lib/cloudinaryHelper');
-        const cUrl = await uploadBase64ToCloudinary(screenshotUrl, 'plan-requests');
+        const uploadPromise = (async () => {
+          const { uploadBase64ToCloudinary } = await import('@/lib/cloudinaryHelper');
+          return await uploadBase64ToCloudinary(screenshotUrl, 'plan-requests');
+        })();
+        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 4000));
+        const cUrl = await Promise.race([uploadPromise, timeoutPromise]);
         if (cUrl) {
           finalScreenshotUrl = cUrl;
         }
       } catch (err) {
-        console.warn('Cloudinary upload error in register route:', err);
+        console.warn('Cloudinary upload fallback in register route:', err);
       }
     }
 
@@ -110,7 +120,7 @@ export async function POST(request) {
       phone,
       password,
       shortId: userShortId,
-      referralCode: referralCode || null,
+      referralCode: referralCode ? referralCode.trim() : null,
       referredBy: referrer ? referrer.phone : null,
       referralLevel: referrer ? 'A' : null,
       status: (cleanedTrxId || planName) ? 'pending' : 'approved',
@@ -125,14 +135,20 @@ export async function POST(request) {
 
     await user.save();
 
-    // Add user to referrer's team if referral code was used
+    // Fast atomic update to add user to referrer's team
     if (referrer) {
-      referrer.teamMembers.push({
-        userId: user._id,
-        level: 'A',
-        joinDate: new Date()
-      });
-      await referrer.save();
+      await User.updateOne(
+        { _id: referrer._id },
+        {
+          $push: {
+            teamMembers: {
+              userId: user._id,
+              level: 'A',
+              joinDate: new Date()
+            }
+          }
+        }
+      ).catch(err => console.warn('Error updating referrer teamMembers:', err));
     }
 
     // Return user data without password
