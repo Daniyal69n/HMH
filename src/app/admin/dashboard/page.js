@@ -2368,9 +2368,17 @@ export default function AdminDashboard() {
       })
 
       if (response.ok) {
+        const result = await response.json()
         showSuccess('User updated successfully!')
         setEditingUserData(null)
-        await refreshUsers()
+        if (result && result.user) {
+          setUsers(prev => prev.map(u => (
+            (u._id && u._id === result.user._id) || (u.phone && u.phone === result.user.phone)
+              ? { ...u, ...result.user }
+              : u
+          )))
+        }
+        refreshUsers()
       } else {
         const errorData = await response.json()
         showError(errorData.error || 'Failed to update user')

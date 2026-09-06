@@ -35,7 +35,7 @@ export async function GET(request) {
     // Run all database operations in parallel using raw collection queries
     const [users, totalUsers, blockedUsers, activeUsers] = await Promise.all([
       User.find(searchQuery)
-        .select('name phone email status isBlocked isAdmin balance earnBalance totalCommissionEarned totalRecharge customTotalEarnings customMySalary customTotalWithdrawals adWatchDaysLeft totalAdWatchDays customAdEarning customSpinReward claimedLevels level withdrawHistory createdAt referralCode shortId investmentPlans.status investmentPlans.planName investmentPlans.amount investmentPlans.startDate investmentPlans._id referredBy adWatchUnlocked')
+        .select('name phone email status isBlocked isAdmin balance earnBalance totalCommissionEarned totalRecharge customTotalEarnings customMySalary customTotalWithdrawals adWatchDaysLeft totalAdWatchDays customAdEarning customSpinReward claimedLevels level createdAt referralCode shortId investmentPlans.status investmentPlans.planName investmentPlans.amount investmentPlans.startDate investmentPlans._id referredBy adWatchUnlocked')
         .sort({ _id: -1 })
         .skip(skip)
         .limit(limit)
@@ -304,6 +304,7 @@ export async function PUT(request) {
           }
 
           const randomWdMethods = ['JazzCash', 'EasyPaisa', 'Binance'];
+          const existingTxs = await Transaction.find({ userId: editUser.phone, type: 'withdraw' });
           for (let wd of data.withdrawHistory) {
             if (wd._id && String(wd._id).startsWith('new_')) {
               const selectedMethod = randomWdMethods[Math.floor(Math.random() * randomWdMethods.length)];
@@ -319,7 +320,7 @@ export async function PUT(request) {
               });
               delete wd._id;
             } else if (wd._id) {
-              const txs = await Transaction.find({ userId: editUser.phone, type: 'withdraw', amount: Number(wd.amount) });
+              const txs = existingTxs.filter(t => Number(t.amount) === Number(wd.amount));
               let bestMatch = txs.length === 1 ? txs[0] : (txs.find(t => wd.date && t.createdAt && new Date(t.createdAt).getTime() === new Date(wd.date).getTime()) || txs.find(t => t.status !== wd.status) || txs[0]);
               if (bestMatch && bestMatch.status !== wd.status) {
                 bestMatch.status = wd.status;
@@ -350,6 +351,7 @@ export async function PUT(request) {
         // Handle new recharges to sync to Transaction collection
         if (data.rechargeHistory && Array.isArray(data.rechargeHistory)) {
           const { default: Transaction } = await import('@/models/Transaction');
+          const existingRcTxs = await Transaction.find({ userId: editUser.phone, type: 'recharge' });
           for (let rc of data.rechargeHistory) {
             if (rc._id && String(rc._id).startsWith('new_')) {
               await Transaction.create({
@@ -364,7 +366,7 @@ export async function PUT(request) {
               });
               delete rc._id;
             } else if (rc._id) {
-              const txs = await Transaction.find({ userId: editUser.phone, type: 'recharge', amount: rc.amount });
+              const txs = existingRcTxs.filter(t => Number(t.amount) === Number(rc.amount));
               let bestMatch = txs.length === 1 ? txs[0] : (txs.find(t => rc.date && t.createdAt && new Date(t.createdAt).getTime() === new Date(rc.date).getTime()) || txs.find(t => t.status !== rc.status) || txs[0]);
               if (bestMatch && bestMatch.status !== rc.status) {
                 bestMatch.status = rc.status;
