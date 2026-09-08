@@ -193,6 +193,11 @@ export async function PUT(request) {
       );
     }
 
+    // Email cannot be modified by user from profile settings (only admin can change email)
+    if (updates && updates.email) {
+      delete updates.email;
+    }
+
     const user = await User.findOneAndUpdate(
       { phone },
       { $set: updates },

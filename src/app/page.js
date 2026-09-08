@@ -1946,7 +1946,6 @@ export default function Page() {
           phone: nextProfile.phone,
           updates: {
             name: nextProfile.name,
-            email: nextProfile.email,
             username: nextProfile.username,
             city: nextProfile.city,
             address: nextProfile.address,
@@ -4422,7 +4421,7 @@ export default function Page() {
                 <input type="text" value={profileDraft.name} onChange={(e) => setProfileDraft((prev) => ({ ...prev, name: e.target.value }))} />
 
                 <label>Email</label>
-                <input type="text" value={profileDraft.email} onChange={(e) => setProfileDraft((prev) => ({ ...prev, email: e.target.value }))} />
+                <input type="text" value={profileDraft.email || ''} readOnly disabled style={{ opacity: 0.7, cursor: 'not-allowed' }} />
 
                 <label>Username</label>
                 <input type="text" value={profileDraft.username} onChange={(e) => setProfileDraft((prev) => ({ ...prev, username: e.target.value }))} placeholder="Choose a unique username" />
