@@ -173,9 +173,9 @@ export async function PUT(request) {
       case 'edit_user':
         let editUser;
         if (userId.match(/^[0-9a-fA-F]{24}$/)) {
-          editUser = await User.findById(userId);
+          editUser = await User.findById(userId).select('-socialTaskSubmissions.screenshotBase64 -investmentPlans.screenshotData');
         } else {
-          editUser = await User.findOne({ phone: userId });
+          editUser = await User.findOne({ phone: userId }).select('-socialTaskSubmissions.screenshotBase64 -investmentPlans.screenshotData');
         }
         
         if (!editUser) {
@@ -308,7 +308,15 @@ export async function PUT(request) {
           return item;
         });
 
-        if (withdrawHistory.length > 0) {
+        const historySignature = (arr = []) => arr.map((entry) => {
+          const timeVal = entry?.date || entry?.createdAt;
+          const ts = timeVal ? new Date(timeVal).getTime() : 0;
+          return `${Number(entry?.amount || 0)}|${entry?.status || ''}|${Number.isFinite(ts) ? ts : 0}`;
+        }).join('::');
+
+        const hasWithdrawHistoryChanges = historySignature(withdrawHistory) !== historySignature(editUser.withdrawHistory || []);
+
+        if (withdrawHistory.length > 0 && hasWithdrawHistoryChanges) {
           try {
             const { default: Transaction } = await import('@/models/Transaction');
             
@@ -401,7 +409,9 @@ export async function PUT(request) {
           return item;
         });
 
-        if (rechargeHistory.length > 0) {
+        const hasRechargeHistoryChanges = historySignature(rechargeHistory) !== historySignature(editUser.rechargeHistory || []);
+
+        if (rechargeHistory.length > 0 && hasRechargeHistoryChanges) {
           try {
             const { default: Transaction } = await import('@/models/Transaction');
             const existingRcTxs = await Transaction.find({ userId: editUser.phone, type: 'recharge' });

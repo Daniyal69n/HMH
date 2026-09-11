@@ -43,12 +43,12 @@ async function connectDB() {
 
   // Serverless-optimized connection options
   const opts = {
-    maxPoolSize: 3,          // Low pool for serverless
+    maxPoolSize: 10,         // Allow concurrent API requests without starving the pool
     minPoolSize: 0,          // Don't hold idle connections
     maxIdleTimeMS: 10000,    // Close connections idle for 10 seconds
-    serverSelectionTimeoutMS: 8000,
-    socketTimeoutMS: 20000,
-    connectTimeoutMS: 8000,
+    serverSelectionTimeoutMS: 20000,
+    socketTimeoutMS: 60000,
+    connectTimeoutMS: 20000,
     heartbeatFrequencyMS: 5000,
   };
 
