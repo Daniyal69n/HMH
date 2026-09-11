@@ -245,7 +245,7 @@ export async function distributeCommission(buyerPhone, purchaseAmountPKR, planNa
 export async function activateUserPlan(user, planToApprove) {
   // 1. Deactivate other active plans in user's investmentPlans array
   for (const p of user.investmentPlans) {
-    if (p._id.toString() !== planToApprove._id.toString() && p.status === 'active') {
+    if (p._id && planToApprove._id && p._id.toString() !== planToApprove._id.toString() && p.status === 'active') {
       p.status = 'completed';
     }
   }

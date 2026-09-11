@@ -239,7 +239,13 @@ export async function PUT(request) {
             if (editUser.referredBy && (uId === editUser.referrerCode || uId === editUser.referredBy || uId === editUser.shortId)) {
               // Same upline ID, no DB query needed
             } else {
-              const uplineUser = await User.findOne({ shortId: uId }).lean();
+              const uplineUser = await User.findOne({
+                $or: [
+                  { shortId: uId },
+                  { referralCode: uId },
+                  { phone: uId }
+                ]
+              }).lean();
               if (uplineUser) {
                 editUser.referredBy = uplineUser.phone;
               } else {
@@ -280,8 +286,12 @@ export async function PUT(request) {
         if (planToActivate) {
           const actualPlanToActivate = editUser.investmentPlans.find(p => p.planName === planToActivate.planName && p.status === 'active');
           if (actualPlanToActivate) {
-            const { activateUserPlan } = await import('@/lib/commission');
-            await activateUserPlan(editUser, actualPlanToActivate);
+            try {
+              const { activateUserPlan } = await import('@/lib/commission');
+              await activateUserPlan(editUser, actualPlanToActivate);
+            } catch (planErr) {
+              console.error('Error activating user plan:', planErr);
+            }
           }
         }
         
