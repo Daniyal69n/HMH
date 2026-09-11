@@ -455,7 +455,9 @@ export async function PUT(request) {
           });
         }
         
-        await editUser.save();
+        // Some legacy users contain invalid values in untouched fields.
+        // Validate only modified paths so admin can still edit current fields safely.
+        await editUser.save({ validateModifiedOnly: true });
         
         return NextResponse.json({
           message: 'User updated successfully',
