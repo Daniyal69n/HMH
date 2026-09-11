@@ -33,7 +33,7 @@ export async function processSocialTaskMilestones(user) {
     user.lifetimeSocialTaskUSD = lifetimeUSD;
   }
 
-  const userLevel = (user.claimedLevels && user.claimedLevels.length > 0) ? Math.max(...user.claimedLevels) : 0;
+  const userLevel = user.level || 0;
 
   for (const milestone of SOCIAL_MILESTONES) {
     const hasReachedLevel = userLevel >= milestone.level;

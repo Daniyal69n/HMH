@@ -123,9 +123,7 @@ export async function GET(request) {
     });
 
     const realLeaders = topUsers.map(user => {
-      const claimLvl = (user.claimedLevels && user.claimedLevels.length > 0) ? Math.max(...user.claimedLevels) : 1;
-      const dbLvl = user.level || 1;
-      const level = Math.max(claimLvl, dbLvl);
+      const level = user.level || 1;
       const amt = user.computedEarnings / 300.0; // convert PKR to USD
       
       const rawPhone = user.phone || '';
