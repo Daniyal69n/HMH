@@ -1,7 +1,15 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
 
-const DEFAULT_PRIMARY_URI = 'mongodb://dk3205997146:Daniyal123@ac-snk8ltk-shard-00-00.githyp3.mongodb.net:27017/hmh?ssl=true&authSource=admin&directConnection=true';
-const MONGODB_URI = process.env.MONGODB_URI || DEFAULT_PRIMARY_URI;
+// Force Google DNS to resolve MongoDB SRV records reliably
+// (ISP DNS often blocks or times out mongodb.net SRV lookups)
+dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
+}
 
 /**
  * Global is used here to maintain a cached connection across hot reloads
@@ -19,6 +27,12 @@ async function connectDB() {
     return cached.conn;
   }
 
+  // If a stale/disconnected connection exists, clear it
+  if (mongoose.connection.readyState === 0 || mongoose.connection.readyState === 3) {
+    cached.conn = null;
+    cached.promise = null;
+  }
+
   // If connecting promise is active (readyState === 2), await it
   if (cached.promise && mongoose.connection.readyState === 2) {
     try {
@@ -30,27 +44,16 @@ async function connectDB() {
   }
 
   const opts = {
-    maxPoolSize: 10,
-    minPoolSize: 1,
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000,
-    connectTimeoutMS: 5000
+    maxPoolSize: 5,
+    minPoolSize: 0,
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 30000,
+    connectTimeoutMS: 10000,
+    heartbeatFrequencyMS: 10000,
   };
 
-  const connectWithFallback = async () => {
-    try {
-      return await mongoose.connect(MONGODB_URI, opts);
-    } catch (err) {
-      console.warn('[MongoDB] Primary URI connection failed, attempting direct connection fallback...', err.message);
-      if (!MONGODB_URI.includes('directConnection=true')) {
-        return await mongoose.connect(DEFAULT_PRIMARY_URI, opts);
-      }
-      throw err;
-    }
-  };
-
-  cached.promise = connectWithFallback().then((m) => {
-    console.log('[MongoDB] Connected successfully to Atlas ✅');
+  cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
+    console.log('[MongoDB] Connected successfully ✅');
     return m;
   }).catch((err) => {
     console.error('[MongoDB] Connection error:', err.message);
