@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://dk3205997146:Daniyal123@ac-snk8ltk-shard-00-00.githyp3.mongodb.net:27017,ac-snk8ltk-shard-00-01.githyp3.mongodb.net:27017,ac-snk8ltk-shard-00-02.githyp3.mongodb.net:27017/hmh?ssl=true&replicaSet=atlas-snk8ltk-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Ai';
+const DEFAULT_PRIMARY_URI = 'mongodb://dk3205997146:Daniyal123@ac-snk8ltk-shard-00-00.githyp3.mongodb.net:27017/hmh?ssl=true&authSource=admin&directConnection=true';
+const MONGODB_URI = process.env.MONGODB_URI || DEFAULT_PRIMARY_URI;
 
 /**
  * Global is used here to maintain a cached connection across hot reloads
@@ -13,10 +14,6 @@ if (!cached) {
 }
 
 async function connectDB() {
-  if (!MONGODB_URI) {
-    throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
-  }
-
   // If already connected and connection is active (readyState === 1), reuse connection immediately
   if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
@@ -35,13 +32,24 @@ async function connectDB() {
   const opts = {
     maxPoolSize: 10,
     minPoolSize: 1,
-    serverSelectionTimeoutMS: 15000,
+    serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
-    connectTimeoutMS: 15000,
-    family: 4 // Force IPv4 to prevent IPv6 DNS timeout hangs
+    connectTimeoutMS: 5000
   };
 
-  cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
+  const connectWithFallback = async () => {
+    try {
+      return await mongoose.connect(MONGODB_URI, opts);
+    } catch (err) {
+      console.warn('[MongoDB] Primary URI connection failed, attempting direct connection fallback...', err.message);
+      if (!MONGODB_URI.includes('directConnection=true')) {
+        return await mongoose.connect(DEFAULT_PRIMARY_URI, opts);
+      }
+      throw err;
+    }
+  };
+
+  cached.promise = connectWithFallback().then((m) => {
     console.log('[MongoDB] Connected successfully to Atlas ✅');
     return m;
   }).catch((err) => {
