@@ -1392,14 +1392,15 @@ export default function Page() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ imageBase64: screenshotBase64 })
         });
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          if (uploadData.screenshotUrl) {
-            uploadedScreenshotUrl = uploadData.screenshotUrl;
-          }
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok || !uploadData.screenshotUrl) {
+          throw new Error(uploadData.message || 'Screenshot upload failed');
         }
+        uploadedScreenshotUrl = uploadData.screenshotUrl;
       } catch (err) {
-        console.warn('Frontend Cloudinary upload fallback for social task:', err);
+        console.error('Screenshot upload failed for social task:', err);
+        showToast(err.message || 'Failed to upload screenshot. Please try again.');
+        return;
       }
 
       const res = await fetch('/api/user/social-task', {
@@ -1411,7 +1412,7 @@ export default function Page() {
           link: stLink,
           platform: currentRequiredPlatform,
           screenshotUrl: uploadedScreenshotUrl,
-          screenshotBase64: uploadedScreenshotUrl ? '' : screenshotBase64,
+          screenshotBase64: '',
           notes: stNotes
         })
       })

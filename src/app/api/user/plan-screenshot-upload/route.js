@@ -4,6 +4,8 @@
  * Frontend should call this BEFORE calling /api/user/plan-request/
  */
 
+export const maxDuration = 60;
+
 export async function POST(request) {
   try {
     const { imageBase64 } = await request.json();
