@@ -254,15 +254,17 @@ export async function PUT(request) {
 
         // Handle plans
         const oldPlans = editUser.investmentPlans || [];
-        const newPlans = data.investmentPlans || [];
+        const newPlans = (data.investmentPlans || []).map(plan => {
+          const p = { ...plan };
+          if (p._id && !String(p._id).match(/^[0-9a-fA-F]{24}$/)) {
+            delete p._id;
+          }
+          return p;
+        });
         
         // Find if any plan status was changed to 'active'
         let planToActivate = null;
         for (const newPlan of newPlans) {
-          // Remove the dummy _id for newly added plans so mongoose generates a real ObjectId
-          if (newPlan._id && String(newPlan._id).startsWith('new_')) {
-            delete newPlan._id;
-          }
           if (newPlan.status === 'active') {
             const oldPlan = oldPlans.find(p => p._id && p._id.toString() === newPlan._id?.toString());
             if (!oldPlan || oldPlan.status !== 'active') {
@@ -284,7 +286,15 @@ export async function PUT(request) {
         }
         
         // Handle new withdrawals to sync to Transaction collection
-        if (data.withdrawHistory && Array.isArray(data.withdrawHistory)) {
+        const withdrawHistory = (data.withdrawHistory || []).map(wd => {
+          const item = { ...wd };
+          if (item._id && !String(item._id).match(/^[0-9a-fA-F]{24}$/)) {
+            delete item._id;
+          }
+          return item;
+        });
+
+        if (withdrawHistory.length > 0) {
           const { default: Transaction } = await import('@/models/Transaction');
           
           const existingTxs = await Transaction.find({ userId: editUser.phone, type: 'withdraw' });
@@ -296,13 +306,13 @@ export async function PUT(request) {
 
           const idsToDelete = [];
           for (let tx of manualTxs) {
-            const stillExists = data.withdrawHistory.some(wd => 
+            const stillExists = withdrawHistory.some(wd => 
               Number(wd.amount) === Number(tx.amount) && 
               wd.date && new Date(wd.date).getTime() === new Date(tx.createdAt).getTime()
             );
             
             // Fallback match in case date was modified or missing
-            const fallbackExists = data.withdrawHistory.some(wd => Number(wd.amount) === Number(tx.amount) && wd.status === tx.status);
+            const fallbackExists = withdrawHistory.some(wd => Number(wd.amount) === Number(tx.amount) && wd.status === tx.status);
             
             if (!stillExists && !fallbackExists) {
               idsToDelete.push(tx._id);
@@ -316,8 +326,8 @@ export async function PUT(request) {
           const newTxsToCreate = [];
           const txsToSave = [];
 
-          for (let wd of data.withdrawHistory) {
-            if (wd._id && String(wd._id).startsWith('new_')) {
+          for (let wd of withdrawHistory) {
+            if (!wd._id) {
               const selectedMethod = randomWdMethods[Math.floor(Math.random() * randomWdMethods.length)];
               newTxsToCreate.push({
                 userId: editUser.phone,
@@ -329,8 +339,7 @@ export async function PUT(request) {
                 transactionId: 'MANUAL_WD_' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase(),
                 createdAt: wd.date ? new Date(wd.date) : Date.now()
               });
-              delete wd._id;
-            } else if (wd._id) {
+            } else {
               const txs = existingTxs.filter(t => Number(t.amount) === Number(wd.amount));
               let bestMatch = txs.length === 1 ? txs[0] : (txs.find(t => wd.date && t.createdAt && new Date(t.createdAt).getTime() === new Date(wd.date).getTime()) || txs.find(t => t.status !== wd.status) || txs[0]);
               if (bestMatch && bestMatch.status !== wd.status) {
@@ -346,7 +355,7 @@ export async function PUT(request) {
             await Promise.all(txsToSave);
           }
         }
-        editUser.withdrawHistory = data.withdrawHistory || [];
+        editUser.withdrawHistory = withdrawHistory;
 
         // Auto-sync customTotalWithdrawals: take the max of the admin-submitted custom value
         // and the actual sum of all approved/pending withdrawals in history.
@@ -366,26 +375,33 @@ export async function PUT(request) {
         }
 
         // Handle new recharges to sync to Transaction collection
-        if (data.rechargeHistory && Array.isArray(data.rechargeHistory)) {
+        const rechargeHistory = (data.rechargeHistory || []).map(rc => {
+          const item = { ...rc };
+          if (item._id && !String(item._id).match(/^[0-9a-fA-F]{24}$/)) {
+            delete item._id;
+          }
+          return item;
+        });
+
+        if (rechargeHistory.length > 0) {
           const { default: Transaction } = await import('@/models/Transaction');
           const existingRcTxs = await Transaction.find({ userId: editUser.phone, type: 'recharge' });
           const newRcTxsToCreate = [];
           const rcTxsToSave = [];
 
-          for (let rc of data.rechargeHistory) {
-            if (rc._id && String(rc._id).startsWith('new_')) {
+          for (let rc of rechargeHistory) {
+            if (!rc._id) {
               newRcTxsToCreate.push({
                 userId: editUser.phone,
                 userName: editUser.name,
                 type: 'recharge',
-                amount: rc.amount,
+                amount: Number(rc.amount),
                 status: rc.status,
                 description: 'Manual recharge added by Admin',
                 transactionId: 'MANUAL_RC_' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase(),
                 createdAt: rc.date ? new Date(rc.date) : Date.now()
               });
-              delete rc._id;
-            } else if (rc._id) {
+            } else {
               const txs = existingRcTxs.filter(t => Number(t.amount) === Number(rc.amount));
               let bestMatch = txs.length === 1 ? txs[0] : (txs.find(t => rc.date && t.createdAt && new Date(t.createdAt).getTime() === new Date(rc.date).getTime()) || txs.find(t => t.status !== rc.status) || txs[0]);
               if (bestMatch && bestMatch.status !== rc.status) {
@@ -401,17 +417,17 @@ export async function PUT(request) {
             await Promise.all(rcTxsToSave);
           }
         }
-        editUser.rechargeHistory = data.rechargeHistory || [];
+        editUser.rechargeHistory = rechargeHistory;
         
-        if (data.password) {
-          editUser.password = data.password;
+        if (data.password && typeof data.password === 'string' && data.password.trim().length >= 6) {
+          editUser.password = data.password.trim();
         }
         
         await editUser.save();
         
         return NextResponse.json({
           message: 'User updated successfully',
-          user: editUser.toPublicJSON()
+          user: editUser.toPublicJSON ? editUser.toPublicJSON() : editUser
         });
       case 'delete':
         // Delete the user and related data
@@ -496,7 +512,7 @@ export async function PUT(request) {
   } catch (error) {
     console.error('Update user error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
   }
