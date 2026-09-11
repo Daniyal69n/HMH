@@ -94,7 +94,7 @@ export async function POST(request) {
         const count = consumeAny(10);
         if (lv === level) isEligible = count >= 10;
       } else {
-        const reqEach = lv - 1;
+        const reqEach = lv >= 6 ? 5 : (lv - 1);
         rewardUSD = lv === 3 ? 10 : lv === 4 ? 15 : lv === 5 ? 20 : (25 + (lv - 6) * 5);
 
         const basicProgress = consumeSpecific('basic', reqEach);

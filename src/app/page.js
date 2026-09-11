@@ -597,7 +597,7 @@ export default function Page() {
           if (!isCompleted) hasMetUncompleted = true
         }
       } else {
-        const reqEach = lv - 1
+        const reqEach = lv >= 6 ? 5 : (lv - 1)
         rewardUSD = lv === 3 ? 10 : lv === 4 ? 15 : lv === 5 ? 20 : (25 + (lv - 6) * 5)
 
         membersRequired = reqEach * 6
