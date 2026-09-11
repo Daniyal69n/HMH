@@ -124,9 +124,7 @@ export async function GET(request) {
     });
 
     const resolveUserLevel = (user) => {
-      const claimedLevels = Array.isArray(user.claimedLevels) ? user.claimedLevels : [];
-      const claimedLevel = claimedLevels.length > 0 ? Math.max(...claimedLevels) : 0;
-      return Math.max(claimedLevel, user.level || 1);
+      return user.level || 1;
     };
 
     const realLeaders = topUsers.map(user => {
