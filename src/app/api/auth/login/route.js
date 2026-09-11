@@ -18,10 +18,18 @@ export async function POST(request) {
       );
     }
 
-    console.log('Login attempt for email:', email);
+    const cleanEmail = email.trim().toLowerCase();
+    console.log('Login attempt for email:', cleanEmail);
 
-    // Find user by email
-    const user = await User.findOne({ email });
+    // Find user by email (indexed search + exclude heavy screenshot base64 payloads to speed up login query)
+    let user = await User.findOne({ email: cleanEmail }).select('-socialTaskSubmissions.screenshotBase64 -investmentPlans.screenshotData');
+
+    // Fallback: Check exact original string or case-insensitive if lowercase lookup produced no result
+    if (!user) {
+      user = await User.findOne({
+        email: { $regex: new RegExp(`^${cleanEmail.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') }
+      }).select('-socialTaskSubmissions.screenshotBase64 -investmentPlans.screenshotData');
+    }
 
     if (!user) {
       console.log('No user found with email:', email);
