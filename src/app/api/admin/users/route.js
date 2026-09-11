@@ -258,12 +258,16 @@ export async function PUT(request) {
         }
 
 
-        // Handle plans
+        // Handle plans — strip heavy base64 screenshot data to prevent document size timeout
         const oldPlans = editUser.investmentPlans || [];
         const newPlans = (data.investmentPlans || []).map(plan => {
           const p = { ...plan };
           if (p._id && !String(p._id).match(/^[0-9a-fA-F]{24}$/)) {
             delete p._id;
+          }
+          // Strip base64 screenshot data — keep only the URL if present
+          if (p.screenshotData && p.screenshotData.startsWith('data:')) {
+            delete p.screenshotData;
           }
           return p;
         });
@@ -439,6 +443,16 @@ export async function PUT(request) {
         
         if (data.password && typeof data.password === 'string' && data.password.trim().length >= 6) {
           editUser.password = data.password.trim();
+        }
+
+        // Strip any legacy base64 from socialTaskSubmissions before saving
+        if (editUser.socialTaskSubmissions && editUser.socialTaskSubmissions.length > 0) {
+          editUser.socialTaskSubmissions = editUser.socialTaskSubmissions.map(sub => {
+            if (sub.screenshotBase64 && String(sub.screenshotBase64).length > 500) {
+              sub.screenshotBase64 = '';
+            }
+            return sub;
+          });
         }
         
         await editUser.save();
