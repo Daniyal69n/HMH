@@ -152,6 +152,19 @@ export async function POST(request) {
       return Response.json({ message: 'This link has already been submitted. Please upload a new link.' }, { status: 400 });
     }
 
+    let finalScreenshotUrl = body.screenshotUrl || body.screenshotBase64 || '';
+    if (finalScreenshotUrl && finalScreenshotUrl.startsWith('data:image')) {
+      try {
+        const { uploadBase64ToCloudinary } = await import('@/lib/cloudinaryHelper');
+        const cUrl = await uploadBase64ToCloudinary(finalScreenshotUrl, 'social-tasks');
+        if (cUrl) {
+          finalScreenshotUrl = cUrl;
+        }
+      } catch (err) {
+        console.warn('Failed to upload social task screenshot to Cloudinary:', err);
+      }
+    }
+
     // Update status
     st[platformLower] = true;
     user.socialTasks = st;
@@ -167,7 +180,8 @@ export async function POST(request) {
     user.socialTaskSubmissions.push({
       platform: platform,
       link: link,
-      screenshotBase64: screenshotBase64 || '',
+      screenshotBase64: finalScreenshotUrl.startsWith('http') ? '' : finalScreenshotUrl,
+      screenshotUrl: finalScreenshotUrl,
       notes: notes || '',
       status: 'pending',
       submittedAt: new Date()

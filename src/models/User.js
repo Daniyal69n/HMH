@@ -63,6 +63,7 @@ const userSchema = new mongoose.Schema({
       platform: String,
       link: String,
       screenshotBase64: String,
+      screenshotUrl: String,
       notes: String,
       status: { type: String, enum: ['pending', 'reviewed'], default: 'pending' },
       adminRemarks: String,

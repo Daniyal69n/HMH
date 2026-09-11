@@ -22,16 +22,33 @@ if (fs.existsSync(envPath)) {
 
 const mongoose = require('mongoose');
 
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 async function cleanupAllBase64() {
   try {
-    const mongoUri = process.env.MONGODB_URI;
-    if (!mongoUri) {
-      console.error('❌ MONGODB_URI not set');
-      process.exit(1);
-    }
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://dk3205997146:Daniyal123@ac-snk8ltk-shard-00-00.githyp3.mongodb.net:27017,ac-snk8ltk-shard-00-01.githyp3.mongodb.net:27017,ac-snk8ltk-shard-00-02.githyp3.mongodb.net:27017/hmh?ssl=true&replicaSet=atlas-snk8ltk-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Ai';
 
     console.log('🔄 Connecting to MongoDB...');
-    await mongoose.connect(mongoUri);
+    try {
+      await mongoose.connect(mongoUri, {
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        connectTimeoutMS: 10000,
+        tls: true
+      });
+    } catch (e) {
+      console.warn('SRV connection failed, attempting fallback direct connection string...');
+      const fallbackUri = 'mongodb://dk3205997146:Daniyal123@ac-snk8ltk-shard-00-00.githyp3.mongodb.net:27017,ac-snk8ltk-shard-00-01.githyp3.mongodb.net:27017,ac-snk8ltk-shard-00-02.githyp3.mongodb.net:27017/test?ssl=true&replicaSet=atlas-snk8ltk-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Ai';
+      await mongoose.connect(fallbackUri, {
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        connectTimeoutMS: 10000,
+        tls: true
+      });
+    }
     console.log('✅ Connected to MongoDB');
 
     // Define schemas for cleanup
@@ -101,7 +118,46 @@ async function cleanupAllBase64() {
       console.log(`  ✅ Cleaned ${screenshotCleaned} investment plans`);
       totalCleaned += screenshotCleaned;
     } else {
-      console.log('  ✓ No base64 screenshots found');
+      console.log('  ✓ No base64 investment plan screenshots found');
+    }
+
+    // ─── 2b. Clean Users: socialTaskSubmissions[].screenshotBase64 ───
+    console.log('\n🧹 Cleaning Users.socialTaskSubmissions[].screenshotBase64...');
+    const stUsers = await User.find({
+      'socialTaskSubmissions.screenshotBase64': { $regex: '^data:image' }
+    }).select('_id phone name socialTaskSubmissions').lean();
+
+    let stCleaned = 0;
+    for (const u of stUsers) {
+      if (u.socialTaskSubmissions && Array.isArray(u.socialTaskSubmissions)) {
+        let modified = false;
+        const updatedSubmissions = u.socialTaskSubmissions.map(sub => {
+          if (sub.screenshotBase64 && sub.screenshotBase64.startsWith('data:image')) {
+            modified = true;
+            return {
+              ...sub,
+              screenshotUrl: sub.screenshotUrl || '',
+              screenshotBase64: ''
+            };
+          }
+          return sub;
+        });
+
+        if (modified) {
+          await User.updateOne(
+            { _id: u._id },
+            { $set: { socialTaskSubmissions: updatedSubmissions } }
+          );
+          stCleaned++;
+        }
+      }
+    }
+
+    if (stCleaned > 0) {
+      console.log(`  ✅ Cleaned ${stCleaned} social task submission screenshots`);
+      totalCleaned += stCleaned;
+    } else {
+      console.log('  ✓ No base64 social task screenshots found');
     }
 
     // ─── 3. Clean Products: image and images[] ───

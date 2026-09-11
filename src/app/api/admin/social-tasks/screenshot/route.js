@@ -22,7 +22,8 @@ export async function GET(request) {
       return Response.json({ message: 'Submission not found' }, { status: 404 });
     }
 
-    return Response.json({ screenshotBase64: submission.screenshotBase64 || '' });
+    const screenshot = submission.screenshotUrl || submission.screenshotBase64 || '';
+    return Response.json({ screenshotBase64: screenshot, screenshotUrl: screenshot });
   } catch (error) {
     console.error('Error fetching screenshot:', error);
     return Response.json({ message: 'Internal server error' }, { status: 500 });

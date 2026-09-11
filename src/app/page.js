@@ -1385,6 +1385,23 @@ export default function Page() {
         reader.readAsDataURL(stScreenshot);
       });
 
+      let uploadedScreenshotUrl = '';
+      try {
+        const uploadRes = await fetch('/api/user/plan-screenshot-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: screenshotBase64 })
+        });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          if (uploadData.screenshotUrl) {
+            uploadedScreenshotUrl = uploadData.screenshotUrl;
+          }
+        }
+      } catch (err) {
+        console.warn('Frontend Cloudinary upload fallback for social task:', err);
+      }
+
       const res = await fetch('/api/user/social-task', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1393,7 +1410,8 @@ export default function Page() {
           action: 'submit_link',
           link: stLink,
           platform: currentRequiredPlatform,
-          screenshotBase64,
+          screenshotUrl: uploadedScreenshotUrl,
+          screenshotBase64: uploadedScreenshotUrl ? '' : screenshotBase64,
           notes: stNotes
         })
       })
