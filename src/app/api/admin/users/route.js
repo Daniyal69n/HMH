@@ -305,64 +305,68 @@ export async function PUT(request) {
         });
 
         if (withdrawHistory.length > 0) {
-          const { default: Transaction } = await import('@/models/Transaction');
-          
-          const existingTxs = await Transaction.find({ userId: editUser.phone, type: 'withdraw' });
+          try {
+            const { default: Transaction } = await import('@/models/Transaction');
+            
+            const existingTxs = await Transaction.find({ userId: editUser.phone, type: 'withdraw' });
 
-          // Find deleted manual withdrawals (added by admin) in memory to avoid unindexed regex DB queries
-          const manualTxs = existingTxs.filter(tx => 
-            tx.description && /^Manual withdrawal/i.test(tx.description)
-          );
-
-          const idsToDelete = [];
-          for (let tx of manualTxs) {
-            const stillExists = withdrawHistory.some(wd => 
-              Number(wd.amount) === Number(tx.amount) && 
-              wd.date && new Date(wd.date).getTime() === new Date(tx.createdAt).getTime()
+            // Find deleted manual withdrawals (added by admin) in memory to avoid unindexed regex DB queries
+            const manualTxs = existingTxs.filter(tx => 
+              tx.description && /^Manual withdrawal/i.test(tx.description)
             );
-            
-            // Fallback match in case date was modified or missing
-            const fallbackExists = withdrawHistory.some(wd => Number(wd.amount) === Number(tx.amount) && wd.status === tx.status);
-            
-            if (!stillExists && !fallbackExists) {
-              idsToDelete.push(tx._id);
-            }
-          }
-          if (idsToDelete.length > 0) {
-            await Transaction.deleteMany({ _id: { $in: idsToDelete } });
-          }
 
-          const randomWdMethods = ['JazzCash', 'EasyPaisa', 'Binance'];
-          const newTxsToCreate = [];
-          const txsToSave = [];
-
-          for (let wd of withdrawHistory) {
-            if (!wd._id) {
-              const selectedMethod = randomWdMethods[Math.floor(Math.random() * randomWdMethods.length)];
-              newTxsToCreate.push({
-                userId: editUser.phone,
-                userName: editUser.name,
-                type: 'withdraw',
-                amount: Number(wd.amount),
-                status: wd.status,
-                description: `Withdrawal request via ${selectedMethod}`,
-                transactionId: 'MANUAL_WD_' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase(),
-                createdAt: wd.date ? new Date(wd.date) : Date.now()
-              });
-            } else {
-              const txs = existingTxs.filter(t => Number(t.amount) === Number(wd.amount));
-              let bestMatch = txs.length === 1 ? txs[0] : (txs.find(t => wd.date && t.createdAt && new Date(t.createdAt).getTime() === new Date(wd.date).getTime()) || txs.find(t => t.status !== wd.status) || txs[0]);
-              if (bestMatch && bestMatch.status !== wd.status) {
-                bestMatch.status = wd.status;
-                txsToSave.push(bestMatch.save());
+            const idsToDelete = [];
+            for (let tx of manualTxs) {
+              const stillExists = withdrawHistory.some(wd => 
+                Number(wd.amount) === Number(tx.amount) && 
+                wd.date && new Date(wd.date).getTime() === new Date(tx.createdAt).getTime()
+              );
+              
+              // Fallback match in case date was modified or missing
+              const fallbackExists = withdrawHistory.some(wd => Number(wd.amount) === Number(tx.amount) && wd.status === tx.status);
+              
+              if (!stillExists && !fallbackExists) {
+                idsToDelete.push(tx._id);
               }
             }
-          }
-          if (newTxsToCreate.length > 0) {
-            await Transaction.insertMany(newTxsToCreate);
-          }
-          if (txsToSave.length > 0) {
-            await Promise.all(txsToSave);
+            if (idsToDelete.length > 0) {
+              await Transaction.deleteMany({ _id: { $in: idsToDelete } });
+            }
+
+            const randomWdMethods = ['JazzCash', 'EasyPaisa', 'Binance'];
+            const newTxsToCreate = [];
+            const txsToSave = [];
+
+            for (let wd of withdrawHistory) {
+              if (!wd._id) {
+                const selectedMethod = randomWdMethods[Math.floor(Math.random() * randomWdMethods.length)];
+                newTxsToCreate.push({
+                  userId: editUser.phone,
+                  userName: editUser.name,
+                  type: 'withdraw',
+                  amount: Number(wd.amount),
+                  status: wd.status,
+                  description: `Withdrawal request via ${selectedMethod}`,
+                  transactionId: 'MANUAL_WD_' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase(),
+                  createdAt: wd.date ? new Date(wd.date) : Date.now()
+                });
+              } else {
+                const txs = existingTxs.filter(t => Number(t.amount) === Number(wd.amount));
+                let bestMatch = txs.length === 1 ? txs[0] : (txs.find(t => wd.date && t.createdAt && new Date(t.createdAt).getTime() === new Date(wd.date).getTime()) || txs.find(t => t.status !== wd.status) || txs[0]);
+                if (bestMatch && bestMatch.status !== wd.status) {
+                  bestMatch.status = wd.status;
+                  txsToSave.push(bestMatch.save());
+                }
+              }
+            }
+            if (newTxsToCreate.length > 0) {
+              await Transaction.insertMany(newTxsToCreate);
+            }
+            if (txsToSave.length > 0) {
+              await Promise.all(txsToSave);
+            }
+          } catch (wdSyncErr) {
+            console.error('Error syncing withdraw transactions:', wdSyncErr);
           }
         }
         editUser.withdrawHistory = withdrawHistory;
@@ -394,37 +398,41 @@ export async function PUT(request) {
         });
 
         if (rechargeHistory.length > 0) {
-          const { default: Transaction } = await import('@/models/Transaction');
-          const existingRcTxs = await Transaction.find({ userId: editUser.phone, type: 'recharge' });
-          const newRcTxsToCreate = [];
-          const rcTxsToSave = [];
+          try {
+            const { default: Transaction } = await import('@/models/Transaction');
+            const existingRcTxs = await Transaction.find({ userId: editUser.phone, type: 'recharge' });
+            const newRcTxsToCreate = [];
+            const rcTxsToSave = [];
 
-          for (let rc of rechargeHistory) {
-            if (!rc._id) {
-              newRcTxsToCreate.push({
-                userId: editUser.phone,
-                userName: editUser.name,
-                type: 'recharge',
-                amount: Number(rc.amount),
-                status: rc.status,
-                description: 'Manual recharge added by Admin',
-                transactionId: 'MANUAL_RC_' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase(),
-                createdAt: rc.date ? new Date(rc.date) : Date.now()
-              });
-            } else {
-              const txs = existingRcTxs.filter(t => Number(t.amount) === Number(rc.amount));
-              let bestMatch = txs.length === 1 ? txs[0] : (txs.find(t => rc.date && t.createdAt && new Date(t.createdAt).getTime() === new Date(rc.date).getTime()) || txs.find(t => t.status !== rc.status) || txs[0]);
-              if (bestMatch && bestMatch.status !== rc.status) {
-                bestMatch.status = rc.status;
-                rcTxsToSave.push(bestMatch.save());
+            for (let rc of rechargeHistory) {
+              if (!rc._id) {
+                newRcTxsToCreate.push({
+                  userId: editUser.phone,
+                  userName: editUser.name,
+                  type: 'recharge',
+                  amount: Number(rc.amount),
+                  status: rc.status,
+                  description: 'Manual recharge added by Admin',
+                  transactionId: 'MANUAL_RC_' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase(),
+                  createdAt: rc.date ? new Date(rc.date) : Date.now()
+                });
+              } else {
+                const txs = existingRcTxs.filter(t => Number(t.amount) === Number(rc.amount));
+                let bestMatch = txs.length === 1 ? txs[0] : (txs.find(t => rc.date && t.createdAt && new Date(t.createdAt).getTime() === new Date(rc.date).getTime()) || txs.find(t => t.status !== rc.status) || txs[0]);
+                if (bestMatch && bestMatch.status !== rc.status) {
+                  bestMatch.status = rc.status;
+                  rcTxsToSave.push(bestMatch.save());
+                }
               }
             }
-          }
-          if (newRcTxsToCreate.length > 0) {
-            await Transaction.insertMany(newRcTxsToCreate);
-          }
-          if (rcTxsToSave.length > 0) {
-            await Promise.all(rcTxsToSave);
+            if (newRcTxsToCreate.length > 0) {
+              await Transaction.insertMany(newRcTxsToCreate);
+            }
+            if (rcTxsToSave.length > 0) {
+              await Promise.all(rcTxsToSave);
+            }
+          } catch (rcSyncErr) {
+            console.error('Error syncing recharge transactions:', rcSyncErr);
           }
         }
         editUser.rechargeHistory = rechargeHistory;

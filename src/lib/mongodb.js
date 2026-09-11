@@ -33,14 +33,12 @@ async function connectDB() {
   }
 
   const opts = {
-    bufferCommands: false,
     maxPoolSize: 10,
     minPoolSize: 1,
-    serverSelectionTimeoutMS: 10000,
+    serverSelectionTimeoutMS: 15000,
     socketTimeoutMS: 45000,
-    connectTimeoutMS: 10000,
-    tls: true, // Explicitly enable TLS to prevent SSL alert 80
-    serverApi: { version: '1', strict: true, deprecationErrors: true } // Ensures stable Atlas routing for serverless
+    connectTimeoutMS: 15000,
+    family: 4 // Force IPv4 to prevent IPv6 DNS timeout hangs
   };
 
   cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
