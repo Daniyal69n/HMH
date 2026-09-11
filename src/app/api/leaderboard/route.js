@@ -9,7 +9,11 @@ const CACHE_DURATION = 1 * 60 * 1000; // 1 minute in ms
 
 export async function GET(request) {
   const now = Date.now();
-  if (cachedLeaderboard && (now - lastCacheTime < CACHE_DURATION)) {
+  const { searchParams } = new URL(request.url);
+  const force = searchParams.get('force') === 'true';
+  const cacheBuster = searchParams.get('_t');
+
+  if (!force && !cacheBuster && cachedLeaderboard && (now - lastCacheTime < CACHE_DURATION)) {
     return Response.json(cachedLeaderboard, {
       headers: {
         'Cache-Control': 'public, max-age=60',
@@ -23,9 +27,6 @@ export async function GET(request) {
     const tConnectStart = performance.now();
     await connectDB();
     const connectTime = (performance.now() - tConnectStart).toFixed(2);
-
-    const { searchParams } = new URL(request.url);
-    const force = searchParams.get('force') === 'true';
 
     // 15 days in milliseconds
     const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
@@ -122,8 +123,14 @@ export async function GET(request) {
       }
     });
 
+    const resolveUserLevel = (user) => {
+      const claimedLevels = Array.isArray(user.claimedLevels) ? user.claimedLevels : [];
+      const claimedLevel = claimedLevels.length > 0 ? Math.max(...claimedLevels) : 0;
+      return Math.max(claimedLevel, user.level || 1);
+    };
+
     const realLeaders = topUsers.map(user => {
-      const level = user.level || 1;
+      const level = resolveUserLevel(user);
       const amt = user.computedEarnings / 300.0; // convert PKR to USD
       
       const rawPhone = user.phone || '';
