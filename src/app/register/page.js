@@ -391,24 +391,24 @@ export default function RegisterPage() {
           </div>
 
           {/* Tutorial Video Card (Temporarily hidden for recording - uncomment when ready) */}
-          {/*
-          <div className="card" style={{ marginBottom: '18px', padding: '16px', background: 'var(--surface)' }}>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', color: 'var(--text-bright)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '18px' }}>📺</span> How to Register (Tutorial)
-            </h3>
-            <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border)', backgroundColor: '#000' }}>
-              <video
-                controls
-                playsInline
-                poster="/tutorial-thumb.jpeg"
-                style={{ width: '100%', maxHeight: '360px', objectFit: 'contain', display: 'block', borderRadius: '12px' }}
-              >
-                <source src="/tutorial.mp4.mp4" type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
+          {
+            <div className="card" style={{ marginBottom: '18px', padding: '16px', background: 'var(--surface)' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', color: 'var(--text-bright)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '18px' }}>📺</span> How to Register (Tutorial)
+              </h3>
+              <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border)', backgroundColor: '#000' }}>
+                <video
+                  controls
+                  playsInline
+                  poster="/tutorial-thumb.jpeg"
+                  style={{ width: '100%', maxHeight: '360px', objectFit: 'contain', display: 'block', borderRadius: '12px' }}
+                >
+                  <source src="/tutorial.mp4.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
             </div>
-          </div>
-          */}
+          }
 
           {/* Main Form Card */}
           <div className="card" style={{ borderRadius: '16px', padding: '24px 20px' }}>
