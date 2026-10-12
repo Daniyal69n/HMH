@@ -30,6 +30,17 @@ export async function GET(request) {
 
     // 15 days in milliseconds
     const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
+    const PKT_OFFSET_MS = 5 * 60 * 60 * 1000;
+
+    const getPktClaimDeadline = (dateInput = new Date()) => {
+      const d = new Date(dateInput);
+      const pktTime = new Date(d.getTime() + PKT_OFFSET_MS);
+      const year = pktTime.getUTCFullYear();
+      const month = pktTime.getUTCMonth();
+      const date = pktTime.getUTCDate();
+      const deadlineUtcMs = Date.UTC(year, month, date + 1, 0, 0, 0) - PKT_OFFSET_MS;
+      return new Date(deadlineUtcMs);
+    };
 
     // Check cycle state
     const tSettingsStart = performance.now();
@@ -38,6 +49,8 @@ export async function GET(request) {
 
     let cycleEndDate = null;
     let cycleWinners = [];
+    let claimDeadline = null;
+    let cycleEndedAt = null;
 
     if (!cycleState || !cycleState.value) {
       cycleEndDate = new Date(Date.now() + FIFTEEN_DAYS_MS);
@@ -55,6 +68,13 @@ export async function GET(request) {
     } else {
       cycleEndDate = new Date(cycleState.value.cycleEndDate);
       cycleWinners = cycleState.value.winners || [];
+      claimDeadline = cycleState.value.claimDeadline ? new Date(cycleState.value.claimDeadline) : null;
+      cycleEndedAt = cycleState.value.cycleEndedAt ? new Date(cycleState.value.cycleEndedAt) : null;
+
+      if (cycleWinners.length > 0 && !claimDeadline) {
+        const fallbackDate = cycleEndedAt || (cycleState.updatedAt ? new Date(cycleState.updatedAt) : new Date());
+        claimDeadline = getPktClaimDeadline(fallbackDate);
+      }
     }
 
     const cycleStartDate = new Date(cycleEndDate.getTime() - FIFTEEN_DAYS_MS);
@@ -229,14 +249,19 @@ export async function GET(request) {
 
       // Reset cycle end date
       const newEndDate = new Date(Date.now() + FIFTEEN_DAYS_MS);
+      const endedAt = new Date();
+      claimDeadline = getPktClaimDeadline(endedAt);
+      cycleEndedAt = endedAt;
 
-      // Save winners and new end date
+      // Save winners, claim deadline, cycle ended time, and new end date
       await SystemSettings.findOneAndUpdate(
         { key: 'mystery_box_cycle' },
         {
           value: {
             cycleEndDate: newEndDate,
-            winners: cycleWinners
+            winners: cycleWinners,
+            cycleEndedAt,
+            claimDeadline
           }
         }
       );
@@ -287,7 +312,9 @@ export async function GET(request) {
     const responseData = {
       leaderboard: data,
       cycleEndDate: cycleEndDate,
-      winners: cycleWinners
+      winners: cycleWinners,
+      claimDeadline: claimDeadline,
+      cycleEndedAt: cycleEndedAt
     };
 
     const tSerStart = performance.now();

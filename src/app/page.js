@@ -430,6 +430,7 @@ export default function Page() {
 
   const [mysteryCycleEnd, setMysteryCycleEnd] = useState(null)
   const [mysteryWinners, setMysteryWinners] = useState([])
+  const [mysteryClaimDeadline, setMysteryClaimDeadline] = useState(null)
   const [mysteryClaiming, setMysteryClaiming] = useState(false)
 
   useEffect(() => {
@@ -454,6 +455,7 @@ export default function Page() {
           setLeaders(data.leaderboard)
           setMysteryCycleEnd(data.cycleEndDate)
           setMysteryWinners(data.winners || [])
+          setMysteryClaimDeadline(data.claimDeadline || null)
         } else if (Array.isArray(data)) {
           setLeaders(data)
         }
@@ -2342,32 +2344,52 @@ export default function Page() {
                   {mysteryBoxes.map((b, idx) => {
                     const rank = idx + 1;
                     const winnerStatus = mysteryWinners.find(w => w.rank === rank);
-                    const isMyWin = winnerStatus && winnerStatus.phone === profile?.phone;
+                    const isMyWin = winnerStatus && (
+                      winnerStatus.phone === profile?.phone ||
+                      (profile?.phone && String(winnerStatus.phone).replace(/[^0-9]/g, '').slice(-10) === String(profile?.phone).replace(/[^0-9]/g, '').slice(-10))
+                    );
                     const isClaimed = winnerStatus && winnerStatus.claimed;
+                    const isExpired = mysteryClaimDeadline ? (Date.now() > new Date(mysteryClaimDeadline).getTime()) : false;
 
                     return (
-                      <div key={b.id || b.title} className="card mystery-card" style={isMyWin && !isClaimed ? { border: '1px solid var(--gold)' } : {}}>
+                      <div key={b.id || b.title} className="card mystery-card" style={isMyWin && !isClaimed && !isExpired ? { border: '1px solid var(--gold)' } : {}}>
                         <div className="mystery-medal">{b.medal}</div>
                         <div className="mystery-title">{b.title}</div>
                         <div className="mystery-sub">{b.desc}</div>
 
-                        {isMyWin && !isClaimed ? (
-                          <button
-                            className="lock-pill"
-                            style={{
-                              background: 'var(--gold)',
-                              color: '#000',
-                              cursor: 'pointer',
-                              border: 'none',
-                              width: '100%',
-                              padding: '8px',
-                              fontWeight: 'bold'
-                            }}
-                            onClick={handleClaimMysteryBox}
-                            disabled={mysteryClaiming}
-                          >
-                            {mysteryClaiming ? 'Processing...' : '🎁 Claim Prize'}
-                          </button>
+                        {isMyWin ? (
+                          isClaimed ? (
+                            <div className="lock-pill" style={{ background: 'rgba(74, 222, 128, 0.15)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.3)', fontWeight: 'bold' }}>
+                              ✅ Prize Claimed
+                            </div>
+                          ) : isExpired ? (
+                            <div className="lock-pill" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                              ⏰ Expired (Claim ended at 12:00 AM)
+                            </div>
+                          ) : (
+                            <div>
+                              <button
+                                className="lock-pill"
+                                style={{
+                                  background: 'var(--gold)',
+                                  color: '#000',
+                                  cursor: 'pointer',
+                                  border: 'none',
+                                  width: '100%',
+                                  padding: '8px',
+                                  fontWeight: 'bold',
+                                  marginBottom: '4px'
+                                }}
+                                onClick={handleClaimMysteryBox}
+                                disabled={mysteryClaiming}
+                              >
+                                {mysteryClaiming ? 'Processing...' : '🎁 Claim Prize'}
+                              </button>
+                              <div style={{ fontSize: '11px', color: 'var(--gold)', textAlign: 'center' }}>
+                                ⏳ Claim before 12:00 AM tonight
+                              </div>
+                            </div>
+                          )
                         ) : (
                           <div className="lock-pill">🔒 Locked (Top {rank} wins)</div>
                         )}

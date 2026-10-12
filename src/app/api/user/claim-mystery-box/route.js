@@ -25,7 +25,12 @@ export async function POST(request) {
     }
 
     const winners = cycleState.value.winners;
-    const winnerIndex = winners.findIndex(w => w.phone === phone);
+    const cleanPhone = String(phone).replace(/[^0-9]/g, '');
+    const phoneSuffix = cleanPhone.slice(-10);
+    const winnerIndex = winners.findIndex(w => {
+      const wClean = String(w.phone || '').replace(/[^0-9]/g, '');
+      return w.phone === phone || (wClean.length >= 10 && cleanPhone.length >= 10 && wClean.slice(-10) === phoneSuffix);
+    });
     
     if (winnerIndex === -1) {
       return Response.json({ message: 'You did not win the previous cycle' }, { status: 400 });
@@ -35,6 +40,30 @@ export async function POST(request) {
     
     if (winner.claimed) {
       return Response.json({ message: 'Reward already claimed' }, { status: 400 });
+    }
+
+    // Check if claim window has expired (12:00 AM midnight PKT)
+    const PKT_OFFSET_MS = 5 * 60 * 60 * 1000;
+    const getPktClaimDeadline = (dateInput) => {
+      const d = new Date(dateInput);
+      const pktTime = new Date(d.getTime() + PKT_OFFSET_MS);
+      const year = pktTime.getUTCFullYear();
+      const month = pktTime.getUTCMonth();
+      const date = pktTime.getUTCDate();
+      const deadlineUtcMs = Date.UTC(year, month, date + 1, 0, 0, 0) - PKT_OFFSET_MS;
+      return new Date(deadlineUtcMs);
+    };
+
+    let claimDeadline = cycleState.value.claimDeadline ? new Date(cycleState.value.claimDeadline) : null;
+    if (!claimDeadline) {
+      const endedAt = cycleState.value.cycleEndedAt || cycleState.updatedAt || new Date();
+      claimDeadline = getPktClaimDeadline(endedAt);
+    }
+
+    if (Date.now() > claimDeadline.getTime()) {
+      return Response.json({
+        message: 'Claim period has expired. Prizes had to be claimed before 12:00 AM.'
+      }, { status: 400 });
     }
 
     // Award cash prize based on rank
