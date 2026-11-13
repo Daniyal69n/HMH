@@ -112,10 +112,11 @@ export default function RegisterPage() {
     } catch { }
   }, [checkStatus])
 
-  // Periodic status polling if pending
+  // Periodic status polling if pending (when tab is active)
   useEffect(() => {
     if (!showSuccessModal && !pendingUser) return
-    const interval = setInterval(() => {
+
+    const pollStatus = () => {
       const saved = localStorage.getItem('hmh-pending-reg')
       if (saved) {
         try {
@@ -123,8 +124,30 @@ export default function RegisterPage() {
           checkStatus(parsed)
         } catch { }
       }
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        pollStatus()
+      }
+    }
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange)
+    }
+
+    const interval = setInterval(() => {
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+        pollStatus()
+      }
     }, 8000)
-    return () => clearInterval(interval)
+
+    return () => {
+      clearInterval(interval)
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange)
+      }
+    }
   }, [showSuccessModal, pendingUser, checkStatus])
 
   // Fetch admin payment account settings from server

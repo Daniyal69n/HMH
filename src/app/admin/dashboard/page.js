@@ -1558,31 +1558,6 @@ export default function AdminDashboard() {
     }
   }, [isAdminLoggedIn, isCheckingAuth, activeTab])
 
-  // Load withdraw history when withdrawals tab is activated
-  useEffect(() => {
-    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'withdrawals') {
-      const loadWithdrawHistory = async () => {
-        try {
-          setHistoryLoading(true)
-          const response = await fetch('/api/transactions?type=withdraw&status=all')
-          if (response.ok) {
-            const data = await response.json()
-            setWithdrawHistory(data)
-          } else {
-            console.warn('Failed to load withdraw history')
-            setWithdrawHistory([])
-          }
-        } catch (error) {
-          console.warn('Error loading withdraw history:', error)
-          setWithdrawHistory([])
-        } finally {
-          setHistoryLoading(false)
-        }
-      }
-      loadWithdrawHistory()
-    }
-  }, [isAdminLoggedIn, isCheckingAuth, activeTab])
-
   // Single useEffect for fetching plan requests with AbortController cancellation & state sync
   useEffect(() => {
     if (!isAdminLoggedIn || isCheckingAuth || activeTab !== 'planRequests') {
@@ -1656,56 +1631,6 @@ export default function AdminDashboard() {
       showError('Network error')
     }
   }
-
-  // Load withdraw history when tab is activated
-  useEffect(() => {
-    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'withdrawals') {
-      const loadWithdrawHistory = async () => {
-        try {
-          setHistoryLoading(true)
-          const response = await fetch('/api/transactions?type=withdraw&status=all')
-          if (response.ok) {
-            const data = await response.json()
-            setWithdrawHistory(data)
-          } else {
-            console.warn('Failed to load withdraw history')
-            setWithdrawHistory([])
-          }
-        } catch (error) {
-          console.warn('Error loading withdraw history:', error)
-          setWithdrawHistory([])
-        } finally {
-          setHistoryLoading(false)
-        }
-      }
-      loadWithdrawHistory()
-    }
-  }, [isAdminLoggedIn, isCheckingAuth, activeTab])
-
-  // Load recent activities when analytics tab is activated
-  useEffect(() => {
-    if (isAdminLoggedIn && !isCheckingAuth && activeTab === 'dashboard') {
-      const loadRecentActivities = async () => {
-        try {
-          setActivityLoading(true)
-          const response = await fetch('/api/admin/activity?limit=10')
-          if (response.ok) {
-            const data = await response.json()
-            setRecentActivities(data)
-          } else {
-            console.warn('Failed to load recent activities')
-            setRecentActivities([])
-          }
-        } catch (error) {
-          console.warn('Error loading recent activities:', error)
-          setRecentActivities([])
-        } finally {
-          setActivityLoading(false)
-        }
-      }
-      loadRecentActivities()
-    }
-  }, [isAdminLoggedIn, isCheckingAuth, activeTab])
 
   // Manual refresh functions
   const refreshRechargeHistory = async () => {
