@@ -347,7 +347,7 @@ userSchema.methods.toPublicJSON = function() {
   return userObject;
 };
 
-if (mongoose.models && mongoose.models.User) {
+if (process.env.NODE_ENV === 'development' && mongoose.models && mongoose.models.User) {
   delete mongoose.models.User;
 }
 const User = mongoose.models.User || mongoose.model('User', userSchema);

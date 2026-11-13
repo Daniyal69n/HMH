@@ -39,10 +39,10 @@ productSchema.index({ isActive: 1, createdAt: -1 });
 productSchema.index({ name: 'text' });
 
 // Prevent model recompilation in development
-if (mongoose.models.Product) {
+if (process.env.NODE_ENV === 'development' && mongoose.models.Product) {
   delete mongoose.models.Product;
 }
 
-const Product = mongoose.model('Product', productSchema);
+const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
 
 export default Product;
