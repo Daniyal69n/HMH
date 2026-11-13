@@ -245,46 +245,33 @@ export default function Page() {
   const [showRegistrationSuccessModal, setShowRegistrationSuccessModal] = useState(false)
   const [showApprovalNoticeModal, setShowApprovalNoticeModal] = useState(false)
   const [planSubmitting, setPlanSubmitting] = useState(false)
-  const trxCheckTimerRef = useRef(null)
 
-  const handleCheckTrxId = (val, immediate = false) => {
+  const handleCheckTrxId = async (val) => {
     const trimmed = (val || '').trim()
     if (!trimmed) {
-      if (trxCheckTimerRef.current) clearTimeout(trxCheckTimerRef.current)
       setTrxIdError('')
       return
     }
 
     if (trimmed.length < 8 || trimmed.length > 30) {
-      if (trxCheckTimerRef.current) clearTimeout(trxCheckTimerRef.current)
       setTrxIdError('⚠️ TRX ID must be between 8 and 30 characters')
       return
     }
 
-    if (trxCheckTimerRef.current) clearTimeout(trxCheckTimerRef.current)
-
-    const executeCheck = async () => {
-      try {
-        const res = await fetch(`/api/user/check-trxid?trxId=${encodeURIComponent(trimmed)}`)
-        if (res.ok) {
-          const data = await res.json()
-          if (data.exists) {
-            setTrxIdError('⚠️ This TRX ID has already been used. Please enter a valid unique TRX ID.')
-          } else if (!data.validLength) {
-            setTrxIdError('⚠️ TRX ID must be between 8 and 30 characters')
-          } else {
-            setTrxIdError('')
-          }
+    try {
+      const res = await fetch(`/api/user/check-trxid?trxId=${encodeURIComponent(trimmed)}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.exists) {
+          setTrxIdError('⚠️ This TRX ID has already been used. Please enter a valid unique TRX ID.')
+        } else if (!data.validLength) {
+          setTrxIdError('⚠️ TRX ID must be between 8 and 30 characters')
+        } else {
+          setTrxIdError('')
         }
-      } catch (err) {
-        console.error('Error checking TRX ID:', err)
       }
-    }
-
-    if (immediate) {
-      executeCheck()
-    } else {
-      trxCheckTimerRef.current = setTimeout(executeCheck, 400)
+    } catch (err) {
+      console.error('Error checking TRX ID:', err)
     }
   }
   const [planPaymentDetails, setPlanPaymentDetails] = useState({
@@ -461,7 +448,7 @@ export default function Page() {
         setProductsLoading(false)
       })
 
-    fetch('/api/leaderboard')
+    fetch(`/api/leaderboard?_t=${ts}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.leaderboard) {
@@ -4794,7 +4781,7 @@ export default function Page() {
                   setPlanTrxId(val);
                   handleCheckTrxId(val);
                 }}
-                onBlur={(e) => handleCheckTrxId(e.target.value, true)}
+                onBlur={(e) => handleCheckTrxId(e.target.value)}
                 style={{
                   width: '100%', padding: '10px 14px', borderRadius: 10,
                   background: '#252b3b',

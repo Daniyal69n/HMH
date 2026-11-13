@@ -63,7 +63,7 @@ export default function ProfilePage() {
           const timestamp = Date.now(); // Add timestamp to prevent caching
           const [teamResponse, investmentsResponse] = await Promise.all([
             fetch(`/api/user/team?userId=${user.phone}&_t=${timestamp}`),
-            fetch(`/api/user/investments?active=true&userId=${encodeURIComponent(user.phone)}&_t=${timestamp}`)
+            fetch(`/api/user/investments?active=true&_t=${timestamp}`)
           ]);
           
           // Process investments
@@ -131,7 +131,7 @@ export default function ProfilePage() {
           // Load ALL data in parallel for maximum performance (same as home page)
           const timestamp = Date.now(); // Add timestamp to prevent caching
           const [investmentsResponse, teamResponse] = await Promise.all([
-            fetch(`/api/user/investments?active=true&userId=${encodeURIComponent(user.phone)}&_t=${timestamp}`),
+            fetch(`/api/user/investments?active=true&_t=${timestamp}`),
             fetch(`/api/user/team?userId=${user.phone}&_t=${timestamp}`)
           ])
           
@@ -186,29 +186,15 @@ export default function ProfilePage() {
     loadUserData()
   }, [])
 
-  // Auto-refresh user data every 30 seconds to show updated balances (when tab is active)
+  // Auto-refresh user data every 30 seconds to show updated balances
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && userData) {
-        refreshUserData()
-      }
-    }
-    if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', handleVisibilityChange)
-    }
-
     const interval = setInterval(() => {
-      if (userData && (typeof document === 'undefined' || document.visibilityState === 'visible')) {
+      if (userData) {
         refreshUserData()
       }
     }, 30000) // 30 seconds
 
-    return () => {
-      clearInterval(interval)
-      if (typeof document !== 'undefined') {
-        document.removeEventListener('visibilitychange', handleVisibilityChange)
-      }
-    }
+    return () => clearInterval(interval)
   }, [userData])
 
   // Load payment details from database
@@ -341,6 +327,15 @@ export default function ProfilePage() {
     }
   }, [userData, currentPlan, showSuccess])
 
+  // Refresh all data when component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      refreshAllData()
+    }, 100) // Small delay to ensure all data is loaded
+    
+    return () => clearTimeout(timer)
+  }, [])
+
   const refreshAllData = async () => {
     if (!userData) return
     
@@ -356,7 +351,7 @@ export default function ProfilePage() {
       // Load ALL data in parallel for maximum performance (same as home page)
       const timestamp = Date.now(); // Add timestamp to prevent caching
       const [investmentsResponse, teamResponse] = await Promise.all([
-        fetch(`/api/user/investments?active=true&userId=${encodeURIComponent(userData.phone)}&_t=${timestamp}`),
+        fetch(`/api/user/investments?active=true&_t=${timestamp}`),
         fetch(`/api/user/team?userId=${userData.phone}&_t=${timestamp}`)
       ])
       
